@@ -10,7 +10,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const baselinePath = path.join(root, 'brand-audit.baseline.json')
 const dirs = ['src', 'electron', 'public', 'index.html', 'package.json', 'electron-builder.config.cjs', 'product-identity.cjs']
 const exts = new Set(['.ts', '.tsx', '.mts', '.cjs', '.mjs', '.js', '.json', '.html', '.css', '.md'])
-const skip = /(^|\/)(node_modules|dist|build)(\/|$)|\.test\.|\.e2e\.|\.d\.c?ts$/
+// Locale catalogs are branded at resolve time (src/i18n/brand-text.ts) and swept by its test.
+const skip = /(^|\/)(node_modules|dist|build)(\/|$)|^src\/i18n\/(?!brand-text)|\.test\.|\.e2e\.|\.d\.c?ts$/
 
 // Identifiers the backend and tooling depend on. They are not branding.
 const internal = [

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
+import { BRAND } from '@/brand'
 import { useI18n } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import { capitalize, normalize } from '@/lib/text'
 
 import introCopyJsonl from './intro-copy.jsonl?raw'
@@ -143,10 +145,12 @@ function fallbackCopyForPersonality(personalityKey: string): IntroCopy[] {
 }
 
 function pickCopy(copies: IntroCopy[], seed = 0): IntroCopy {
-  return copies[Math.abs(seed) % copies.length] || FALLBACK_COPY[0]
+  const copy = copies[Math.abs(seed) % copies.length] || FALLBACK_COPY[0]
+
+  return { headline: brandText(copy.headline), body: brandText(copy.body) }
 }
 
-const WORDMARK = 'HERMES AGENT'
+const WORDMARK = BRAND.name.toUpperCase()
 
 function resolveCopy(personality?: string, seed?: number): IntroCopy {
   const personalityKey = normalizeKey(personality)

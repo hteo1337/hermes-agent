@@ -48,7 +48,7 @@ export function buildEnvoyTheme(base: DesktopTheme): DesktopTheme {
     ...base,
     name: 'envoy',
     label: 'Envoy',
-    description: 'Nous chrome, Nexus Envoy blue-black and indigo',
+    description: 'Azure chrome, blue-black and indigo',
     colors: { ...base.colors, ...light },
     darkColors: { ...(base.darkColors ?? base.colors), ...dark }
   }
