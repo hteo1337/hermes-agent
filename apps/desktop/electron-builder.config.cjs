@@ -12,6 +12,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const brand = require('./brand.json')
 const feedContract = require('./update-feed.cjs')
 const { createMacSigner } = require('./scripts/mac-sign.mjs')
 
@@ -78,7 +79,7 @@ module.exports = {
   protocols: [
     {
       name: `${displayName} Protocol`,
-      schemes: ['hermes']
+      schemes: [brand.protocol]
     }
   ],
   // A store build is archived, never served to a feed — prefix its artifact

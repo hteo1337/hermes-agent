@@ -26,6 +26,7 @@ type PackagingConfiguration = Omit<Configuration, 'extraMetadata' | 'mac' | 'msi
 }
 
 const require: NodeJS.Require = createRequire(import.meta.url)
+const brand: { name: string; kebab: string; cliName: string; protocol: string; appIdPrefix: string } = require('../brand.json')
 
 beforeEach((): void => {
   vi.resetModules()
@@ -92,8 +93,8 @@ test('nonstable runtime pins userData before the app name can change', async ():
   const canary: ProductIdentity = await identityForVariant('bundled')
   const runtime: { applyDesktopIdentity: typeof applyDesktopIdentity } = await import('./product-identity')
   const root: string = fs.mkdtempSync(path.join(os.tmpdir(), 'identity-userdata-'))
-  const paths: Record<string, string> = { appData: root, userData: path.join(root, 'Hermes') }
-  let name: string = 'Hermes'
+  const paths: Record<string, string> = { appData: root, userData: path.join(root, brand.name) }
+  let name: string = brand.name
 
   const app: Parameters<typeof applyDesktopIdentity>[0] = {
     getPath: (key: string): string => paths[key],
@@ -108,7 +109,7 @@ test('nonstable runtime pins userData before the app name can change', async ():
 
   try {
     assert.equal(runtime.applyDesktopIdentity(app, stable), null)
-    assert.equal(paths.userData, path.join(root, 'Hermes'))
+    assert.equal(paths.userData, path.join(root, brand.name))
     assert.equal(runtime.applyDesktopIdentity(app, canary), canary.displayName)
     assert.equal(paths.userData, path.join(paths.appData, canary.appNamePascal))
     assert.equal(name, canary.displayName)
@@ -118,9 +119,9 @@ test('nonstable runtime pins userData before the app name can change', async ():
 })
 
 test.each([
-  [undefined, 'Hermes', 'hermes', 'latest', 'canary'],
-  ['bundled', 'Hermes Agent', 'hermes', 'latest', 'canary'],
-  ['light', 'Hermes Light', 'hermes-light', 'light', 'light-canary']
+  [undefined, brand.name, brand.cliName, 'latest', 'canary'],
+  ['bundled', `${brand.name} Agent`, brand.cliName, 'latest', 'canary'],
+  ['light', `${brand.name} Light`, `${brand.cliName}-light`, 'light', 'light-canary']
 ] as const)(
   '%s separates stable, canary and independent commits',
   async (
@@ -254,7 +255,7 @@ test('packaging isolates boot metadata and executable names without renaming rel
     const artifact: ReturnType<typeof appIdentity> = appIdentity(fileURLToPath(new URL('../', import.meta.url)))
     assert.equal(artifact.name, identity.artifactNamePascal)
     assert.equal(artifact.identity.msixAppIdWithOrg, config.msix.identityName)
-    assert.deepEqual(config.protocols[0].schemes, ['hermes'])
+    assert.deepEqual(config.protocols[0].schemes, [brand.protocol])
 
     if (build !== 'canary') {
       assert.equal(config.publish, null)
@@ -298,4 +299,10 @@ test('store carries the Partner Center MSIX identity and no other variant does',
   for (const v of [undefined, 'bundled', 'light'] as const) {
     assert.equal((await identityForVariant(v)).storeMsix, undefined, `variant ${v} must carry no storeMsix`)
   }
+})
+
+test('identity never reuses the upstream app id or URL scheme', async (): Promise<void> => {
+  const identity: ProductIdentity = await identityForVariant(undefined)
+  assert.ok(identity.appId.startsWith(`${brand.appIdPrefix}.`))
+  assert.ok(!/nousresearch|hermes/i.test(identity.appId + identity.msixAppIdWithOrg + brand.protocol))
 })

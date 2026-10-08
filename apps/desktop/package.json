@@ -1,10 +1,10 @@
 {
   "name": "hermes",
-  "productName": "Hermes",
+  "productName": "Envoy",
   "private": true,
   "version": "0.0.0",
-  "description": "Native desktop shell for Hermes Agent.",
-  "author": "Nous Research",
+  "description": "Native desktop client for a local agent backend.",
+  "author": "Envoy contributors",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NousResearch/hermes-agent.git"

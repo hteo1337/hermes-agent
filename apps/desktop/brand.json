@@ -1,0 +1,17 @@
+{
+  "name": "Envoy",
+  "kebab": "envoy",
+  "pascal": "Envoy",
+  "tagline": "A desktop agent client",
+  "appIdPrefix": "app.envoy",
+  "msixOrg": "Envoy",
+  "protocol": "envoy",
+  "cliName": "envoy",
+  "author": "Envoy contributors",
+  "attribution": {
+    "file": "NOTICE.md",
+    "upstream": "Hermes Desktop",
+    "holder": "Nous Research",
+    "license": "MIT"
+  }
+}
