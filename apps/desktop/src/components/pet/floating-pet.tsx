@@ -124,6 +124,7 @@ export function FloatingPet() {
   const petH = (info.frameH ?? 208) * (info.scale ?? 0.33)
   // Soft contact shadow, sized off the pet so every scale/species grounds the
   // same way (cf. lairp's per-actor feet ellipse). Lighter on light backgrounds.
+  const chipsOnLeft = position.x + petW / 2 < window.innerWidth / 2
   const shadowW = Math.round(petW * 0.55)
   const shadowH = Math.max(3, Math.round(shadowW * 0.28))
   const shadowAlpha = resolvedMode === 'light' ? 0.2 : 0.55
@@ -497,10 +498,20 @@ export function FloatingPet() {
           zIndex: 0
         }}
       />
-      <div style={{ bottom: '100%', left: '50%', position: 'absolute', transform: 'translateX(-50%)', zIndex: 2 }}>
+      <div
+        style={{
+          bottom: '100%',
+          position: 'absolute',
+          zIndex: 2,
+          ...(chipsOnLeft ? { left: 0 } : { right: 0 })
+        }}
+      >
         <PetChips
           chips={chips}
-          onAnswer={(chip, choice) => chip.requestId && void answerPetChip(chip.sessionId, chip.requestId, choice)}
+          onAnswer={(chip, choice) =>
+            chip.requestId ? answerPetChip(chip.sessionId, chip.requestId, choice) : undefined
+          }
+          side={chipsOnLeft ? 'left' : 'right'}
         />
       </div>
       <div

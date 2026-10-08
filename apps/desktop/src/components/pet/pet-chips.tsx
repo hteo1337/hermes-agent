@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { PetChip, PetChipChoice } from '@/store/pet-chips'
 
 const MAX_VISIBLE = 3
+const REARM_MS = 6000
 
 const surface = {
   alignItems: 'center',
@@ -34,10 +35,12 @@ const stop = (e: React.SyntheticEvent) => e.stopPropagation()
 
 interface PetChipsProps {
   chips: readonly PetChip[]
-  onAnswer: (chip: PetChip, choice: PetChipChoice) => void
+  // Resolves false (or rejects) when the answer did not land, so the buttons re-arm.
+  onAnswer: (chip: PetChip, choice: PetChipChoice) => Promise<boolean> | void
+  side?: 'left' | 'right'
 }
 
-export function PetChips({ chips, onAnswer }: PetChipsProps) {
+export function PetChips({ chips, onAnswer, side }: PetChipsProps) {
   const [answered, setAnswered] = useState<ReadonlySet<string>>(new Set())
 
   if (!chips.length) {
@@ -48,8 +51,25 @@ export function PetChips({ chips, onAnswer }: PetChipsProps) {
   const hidden = chips.length - shown.length
 
   const answer = (chip: PetChip, choice: PetChipChoice) => {
-    setAnswered(prev => new Set(prev).add(chip.key))
-    onAnswer(chip, choice)
+    const settle = (keep: boolean) =>
+      setAnswered(prev => {
+        const next = new Set(prev)
+
+        if (keep) {
+          next.add(chip.key)
+        } else {
+          next.delete(chip.key)
+        }
+
+        return next
+      })
+
+    settle(true)
+    // The overlay gets no reply, so re-arm if the chip is still here after a while.
+    setTimeout(() => settle(false), REARM_MS)
+    void Promise.resolve(onAnswer(chip, choice))
+      .then(ok => ok === false && settle(false))
+      .catch(() => settle(false))
   }
 
   return (
@@ -58,7 +78,12 @@ export function PetChips({ chips, onAnswer }: PetChipsProps) {
       onPointerDown={stop}
       onPointerUp={stop}
       role="group"
-      style={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: 4 }}
+      style={{
+        alignItems: side === 'left' ? 'flex-start' : side === 'right' ? 'flex-end' : 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4
+      }}
     >
       {shown.map(chip =>
         chip.kind === 'approval' ? (

@@ -302,7 +302,9 @@ export function initPetOverlayBridge(): () => void {
       typeof payload.sessionId === 'string' &&
       typeof payload.requestId === 'string'
     ) {
-      void answerPetChip(payload.sessionId, payload.requestId, String(payload.choice))
+      void answerPetChip(payload.sessionId, payload.requestId, String(payload.choice)).catch(error =>
+        console.warn('pet chip answer failed', error)
+      )
     } else if (payload?.type === 'open-app') {
       // Mail icon: surface the app on the most recent thread (main.ts already
       // focused the window before forwarding this) and mark it read.

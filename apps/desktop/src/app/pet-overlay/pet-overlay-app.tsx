@@ -438,15 +438,16 @@ export function PetOverlayApp() {
         <div style={{ marginBottom: 4 }}>
           <PetChips
             chips={chips}
-            onAnswer={(chip, choice) =>
-              chip.requestId &&
-              window.hermesDesktop?.petOverlay?.control({
-                choice,
-                requestId: chip.requestId,
-                sessionId: chip.sessionId,
-                type: 'chip-answer'
-              })
-            }
+            onAnswer={(chip, choice) => {
+              if (chip.requestId) {
+                window.hermesDesktop?.petOverlay?.control({
+                  choice,
+                  requestId: chip.requestId,
+                  sessionId: chip.sessionId,
+                  type: 'chip-answer'
+                })
+              }
+            }}
           />
           <PetBubble />
         </div>
