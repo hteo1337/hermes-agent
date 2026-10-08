@@ -449,7 +449,7 @@ export function BootFailureOverlay() {
     // bundled install is not fixed by reinstalling.
     const damagedPayload: boolean = bundled && classifyLocalBootFailure(boot.error) === 'installMissing'
 
-    const fixAction: RecoveryAction | null = damagedPayload
+    const fixAction: RecoveryAction | null = damagedPayload && DESKTOP_DOCS_URL
       ? {
           key: 'reinstall',
           label: copy.reinstallApp,

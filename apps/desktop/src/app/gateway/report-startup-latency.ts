@@ -1,3 +1,5 @@
+import { TELEMETRY_ENABLED } from '@/brand'
+
 type GatewayRequest = (
   method: 'shared_metrics.startup_latency',
   params: { elapsed_ms: number; launch_id: string; surface: 'desktop_attach' }
@@ -10,6 +12,10 @@ export async function reportStartupLatency(
   desktop: Pick<Window['hermesDesktop'], 'claimStartupLatency'> | undefined,
   request: GatewayRequest
 ): Promise<void> {
+  if (!TELEMETRY_ENABLED) {
+    return
+  }
+
   const elapsedMs = (await desktop?.claimStartupLatency?.().catch(() => null)) ?? null
 
   if (elapsedMs === null) {

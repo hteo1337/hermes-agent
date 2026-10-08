@@ -39,6 +39,8 @@ import type { SubmitTextOptions } from './utils'
 
 import { uploadComposerAttachment, usePromptActions } from '.'
 
+vi.mock('@/brand', async importOriginal => ({ ...(await importOriginal<typeof import('@/brand')>()), TELEMETRY_ENABLED: true }))
+
 // Suites in this file reuse the same stored-id constants. The module-level
 // single-flight resume map (and drift-recovery cache) would otherwise leak a
 // never-settling in-flight promise from one test into the next.

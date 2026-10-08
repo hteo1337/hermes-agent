@@ -8,6 +8,8 @@ import { $desktopOnboarding } from '@/store/onboarding'
 
 import { BootFailureOverlay } from './boot-failure-overlay'
 
+vi.mock('@/lib/docs', () => ({ DESKTOP_DOCS_URL: 'https://example.invalid/docs' }))
+
 // Remote-backend users hit a hard boot failure that isn't OAuth reauth (token
 // auth, wrong URL, unreachable host). The recovery screen must let them fix the
 // remote connection in place — the "Connection settings" action swaps the card
@@ -361,7 +363,7 @@ describe('BootFailureOverlay', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /reinstall the app/i }))
       await waitFor(() =>
-        expect(openExternal).toHaveBeenCalledWith('https://hermes-agent.nousresearch.com/docs/user-guide/desktop')
+        expect(openExternal).toHaveBeenCalledWith('https://example.invalid/docs')
       )
     } finally {
       restore()

@@ -7,6 +7,10 @@
   "msixOrg": "Envoy",
   "protocol": "envoy",
   "cliName": "envoy",
+  "telemetry": false,
+  "updateRepository": "",
+  "docsUrl": "",
+  "maintainer": "Envoy contributors <noreply@envoy.invalid>",
   "author": "Envoy contributors",
   "attribution": {
     "file": "NOTICE.md",

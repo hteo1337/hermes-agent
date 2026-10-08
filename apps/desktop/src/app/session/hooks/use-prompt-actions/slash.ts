@@ -5,6 +5,7 @@ import { type MutableRefObject, useCallback, useRef } from 'react'
 import { mergeOlderTranscriptPage } from '@/app/chat/transcript-backfill'
 import { prepareDefaultNewSession } from '@/app/session/new-session-route'
 import { invalidateContextBreakdown } from '@/app/shell/hooks/use-context-breakdown'
+import { TELEMETRY_ENABLED } from '@/brand'
 import { getProfiles } from '@/hermes'
 import type { Translations } from '@/i18n'
 import { type ChatMessage, toChatMessages } from '@/lib/chat-messages'
@@ -1372,7 +1373,7 @@ export function useSlashCommand(deps: SlashCommandDeps) {
         // Shared metrics count each command the user typed exactly once, here, whether the desktop
         // handles it locally or on the gateway (which no longer counts slash.exec itself). An alias
         // re-dispatch (recordInput=false) and programmatic calls (typed=false) are not user input.
-        if (recordInput && options?.typed !== false) {
+        if (TELEMETRY_ENABLED && recordInput && options?.typed !== false) {
           const metricsSessionId = sessionHint || activeSessionIdRef.current
 
           void requestGateway('shared_metrics.slash_command', {

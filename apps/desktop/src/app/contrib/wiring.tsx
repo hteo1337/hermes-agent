@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { type CSSProperties, lazy, type ReactNode, Suspense, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
+import { TELEMETRY_ENABLED } from '@/brand'
 import { formatRefValue } from '@/components/assistant-ui/directive-text'
 import { BootFailureOverlay } from '@/components/boot-failure-overlay'
 import { ConfirmHost } from '@/components/confirm-host'
@@ -884,7 +885,7 @@ export function ContribWiring({ children }: { children: ReactNode }) {
   }, [gatewayState, requestGateway])
 
   useEffect(() => {
-    if (gatewayState !== 'open' || isAuxiliaryWindow()) {
+    if (!TELEMETRY_ENABLED || gatewayState !== 'open' || isAuxiliaryWindow()) {
       return
     }
 
@@ -895,7 +896,7 @@ export function ContribWiring({ children }: { children: ReactNode }) {
   }, [gatewayState, requestGateway])
 
   useDesktopMetrics({
-    enabled: !isAuxiliaryWindow(),
+    enabled: TELEMETRY_ENABLED && !isAuxiliaryWindow(),
     gatewayOpen: gatewayState === 'open',
     pathname: location.pathname,
     profile: activeGatewayProfile
@@ -1314,7 +1315,7 @@ export function ContribWiring({ children }: { children: ReactNode }) {
           requestGateway={requestGateway}
         />
       )}
-      {!isAuxiliaryWindow() && (
+      {TELEMETRY_ENABLED && !isAuxiliaryWindow() && (
         <SharedMetricsConsentDialog
           enabled={gatewayState === 'open'}
           profile={activeGatewayProfile}

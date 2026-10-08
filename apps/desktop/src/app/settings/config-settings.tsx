@@ -4,6 +4,7 @@ import type { ChangeEvent, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
+import { TELEMETRY_ENABLED } from '@/brand'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SegmentedControl } from '@/components/ui/segmented-control'
@@ -314,7 +315,7 @@ function ConfigSettingsInner({
 
   const showDesktopSettings = activeSectionId === 'advanced' && (subpage === undefined || subpage === 'desktop')
   const showAttachments = activeSectionId === 'chat' && (subpage === undefined || subpage === 'attachments')
-  const showSharedMetrics = activeSectionId === 'safety' && subpage === 'privacy'
+  const showSharedMetrics = TELEMETRY_ENABLED && activeSectionId === 'safety' && subpage === 'privacy'
 
   // Deep-link target from the command palette (?field=<key>): scroll the row
   // into view and flash it, then drop the param so it doesn't re-fire.

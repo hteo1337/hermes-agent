@@ -58,9 +58,11 @@ const channelRequest = channelBuildRequest()
 
 /** @typedef {import("app-builder-lib").Configuration} Configuration */
 
-const [owner, repo] = (process.env.GITHUB_REPOSITORY || 'NousResearch/hermes-agent').split('/')
-if (!owner || !repo) {
-  throw new Error(`invalid GITHUB_REPOSITORY ${process.env.GITHUB_REPOSITORY}`)
+// No default repository: an empty brand.updateRepository ships without a GitHub update feed.
+const updateRepository = process.env.GITHUB_REPOSITORY || brand.updateRepository
+const [owner, repo] = updateRepository ? updateRepository.split('/') : []
+if (updateRepository && (!owner || !repo)) {
+  throw new Error(`invalid GITHUB_REPOSITORY ${updateRepository}`)
 }
 const electronVersion = require('./package.json').devDependencies.electron
 if (!/^\d+\.\d+\.\d+$/.test(electronVersion)) {
@@ -94,7 +96,7 @@ module.exports = {
   // var (local, or a fork without the R2 vars) keep the github provider, which
   // is exactly today's behavior. The store build has no feed at all (the Store
   // owns its distribution and updates).
-  publish: channelRequest ? null : !channel
+  publish: channelRequest || !channel || (!publicUrl && !repo)
     ? null
     : [
         publicUrl
@@ -279,7 +281,7 @@ module.exports = {
   },
   linux: {
     category: 'Development',
-    maintainer: 'Nous Research <support@nousresearch.com>',
+    maintainer: brand.maintainer,
     synopsis: light
       ? 'Remote-only desktop client for Hermes Agent.'
       : 'Native desktop shell for Hermes Agent.',

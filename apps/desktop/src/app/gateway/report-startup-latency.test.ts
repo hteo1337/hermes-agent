@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { reportStartupLatency } from './report-startup-latency'
 
+vi.mock('@/brand', async importOriginal => ({ ...(await importOriginal<typeof import('@/brand')>()), TELEMETRY_ENABLED: true }))
+
 describe('reportStartupLatency', () => {
   it('sends the metric once even when the renderer boots again (reload, reconnect, extra window)', async () => {
     // The main-process latch: a number for the first claim of the launch, null afterwards.

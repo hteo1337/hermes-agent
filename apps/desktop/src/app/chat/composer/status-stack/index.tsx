@@ -7,6 +7,7 @@ import { useComposerSurfaceId } from '@/app/chat/composer/scope'
 import { useSessionView } from '@/app/chat/session-view'
 import { AGENTS_ROUTE } from '@/app/routes'
 import type { SubmitTextOptions } from '@/app/session/hooks/use-prompt-actions/utils'
+import { TELEMETRY_ENABLED } from '@/brand'
 import { BillingBanner } from '@/components/billing-banner'
 import { composerDockCard } from '@/components/chat/composer-dock'
 import { StatusSection } from '@/components/chat/status-section'
@@ -236,7 +237,7 @@ export function ComposerStatusStack({ onSubmit, queue, sessionId }: ComposerStat
     sections.push({ key: 'free-tier', node: <FreeTierNoticeStrip /> })
   }
 
-  if (sharedMetricsOffer) {
+  if (TELEMETRY_ENABLED && sharedMetricsOffer) {
     sections.push({ key: 'shared-metrics', node: <SharedMetricsConsentStrip /> })
   }
 
