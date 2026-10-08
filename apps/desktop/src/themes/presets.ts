@@ -20,6 +20,7 @@
 
 import { THEME_PRESET_PALETTES } from '@hermes/shared'
 
+import { buildEnvoyTheme } from './envoy'
 import { skinToDesktopTheme } from './skin'
 import type { DesktopTheme, DesktopThemeTypography } from './types'
 
@@ -453,7 +454,8 @@ export const BUILTIN_THEMES: Record<string, DesktopTheme> = {
   ember: emberTheme,
   mono: monoTheme,
   slate: slateTheme,
-  cyberpunk: cyberpunkTheme
+  cyberpunk: cyberpunkTheme,
+  envoy: buildEnvoyTheme(nousTheme)
 }
 
 export const BUILTIN_THEME_LIST = Object.values(BUILTIN_THEMES)
