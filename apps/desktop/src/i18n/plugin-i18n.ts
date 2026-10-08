@@ -15,6 +15,7 @@ import { useStore } from '@nanostores/react'
 import { atom } from 'nanostores'
 import { useCallback } from 'react'
 
+import { brandTranslations } from './brand-text'
 import { useI18n } from './context'
 import { type AppLocaleRegistration, registerAppLocale } from './registry'
 import { getRuntimeI18nLocale, subscribeRuntimeI18nLocale, translateFrom } from './runtime'
@@ -91,7 +92,9 @@ export function registerPluginLocales(pluginId: string, bundles: PluginLocaleBun
     }
 
     const prev = byLocale.get(locale)
-    byLocale.set(locale, prev ? mergeMessages(prev, messages) : messages)
+    const branded = brandTranslations(messages)
+
+    byLocale.set(locale, prev ? mergeMessages(prev, branded) : branded)
   }
 
   $version.set($version.get() + 1)

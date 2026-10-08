@@ -111,6 +111,7 @@ import {
 import { decideBootstrapRepair } from './bootstrap-repair-guard'
 import { runBootstrap } from './bootstrap-runner'
 import { bootstrapSnapshot } from './bootstrap-state'
+import { BRAND } from './brand'
 import {
   BROWSER_WINDOW_HEIGHT,
   BROWSER_WINDOW_MIN_HEIGHT,
@@ -471,7 +472,6 @@ import {
 } from './primary-backend-startup'
 import { rehomePrimaryConnection } from './primary-connection-rehome'
 import { PrimaryProfilePin, resolveLaunchProfile } from './primary-profile-pin'
-import { BRAND } from './brand'
 import { applyDesktopIdentity, PRODUCT_IDENTITY } from './product-identity'
 import {
   assertLocalProfileCanStart,
@@ -1278,7 +1278,7 @@ function acquireSingleInstanceLock(): boolean {
 const isPrimaryInstance: boolean = acquireSingleInstanceLock()
 
 if (!isPrimaryInstance) {
-  console.error('[hermes] another Hermes Desktop instance holds the single-instance lock; exiting')
+  console.error(`[hermes] another ${BRAND.name} instance holds the single-instance lock; exiting`)
   app.exit(0)
 }
 
@@ -1860,7 +1860,7 @@ if (IS_WINDOWS) {
 app.setAboutPanelOptions({
   applicationName: APP_NAME,
   applicationVersion: nativeAboutVersion(appVersionInfo(INSTALL_STAMP, '', app.getVersion())),
-  copyright: 'Copyright © 2026 Nous Research'
+  copyright: `Copyright © 2026 ${BRAND.attribution.holder}`
 })
 
 // Custom scheme for streaming audio/video into the renderer. Local paths read
@@ -5411,7 +5411,7 @@ async function resolveHermesBackend(backendArgs: string[]): Promise<ResolvedHerm
   //    is a recoverable state the GUI can drive through.
   return {
     kind: 'bootstrap-needed',
-    label: 'Hermes Agent not installed yet; bootstrap required',
+    label: `${BRAND.name} not installed yet; bootstrap required`,
     command: null,
     args: backendArgs,
     bootstrap: true,
@@ -5471,7 +5471,7 @@ async function ensureRuntime(
     rememberLog('[bootstrap] REFUSING installer on a bundled install; payload missing or damaged — reinstall the app')
 
     const bundledError: Error & { isBootstrapFailure?: boolean } = new Error(
-      'This app bundles its own Hermes runtime, but the runtime files are missing or damaged. Reinstall Hermes Desktop to restore it.'
+      `This app bundles its own Hermes runtime, but the runtime files are missing or damaged. Reinstall ${BRAND.name} to restore it.`
     )
 
     bundledError.isBootstrapFailure = true
@@ -12820,7 +12820,7 @@ function reportPrimaryRecoveryCrashLoop(code: number | null, signal: string | nu
   }
 
   const message =
-    'Hermes backend keeps crashing right after it restarts; not restarting it again. Relaunch Hermes Desktop.'
+    `Hermes backend keeps crashing right after it restarts; not restarting it again. Relaunch ${BRAND.name}.`
 
   rememberLog(`[supervisor] ${message}`)
   sendBackendExit({ code, signal, error: message })
@@ -12907,7 +12907,7 @@ async function runHermesStart({ supervisorRecovery = false }: { supervisorRecove
   // otherwise SIGTERMs the running instance's live backend (#87295).
   if (!isPrimaryInstance) {
     rememberLog('[boot] non-primary instance: skipping backend machinery')
-    throw new Error('Hermes Desktop is already running in another window.')
+    throw new Error(`${BRAND.name} is already running in another window.`)
   }
 
   await reapOrphanedBackendsOnce()
@@ -18715,7 +18715,7 @@ function showAboutPanelFresh(): void {
     app.setAboutPanelOptions({
       applicationName: APP_NAME,
       applicationVersion: skew.outOfSync ? `${display} — app build out of date, update the desktop app` : display,
-      copyright: 'Copyright © 2026 Nous Research'
+      copyright: `Copyright © 2026 ${BRAND.attribution.holder}`
     })
     app.showAboutPanel()
   })

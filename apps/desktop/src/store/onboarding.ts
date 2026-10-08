@@ -1,6 +1,7 @@
 import type { ModelOptionProvider } from '@hermes/shared'
 import { atom } from 'nanostores'
 
+import { PRODUCT_NAME } from '@/brand'
 import {
   cancelOAuthSession,
   getGlobalModelOptions,
@@ -802,7 +803,7 @@ export async function refreshOnboarding(ctx: OnboardingContext, stillWanted?: ()
         kind: 'info',
         title: 'Runtime not ready',
         message:
-          'Hermes Desktop could not verify the running backend on startup. Some features may be unavailable until the gateway is reachable.'
+          `${PRODUCT_NAME} could not verify the running backend on startup. Some features may be unavailable until the gateway is reachable.`
       })
     }
 

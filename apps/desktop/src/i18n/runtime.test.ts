@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { fieldCopyForSchemaKey } from '@/app/settings/field-copy'
 
+import { brandText } from './brand-text'
 import { TRANSLATIONS } from './catalog'
 import { setRuntimeI18nLocale, translateNow } from './runtime'
 import { zh } from './zh'
@@ -18,8 +19,8 @@ describe('desktop i18n runtime translator', () => {
   it('translates string paths for the active runtime locale', () => {
     setRuntimeI18nLocale('zh')
 
-    expect(translateNow('boot.ready')).toBe(zh.boot.ready)
-    expect(translateNow('assistant.tool.statusRecovered')).toBe(zh.assistant.tool.statusRecovered)
+    expect(translateNow('boot.ready')).toBe(brandText(zh.boot.ready))
+    expect(translateNow('assistant.tool.statusRecovered')).toBe(brandText(zh.assistant.tool.statusRecovered))
     expect(translateNow('boot.ready')).not.toBe(TRANSLATIONS.en.boot.ready)
   })
 
@@ -45,7 +46,7 @@ describe('desktop i18n runtime translator', () => {
       boot.ready = undefined
       setRuntimeI18nLocale('ja')
 
-      expect(translateNow('boot.ready')).toBe(TRANSLATIONS.en.boot.ready)
+      expect(translateNow('boot.ready')).toBe(brandText(TRANSLATIONS.en.boot.ready))
     } finally {
       boot.ready = originalReady
     }

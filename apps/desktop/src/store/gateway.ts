@@ -10,6 +10,7 @@ import {
 } from '@hermes/shared'
 import { atom } from 'nanostores'
 
+import { PRODUCT_NAME } from '@/brand'
 import type { HermesConnection } from '@/global'
 import { HermesGateway, setApiRequestConnection } from '@/hermes'
 import { translateNow } from '@/i18n'
@@ -1377,7 +1378,7 @@ export async function requestGatewayForAgent<T>(
   traceAgentRoute(scope, 'secondary')
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update Hermes Desktop.')
+    throw new Error(`This Desktop build cannot dial registry connections. Update ${PRODUCT_NAME}.`)
   }
 
   const entry = g.secondaries.get(scope) ?? createSecondary(key, connectionId)
@@ -1881,7 +1882,7 @@ export async function openGatewayForAgent(
   }
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update Hermes Desktop.')
+    throw new Error(`This Desktop build cannot dial registry connections. Update ${PRODUCT_NAME}.`)
   }
 
   const entry = g.secondaries.get(scope) ?? createSecondary(profile, connectionId)
@@ -1935,7 +1936,7 @@ export async function ensureGatewayForAgent(
   }
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update Hermes Desktop.')
+    throw new Error(`This Desktop build cannot dial registry connections. Update ${PRODUCT_NAME}.`)
   }
 
   let entry = g.secondaries.get(scope)

@@ -26,6 +26,7 @@ import { PRIMARY_SESSION_VIEW } from '@/app/chat/session-view'
 import { openSession, type OpenSessionIntent } from '@/app/open-session'
 import { syncWorkspaceRoute } from '@/app/routes'
 import type { ClientSessionState } from '@/app/types'
+import { PRODUCT_NAME } from '@/brand'
 import {
   $narrowViewport,
   $newSessionTabAction,
@@ -896,7 +897,7 @@ export const host = {
     const bridge = window.hermesDesktop?.connections
 
     if (!bridge) {
-      throw new Error('This Desktop build has no connection registry. Update Hermes Desktop.')
+      throw new Error(`This Desktop build has no connection registry. Update ${PRODUCT_NAME}.`)
     }
 
     const registryPayload = await bridge.list()
@@ -913,7 +914,7 @@ export const host = {
     const roster = window.hermesDesktop?.getAgentRoster
 
     if (!roster) {
-      throw new Error('This Desktop build cannot enumerate multi-source agents. Update Hermes Desktop.')
+      throw new Error(`This Desktop build cannot enumerate multi-source agents. Update ${PRODUCT_NAME}.`)
     }
 
     return roster()
@@ -1480,7 +1481,7 @@ export const host = {
     const getProfileRoutes = desktop?.getProfileRoutes
 
     if (!getProfileRoutes) {
-      throw new Error('Hermes Desktop connection routing unavailable')
+      throw new Error(`${PRODUCT_NAME} connection routing unavailable`)
     }
 
     let profiles = $profiles.get()

@@ -13,6 +13,8 @@
 
 import { resolveGatewayWsUrl } from '@hermes/shared'
 
+import { PRODUCT_NAME } from '@/brand'
+
 const RESOLVE_TIMEOUT_MS = 15_000
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -50,7 +52,7 @@ export async function resolveSiblingWsUrl(
   const desktop = window.hermesDesktop
 
   if (!desktop?.getConnection) {
-    throw new Error('Hermes Desktop connection bridge unavailable')
+    throw new Error(`${PRODUCT_NAME} connection bridge unavailable`)
   }
 
   const connectionId = route.connectionId?.trim() || null

@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/brand'
 import { getApiRequestConnection, getApiRequestProfile, type ProfileScope } from '@/hermes'
 import { RECONNECT_ATTEMPT_TIMEOUT_MS, withTimeout } from '@/lib/with-timeout'
 import { requestGatewayForAgent } from '@/store/gateway'
@@ -32,7 +33,7 @@ export async function requestOnboardingGateway<T>(
   const desktop = window.hermesDesktop
 
   if (scope.connectionId && !desktop.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update Hermes Desktop.')
+    throw new Error(`This Desktop build cannot dial registry connections. Update ${PRODUCT_NAME}.`)
   }
 
   const connection = await withTimeout(

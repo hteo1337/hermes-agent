@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react'
 
 import { createGatewayEventDedupe } from '@/app/gateway/gateway-event-dedupe'
 import { reportStartupLatency } from '@/app/gateway/report-startup-latency'
+import { PRODUCT_NAME } from '@/brand'
 import { shouldApplyPostBootProgressError } from '@/components/boot-failure-reauth'
 import type { DesktopBootProgress, HermesConnection, HermesWindowState } from '@/global'
 import { HermesGateway } from '@/hermes'
@@ -1021,7 +1022,7 @@ export function useGatewayBoot({
     configureGatewayRegistry({
       onServerRequest: request => {
         if (!callbacksRef.current.handleServerRequest(request)) {
-          request.fail(JSON_RPC_METHOD_NOT_FOUND, `Hermes Desktop cannot answer ${request.method}`)
+          request.fail(JSON_RPC_METHOD_NOT_FOUND, `${PRODUCT_NAME} cannot answer ${request.method}`)
         }
       },
       // The primary socket has no secondary entry to carry registry identity.

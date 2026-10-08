@@ -1,5 +1,6 @@
 import { capabilityScoped, type ProfileScope } from '@/api/client'
 import { type McpOAuthFlow, mcpOAuthRpc } from '@/api/mcp'
+import { PRODUCT_NAME } from '@/brand'
 
 import { isMissingRpcMethod } from './gateway-rpc'
 
@@ -49,7 +50,7 @@ export async function completeMcpDesktopOAuth({
 
   // A legacy null connection can resolve to a remote registry primary.
   if (!bridge && scope.connectionId !== 'local') {
-    throw new Error('Update Hermes Desktop to support MCP OAuth callbacks.')
+    throw new Error(`Update ${PRODUCT_NAME} to support MCP OAuth callbacks.`)
   }
 
   let listener: { id: string; redirectUri: string } | undefined
