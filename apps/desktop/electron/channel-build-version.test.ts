@@ -371,6 +371,7 @@ test('actual MSIX manifest writer consumes the channel quad across rollover inst
 
   try {
     for (const file of [
+      'apps/desktop/brand.json',
       'apps/desktop/product-identity.cjs',
       'apps/desktop/electron-builder.config.cjs',
       'apps/desktop/package.json',
