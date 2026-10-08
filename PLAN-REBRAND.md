@@ -83,3 +83,10 @@ about text, logo, wordmark) and route every user-visible string through it.
 
 ## Order of value
 Phases 0-4 give a fully de-branded UI in about 4-5 days. Phase 5 is optional.
+
+## Status (2026-10-08)
+Phases 0-4 and 6 done; phase 5 (identifier rename) skipped on purpose. Verified in dev with an isolated
+HERMES_HOME: title, wordmark, onboarding, all Settings pages, light and dark. Known leftovers: theme label
+"Classic Hermes" (tests assert it), backend-provided strings (hermes CLI hints), the Nous Portal integration
+itself, and the app's About line showing the backend checkout path. Full vitest not re-run after phase 3
+(13 files fail on a clean checkout already).
