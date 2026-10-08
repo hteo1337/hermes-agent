@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BRAND } from '@/brand'
 import { PetHeartField, playVibeHearts } from '@/components/chat/vibe-hearts'
 import { PetBubble } from '@/components/pet/pet-bubble'
+import { PetChips } from '@/components/pet/pet-chips'
 import { PetSprite } from '@/components/pet/pet-sprite'
 import { type PetZoomAnchor, usePetZoomGesture } from '@/components/pet/use-pet-zoom-gesture'
 import { Mail } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 import { $petActivity, $petInfo, setPetInfo } from '@/store/pet'
+import type { PetChip } from '@/store/pet-chips'
 import { overlayWindowSize } from '@/store/pet-overlay'
 import { setAwaitingResponse, setBusy } from '@/store/session'
 
@@ -68,6 +70,7 @@ export function PetOverlayApp() {
   const [draft, setDraft] = useState('')
   // Mirrored from the main renderer: a finish landed while you were away.
   const [unread, setUnread] = useState(false)
+  const [chips, setChips] = useState<PetChip[]>([])
 
   const dragRef = useRef<DragState | null>(null)
   // Last Alt+wheel anchor, consumed by the resize effect to zoom toward the
@@ -97,6 +100,7 @@ export function PetOverlayApp() {
       setBusy(Boolean(payload.busy))
       setAwaitingResponse(Boolean(payload.awaiting))
       setUnread(Boolean(payload.unread))
+      setChips(payload.chips ?? [])
 
       // Play a reaction on a new id (ignore the first sync, which just primes it).
       const reaction = payload.reaction ?? null
@@ -432,6 +436,18 @@ export function PetOverlayApp() {
         }}
       >
         <div style={{ marginBottom: 4 }}>
+          <PetChips
+            chips={chips}
+            onAnswer={(chip, choice) =>
+              chip.requestId &&
+              window.hermesDesktop?.petOverlay?.control({
+                choice,
+                requestId: chip.requestId,
+                sessionId: chip.sessionId,
+                type: 'chip-answer'
+              })
+            }
+          />
           <PetBubble />
         </div>
         <div style={{ lineHeight: 0, position: 'relative' }}>

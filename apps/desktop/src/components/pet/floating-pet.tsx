@@ -5,6 +5,7 @@ import { useGatewayRequest } from '@/app/gateway/hooks/use-gateway-request'
 import { useOnProfileSwitch } from '@/app/hooks/use-on-profile-switch'
 import { useRouteOverlayActive } from '@/app/hooks/use-route-overlay-active'
 import { PetHeartField } from '@/components/chat/vibe-hearts'
+import { PetChips } from '@/components/pet/pet-chips'
 import { persistString, storedString } from '@/lib/storage'
 import { $changeEventsAvailable, $petChange } from '@/store/live-sync'
 import {
@@ -20,6 +21,7 @@ import {
   petProfile,
   setPetInfo
 } from '@/store/pet'
+import { $petChips, answerPetChip } from '@/store/pet-chips'
 import { resetPetGallery, setPetScale } from '@/store/pet-gallery'
 import { $petOverlayActive, initPetOverlayBridge, popOutPet, restorePetOverlay } from '@/store/pet-overlay'
 import { $gatewayState } from '@/store/session'
@@ -107,6 +109,7 @@ export function FloatingPet() {
   const changeEventsAvailable = useStore($changeEventsAvailable)
   const petChange = useStore($petChange)
   const overlayActive = useStore($petOverlayActive)
+  const chips = useStore($petChips)
   const roamEnabled = useStore($petRoam)
   const atRest = useStore($petAtRest)
   const roamDir = useStore($petRoamDir)
@@ -494,6 +497,12 @@ export function FloatingPet() {
           zIndex: 0
         }}
       />
+      <div style={{ bottom: '100%', left: '50%', position: 'absolute', transform: 'translateX(-50%)', zIndex: 2 }}>
+        <PetChips
+          chips={chips}
+          onAnswer={(chip, choice) => chip.requestId && void answerPetChip(chip.sessionId, chip.requestId, choice)}
+        />
+      </div>
       <div
         ref={spriteWrapRef}
         style={{

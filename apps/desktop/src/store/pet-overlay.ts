@@ -3,6 +3,7 @@ import { atom } from 'nanostores'
 import { PRIMARY_SESSION_VIEW } from '@/app/chat/session-view'
 import { persistBoolean, persistString, storedBoolean, storedString } from '@/lib/storage'
 import { $petActivity, $petInfo, $petUnread, clearPetUnread, type PetActivity, type PetInfo } from '@/store/pet'
+import { $petChips, answerPetChip, type PetChip } from '@/store/pet-chips'
 
 /**
  * Controller for the pop-out pet overlay (main-renderer side).
@@ -48,6 +49,8 @@ export interface PetOverlayStatePayload {
   unread: boolean
   /** Latest reaction — bumping its id forwards a burst to the overlay. */
   reaction: PetReaction | null
+  /** Running / blocked sessions shown as chips above the pet. */
+  chips?: PetChip[]
 }
 
 export type PetOverlayControl =
@@ -58,6 +61,7 @@ export type PetOverlayControl =
   | { type: 'open-app' }
   | { type: 'toggle-app' }
   | { type: 'scale'; scale: number }
+  | { type: 'chip-answer'; sessionId: string; requestId: string; choice: string }
 
 // Persisted across restarts: was the pet popped out, and where on the desktop
 // did the user leave it. Keyed v1; bump if the bounds shape ever changes.
@@ -147,7 +151,8 @@ function currentPayload(): PetOverlayStatePayload {
     busy: PRIMARY_SESSION_VIEW.$busy.get(),
     awaiting: PRIMARY_SESSION_VIEW.$awaitingResponse.get(),
     unread: $petUnread.get(),
-    reaction: $petReaction.get()
+    reaction: $petReaction.get(),
+    chips: $petChips.get()
   }
 }
 
@@ -184,7 +189,8 @@ function openOverlay(request: PetOverlayOpenRequest): void {
     PRIMARY_SESSION_VIEW.$busy.subscribe(pushNow),
     PRIMARY_SESSION_VIEW.$awaitingResponse.subscribe(pushNow),
     $petUnread.subscribe(pushNow),
-    $petReaction.subscribe(pushNow)
+    $petReaction.subscribe(pushNow),
+    $petChips.subscribe(pushNow)
   ]
 }
 
@@ -291,6 +297,12 @@ export function initPetOverlayBridge(): () => void {
       // the main renderer's gateway; the new scale rides $petInfo back to the
       // overlay on the next push, keeping both surfaces in sync.
       scaleHandler?.(payload.scale)
+    } else if (
+      payload?.type === 'chip-answer' &&
+      typeof payload.sessionId === 'string' &&
+      typeof payload.requestId === 'string'
+    ) {
+      void answerPetChip(payload.sessionId, payload.requestId, String(payload.choice))
     } else if (payload?.type === 'open-app') {
       // Mail icon: surface the app on the most recent thread (main.ts already
       // focused the window before forwarding this) and mark it read.
