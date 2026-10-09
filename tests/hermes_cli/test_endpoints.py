@@ -82,3 +82,41 @@ def test_configured_endpoints_are_used_without_upstream_fallback(tmp_path, monke
     assert (portal, stored, effective) == (
         "https://portal.example.invalid", "https://inference.example.invalid/v1",
         "https://inference.example.invalid/v1")
+
+
+def test_disabled_upstream_services_have_no_implicit_routes(tmp_path, monkeypatch):
+    from hermes_cli import nous_account, models
+    from hermes_cli.portal_cli import _subscription_url, _docs_url
+    from unittest.mock import patch
+
+    brand = tmp_path / "brand.json"
+    brand.write_text(json.dumps({"name": "Envoy", "docsUrl": "", "endpoints": {}}))
+    monkeypatch.setattr(endpoints, "_BRAND_FILE", brand)
+    assert nous_account.nous_portal_billing_url() == ""
+    assert nous_account.nous_portal_topup_url() == ""
+    assert _subscription_url() == _docs_url() == ""
+    with patch("hermes_cli.nous_account.urllib.request.urlopen") as opened:
+        assert nous_account._fetch_nous_account_info("test-token") == {}
+    opened.assert_not_called()
+    with patch("hermes_cli.models._get_json") as fetched:
+        assert models.fetch_nous_recommended_models(force_refresh=True) == {}
+    fetched.assert_not_called()
+
+
+def test_configured_portal_routes_use_manifest(tmp_path, monkeypatch):
+    from hermes_cli import nous_account
+    from hermes_cli.portal_cli import _subscription_url, _docs_url
+    from unittest.mock import MagicMock, patch
+
+    brand = tmp_path / "brand.json"
+    brand.write_text(json.dumps({"name": "Envoy", "docsUrl": "https://docs.example.test", "endpoints": {
+        "portal": "https://portal.example.test"}}))
+    monkeypatch.setattr(endpoints, "_BRAND_FILE", brand)
+    assert nous_account.nous_portal_billing_url() == "https://portal.example.test/billing"
+    assert _subscription_url() == "https://portal.example.test/manage-subscription"
+    assert _docs_url() == "https://docs.example.test/user-guide/features/tool-gateway"
+    response = MagicMock()
+    response.__enter__.return_value.read.return_value = b"{}"
+    with patch("hermes_cli.nous_account.urllib.request.urlopen", return_value=response) as opened:
+        assert nous_account._fetch_nous_account_info("test-token") == {}
+    assert opened.call_args.args[0].full_url == "https://portal.example.test/api/oauth/account"

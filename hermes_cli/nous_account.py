@@ -148,15 +148,11 @@ class NousPortalAccountInfo:
 
 def nous_portal_billing_url(account_info: Optional[NousPortalAccountInfo] = None) -> str:
     """Return the billing URL for a normalized Nous account snapshot."""
-    try:
-        from hermes_cli.auth import DEFAULT_NOUS_PORTAL_URL
-    except Exception:
-        DEFAULT_NOUS_PORTAL_URL = "https://portal.nousresearch.com"
+    from hermes_cli.endpoints import endpoint
 
     base = account_info.portal_base_url if account_info is not None else None
-    if not _nonblank(base):
-        base = DEFAULT_NOUS_PORTAL_URL
-    return f"{base.rstrip('/')}/billing"
+    base = base if _nonblank(base) else endpoint("portal")
+    return f"{base.rstrip('/')}/billing" if base else ""
 
 
 def nous_portal_topup_url(account_info: Optional[NousPortalAccountInfo] = None) -> str:
@@ -166,7 +162,10 @@ def nous_portal_topup_url(account_info: Optional[NousPortalAccountInfo] = None) 
     re-resolution); falls back to ``{base}/billing`` when ``org_slug`` is null — never
     ``/orgs/None/billing``.
     """
-    base = nous_portal_billing_url(account_info)[: -len("/billing")]
+    billing_url = nous_portal_billing_url(account_info)
+    if not billing_url:
+        return ""
+    base = billing_url[: -len("/billing")]
     slug = getattr(account_info, "org_slug", None) if account_info is not None else None
     if _nonblank(slug):
         from urllib.parse import quote
@@ -481,7 +480,11 @@ def _pool_entry_is_portal_oauth(entry: Any) -> bool:
 
 
 def _fetch_nous_account_info(access_token: str, portal_base_url: Optional[str] = None) -> dict[str, Any]:
-    base = (portal_base_url or "https://portal.nousresearch.com").rstrip("/")
+    from hermes_cli.endpoints import endpoint
+
+    base = (portal_base_url or endpoint("portal")).rstrip("/")
+    if not base:
+        return {}
     headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
     req = urllib.request.Request(f"{base}/api/oauth/account", headers=headers)
     with urllib.request.urlopen(req, timeout=8) as resp:

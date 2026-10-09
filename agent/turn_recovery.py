@@ -22,6 +22,7 @@ from agent.fast_mode import fast_mode_unprovisioned, mark_fast_mode_unavailable
 from agent.model_metadata import is_output_cap_error, parse_available_output_tokens_from_error
 from agent.retry_utils import is_zai_coding_overload_error, zai_coding_overload_retry_ceiling
 from agent.error_classifier import FailoverReason, classify_api_error
+from hermes_cli.endpoints import endpoint
 from agent.message_sanitization import (
     _looks_like_corrupt_image_rejection, _looks_like_image_content_rejection, _sanitize_messages_non_ascii,
     _sanitize_messages_surrogates, _sanitize_structure_non_ascii, _sanitize_structure_surrogates,
@@ -346,7 +347,7 @@ def _print_nous_401_diagnostics(agent: Any, api_error: Exception) -> None:
         agent,
         "   Troubleshooting:",
         "     • Re-authenticate: hermes auth add nous",
-        "     • Check credits / billing: https://portal.nousresearch.com",
+        *( [f"     • Check credits / billing: {endpoint('portal')}"] if endpoint("portal") else [] ),
         f"     • Verify stored credentials: {display_hermes_home()}/auth.json",
         "     • Switch providers temporarily: /model <model> --provider openrouter",
     )
@@ -917,7 +918,7 @@ def _print_nonretryable_auth_guidance(
                 "   💡 Nous Portal OAuth token was rejected (HTTP 401). Your token may be",
                 "      expired, revoked, or your account may be out of credits. To fix:",
                 "      1. Re-authenticate: hermes portal",
-                "      2. Check your portal account: https://portal.nousresearch.com",
+                *( [f"      2. Check your portal account: {endpoint('portal')}"] if endpoint("portal") else [] ),
             )
             # ``:free`` is OpenRouter slug syntax; Nous Portal will reject the model
             # name even after a successful re-auth.

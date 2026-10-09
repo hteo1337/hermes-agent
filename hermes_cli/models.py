@@ -27,6 +27,7 @@ from typing import Any, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import TypeGuard
 
+from hermes_cli.endpoints import endpoint
 from hermes_cli.route_identity import normalize_route_base_url
 from hermes_cli.urllib_security import open_credentialed_url
 from hermes_cli.version_info import get_version_info
@@ -403,7 +404,8 @@ def fetch_nous_recommended_models(
     process restarts. ``force_refresh`` bypasses both caches. Stale disk data remains a fallback
     on live failure; reading it never renews its freshness.
     """
-    base = (portal_base_url or "https://portal.nousresearch.com").rstrip("/")
+    base = (portal_base_url or endpoint("portal")).rstrip("/")
+    if not base: return {}
     now = time.monotonic()
     cache_key = (_pricing_profile_key(), base)
     cached = _nous_recommended_cache.get(cache_key)
@@ -430,18 +432,16 @@ def fetch_nous_recommended_models(
     _nous_recommended_cache[cache_key] = (data, now)
     return data
 
-
 def _resolve_nous_portal_url() -> str:
     """Best-effort lookup of the Portal base URL the user is authed against."""
     try:
-        from hermes_cli.auth import DEFAULT_NOUS_PORTAL_URL, get_provider_auth_state
+        from hermes_cli.auth import get_provider_auth_state
 
         state = get_provider_auth_state("nous") or {}
         portal = str(state.get("portal_base_url") or "").strip()
-        return (portal or str(DEFAULT_NOUS_PORTAL_URL)).rstrip("/")
+        return (portal or endpoint("portal")).rstrip("/")
     except Exception:
-        return "https://portal.nousresearch.com"
-
+        return endpoint("portal")
 
 def _extract_model_name(entry: Any) -> Optional[str]:
     """Pull the ``modelName`` field from a recommended-model entry, else None."""

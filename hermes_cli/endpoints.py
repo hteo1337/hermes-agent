@@ -19,8 +19,8 @@ def endpoint(name: str) -> str:
         return ""
     endpoints = data.get("endpoints")
     value = endpoints.get(name) if isinstance(endpoints, dict) else None
-    if value is None and name == "updateRepository":
-        value = data.get("updateRepository")
+    if value is None and name in ("updateRepository", "docsUrl"):
+        value = data.get(name)
     return value.strip() if isinstance(value, str) else ""
 
 

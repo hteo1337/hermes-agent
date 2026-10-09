@@ -192,9 +192,8 @@ def test_403_insufficient_scope_maps_to_scope_required():
     with pytest.raises(BillingScopeRequired) as ei:
         _raise_for_error(403, {"error": "insufficient_scope", "portalUrl": "/billing"})
     assert ei.value.error == "insufficient_scope"
-    # portalUrl is resolved to an absolute URL (relative-by-design from the server).
-    assert (ei.value.portal_url or "").startswith("http")
-    assert (ei.value.portal_url or "").endswith("/billing")
+    # A relative link cannot be shown without a configured Portal origin.
+    assert ei.value.portal_url is None
 
 
 

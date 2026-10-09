@@ -23,6 +23,22 @@ def _resp(*, status=200, body=b""):
     return m
 
 
+@pytest.fixture(autouse=True)
+def _configured_diagnostics_endpoint(monkeypatch):
+    monkeypatch.setenv("HERMES_DIAGNOSTICS_BASE_URL", "https://diagnostics.example.test")
+
+
+def test_disabled_diagnostics_never_opens_network(monkeypatch):
+    import hermes_cli.diagnostics_upload as mod
+
+    monkeypatch.delenv("HERMES_DIAGNOSTICS_BASE_URL", raising=False)
+    monkeypatch.setattr(mod, "endpoint", lambda name: "")
+    with patch.object(mod.urllib.request, "urlopen") as opened:
+        with pytest.raises(RuntimeError, match="disabled"):
+            mod.request_upload_url(size_bytes=4)
+    opened.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # request_upload_url
 # ---------------------------------------------------------------------------
@@ -71,30 +87,15 @@ class TestRequestUploadUrl:
 
 
     def test_base_url_env_override(self, monkeypatch):
-        # NAS_BASE is read at import time; re-import the module under the
-        # patched env to confirm the override is honoured.
-        import importlib
-
         monkeypatch.setenv("HERMES_DIAGNOSTICS_BASE_URL", "https://staging.example.com")
-        import hermes_cli.diagnostics_upload as mod
+        from hermes_cli.diagnostics_upload import request_upload_url
 
-        mod = importlib.reload(mod)
-        try:
-            assert mod.NAS_BASE == "https://staging.example.com"
-            resp = _resp(
-                status=200,
-                body=json.dumps({"uploadUrl": "u", "id": "i", "viewUrl": "v"}).encode(),
-            )
-            with patch(
-                "hermes_cli.diagnostics_upload.urllib.request.urlopen",
-                return_value=resp,
-            ) as urlopen:
-                mod.request_upload_url()
-            req = urlopen.call_args[0][0]
-            assert req.full_url == "https://staging.example.com/api/diagnostics/upload-url"
-        finally:
-            monkeypatch.delenv("HERMES_DIAGNOSTICS_BASE_URL", raising=False)
-            importlib.reload(mod)
+        resp = _resp(status=200, body=json.dumps({"uploadUrl": "u"}).encode())
+        with patch("hermes_cli.diagnostics_upload.urllib.request.urlopen", return_value=resp) as opened:
+            request_upload_url()
+        assert opened.call_args.args[0].full_url == (
+            "https://staging.example.com/api/diagnostics/upload-url"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -16,7 +16,9 @@ import urllib.parse
 import urllib.request
 from typing import Any, Optional
 
-DEFAULT_PORTAL_BASE_URL = "https://portal.nousresearch.com"
+from hermes_cli.endpoints import endpoint
+
+DEFAULT_PORTAL_BASE_URL = endpoint("portal")
 
 DEFAULT_TIMEOUT = 15.0  # tight so a hung portal doesn't freeze the TUI (charge/poll calls are quick)
 
@@ -114,7 +116,10 @@ def _absolutize_portal_url(portal_url: Optional[str]) -> Optional[str]:
     """
     if not (isinstance(portal_url, str) and portal_url.strip()):
         return portal_url
-    return urllib.parse.urljoin(resolve_portal_base_url().rstrip("/") + "/", portal_url)
+    base = resolve_portal_base_url()
+    if not base:
+        return None
+    return urllib.parse.urljoin(base.rstrip("/") + "/", portal_url)
 
 
 # Short-lived cache for the resolved (token, base): `resolve_nous_access_token` takes two
