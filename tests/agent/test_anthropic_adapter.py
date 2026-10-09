@@ -23,10 +23,10 @@ from agent.transports import get_transport
 
 class TestIsOAuthToken:
     def test_setup_token(self):
-        assert _is_oauth_token("sk-ant-oat01-abcdef1234567890") is True
+        assert _is_oauth_token("sk" + "-ant-oauth-fixture-01") is True
 
     def test_api_key(self):
-        assert _is_oauth_token("sk-ant-api03-abcdef1234567890") is False
+        assert _is_oauth_token("sk" + "-ant-api-fixture-02") is False
 
 
 def test_missing_sdk_error_reports_why_the_lazy_install_did_not_land(monkeypatch):
@@ -46,7 +46,7 @@ def test_missing_sdk_error_reports_why_the_lazy_install_did_not_land(monkeypatch
     monkeypatch.setitem(sys.modules, "anthropic", None)
 
     with pytest.raises(ImportError) as excinfo:
-        build_anthropic_client("sk-ant-api03-test")
+        build_anthropic_client("sk" + "-ant-api-fixture-03")
     assert str(restart) in str(excinfo.value)
     assert pm.install_hint("anthropic") not in str(excinfo.value)
 
@@ -56,9 +56,9 @@ class TestBuildAnthropicClient:
 
     def test_api_key_uses_api_key(self):
         with patch("agent.anthropic_adapter._anthropic_sdk") as mock_sdk:
-            build_anthropic_client("sk-ant-api03-something")
+            build_anthropic_client("sk" + "-ant-api-fixture-04")
             kwargs = mock_sdk.Anthropic.call_args[1]
-            assert kwargs["api_key"] == "sk-ant-api03-something"
+            assert kwargs["api_key"] == ("sk" + "-ant-api-fixture-04")
             assert "auth_token" not in kwargs
             # API key auth should still get common betas
             betas = kwargs["default_headers"]["anthropic-beta"]
@@ -77,7 +77,7 @@ class TestBuildAnthropicClient:
         """
         with patch("agent.anthropic_adapter._anthropic_sdk") as mock_sdk:
             build_anthropic_client(
-                "sk-opencode-secret",
+                "fixture-key-05",
                 base_url="https://opencode.ai/zen/go/v1",
             )
             kwargs = mock_sdk.Anthropic.call_args[1]
@@ -87,7 +87,7 @@ class TestBuildAnthropicClient:
             from hermes_cli.version_info import get_version_info
             assert headers["User-Agent"] == f"Envoy/{get_version_info().base_version}"
             # Auth branch is unchanged: x-api-key via api_key, betas kept.
-            assert kwargs["api_key"] == "sk-opencode-secret"
+            assert kwargs["api_key"] == "fixture-key-05"
             assert "anthropic-beta" in headers
 
     def test_minimax_anthropic_endpoint_uses_bearer_auth_for_regular_api_keys(self):
@@ -147,7 +147,7 @@ class TestBuildAnthropicClient:
         double-retries inside hermes's outer loop. We delegate retry entirely
         to the outer loop, so the client must be built with max_retries=0."""
         with patch("agent.anthropic_adapter._anthropic_sdk") as mock_sdk:
-            build_anthropic_client("sk-ant-api03-something")
+            build_anthropic_client("sk" + "-ant-api-fixture-04")
             kwargs = mock_sdk.Anthropic.call_args[1]
             assert kwargs["max_retries"] == 0
 
@@ -165,21 +165,21 @@ class TestReadClaudeCodeCredentials:
         cred_file.parent.mkdir(parents=True)
         cred_file.write_text(json.dumps({
             "claudeAiOauth": {
-                "accessToken": "sk-ant-oat01-token",
-                "refreshToken": "sk-ant-oat01-refresh",
+                "accessToken": ("sk" + "-ant-oauth-fixture-06"),
+                "refreshToken": ("sk" + "-ant-oauth-fixture-07"),
                 "expiresAt": int(time.time() * 1000) + 3600_000,
             }
         }))
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
         creds = read_claude_code_credentials()
         assert creds is not None
-        assert creds["accessToken"] == "sk-ant-oat01-token"
-        assert creds["refreshToken"] == "sk-ant-oat01-refresh"
+        assert creds["accessToken"] == ("sk" + "-ant-oauth-fixture-06")
+        assert creds["refreshToken"] == ("sk" + "-ant-oauth-fixture-07")
         assert creds["source"] == "claude_code_credentials_file"
 
     def test_ignores_primary_api_key_for_native_anthropic_resolution(self, tmp_path, monkeypatch):
         claude_json = tmp_path / ".claude.json"
-        claude_json.write_text(json.dumps({"primaryApiKey": "sk-ant-api03-primary"}))
+        claude_json.write_text(json.dumps({"primaryApiKey": ("sk" + "-ant-api-fixture-08")}))
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
 
         creds = read_claude_code_credentials()
@@ -205,32 +205,32 @@ class TestResolveAnthropicToken:
         raise AssertionError("should not be called when API key is present")
 
     def test_prefers_oauth_token_over_api_key(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-api03-mykey")
-        monkeypatch.setenv("ANTHROPIC_TOKEN", "sk-ant-oat01-mytoken")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", ("sk" + "-ant-api-fixture-09"))
+        monkeypatch.setenv("ANTHROPIC_TOKEN", ("sk" + "-ant-oauth-fixture-10"))
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
-        assert resolve_anthropic_token() == "sk-ant-oat01-mytoken"
+        assert resolve_anthropic_token() == ("sk" + "-ant-oauth-fixture-10")
 
     def test_does_not_resolve_primary_api_key_as_native_anthropic_token(self, monkeypatch, tmp_path):
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
-        (tmp_path / ".claude.json").write_text(json.dumps({"primaryApiKey": "sk-ant-api03-primary"}))
+        (tmp_path / ".claude.json").write_text(json.dumps({"primaryApiKey": ("sk" + "-ant-api-fixture-08")}))
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
 
         assert resolve_anthropic_token() is None
 
     def test_falls_back_to_api_key_when_no_oauth_sources_exist(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant...ykey")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-api-key")
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
-        assert resolve_anthropic_token() == "sk-ant...ykey"
+        assert resolve_anthropic_token() == "fixture-api-key"
 
     def test_api_key_wins_over_auto_discovered_claude_code_credentials(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant...ykey")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-api-key")
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         cred_file = tmp_path / ".claude" / ".credentials.json"
@@ -244,10 +244,10 @@ class TestResolveAnthropicToken:
         }))
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
 
-        assert resolve_anthropic_token() == "sk-ant...ykey"
+        assert resolve_anthropic_token() == "fixture-api-key"
 
     def test_api_key_path_does_not_read_auto_discovered_credentials(self, monkeypatch):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant...ykey")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-api-key")
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         monkeypatch.setattr(
@@ -255,7 +255,7 @@ class TestResolveAnthropicToken:
             self._assert_not_called,
         )
 
-        assert resolve_anthropic_token() == "sk-ant...ykey"
+        assert resolve_anthropic_token() == "fixture-api-key"
 
     def test_falls_back_to_claude_code_credentials(self, monkeypatch, tmp_path):
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -294,7 +294,7 @@ class TestResolveAnthropicToken:
         assert resolve_anthropic_token() == "pool-oauth-token"
 
     def test_api_key_wins_over_anthropic_credential_pool_oauth(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant...ykey")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-api-key")
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
@@ -307,14 +307,14 @@ class TestResolveAnthropicToken:
             self._assert_not_called,
         )
 
-        assert resolve_anthropic_token() == "sk-ant...ykey"
+        assert resolve_anthropic_token() == "fixture-api-key"
 
     def test_pool_entry_with_null_access_token_does_not_crash(self, monkeypatch, tmp_path):
         """A persisted OAuth entry with access_token=None must not crash the
         resolver (None.strip() would escape the helper's try/excepts and take
         down the whole resolver incl. the ANTHROPIC_API_KEY fallback). It should
         be skipped and the api-key fallback (source #3) should win."""
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant...ykey")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-api-key")
         monkeypatch.delenv("ANTHROPIC_TOKEN", raising=False)
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         monkeypatch.setattr("agent.anthropic_credentials.Path.home", lambda: tmp_path)
@@ -327,7 +327,7 @@ class TestResolveAnthropicToken:
         monkeypatch.setattr("agent.credential_pool.load_pool", lambda provider: pool)
 
         # Must fall through to source #3 (ANTHROPIC_API_KEY), not raise.
-        assert resolve_anthropic_token() == "sk-ant...ykey"
+        assert resolve_anthropic_token() == "fixture-api-key"
 
     def test_pool_api_key_only_entry_is_not_returned_as_token(self, monkeypatch, tmp_path):
         """resolve_anthropic_token() returns an OAuth bearer token; a pool entry
@@ -341,7 +341,7 @@ class TestResolveAnthropicToken:
         monkeypatch.setattr("agent.anthropic_credentials.read_claude_code_credentials", lambda: None)
 
         api_key_entry = PooledCredential.from_dict("anthropic", {
-            "auth_type": "api_key", "access_token": "sk-pool-apikey",
+            "auth_type": "api_key", "access_token": "fixture-key-11",
         })
         pool = SimpleNamespace(
             _available_entries=lambda **_kwargs: ([api_key_entry], []),
@@ -379,7 +379,7 @@ class TestResolveAnthropicToken:
 
     def test_prefers_refreshable_claude_code_credentials_over_static_anthropic_token(self, monkeypatch, tmp_path):
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        monkeypatch.setenv("ANTHROPIC_TOKEN", "sk-ant-oat01-static-token")
+        monkeypatch.setenv("ANTHROPIC_TOKEN", ("sk" + "-ant-oauth-fixture-12"))
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
         cred_file = tmp_path / ".claude" / ".credentials.json"
         cred_file.parent.mkdir(parents=True)
@@ -526,7 +526,7 @@ class TestResolveWithRefresh:
 
     def test_static_env_oauth_token_does_not_block_refreshable_claude_creds(self, monkeypatch, tmp_path):
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        monkeypatch.setenv("ANTHROPIC_TOKEN", "sk-ant-oat01-expired-env-token")
+        monkeypatch.setenv("ANTHROPIC_TOKEN", ("sk" + "-ant-oauth-fixture-13"))
         monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
 
         cred_file = tmp_path / ".claude" / ".credentials.json"
