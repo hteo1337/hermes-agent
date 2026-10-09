@@ -736,8 +736,11 @@ def _run_setup_wizard_impl(args):
         migration_ran = _offer_openclaw_migration(hermes_home)  # before configuration begins
         if migration_ran:
             config = load_config()
-        setup_mode = prompt_choice("How would you like to set up Hermes?", [label for label, _ in _FIRST_TIME_MODES], 0)
-        label, runner = _FIRST_TIME_MODES[setup_mode]
+        from hermes_cli.endpoints import endpoint
+
+        modes = _FIRST_TIME_MODES if endpoint("portal") else _FIRST_TIME_MODES[1:]
+        setup_mode = prompt_choice("How would you like to set up Hermes?", [label for label, _ in modes], 0)
+        label, runner = modes[setup_mode]
         if runner is not None:
             from hermes_cli import setup_quick
             _run_setup_steps([(label, lambda: getattr(setup_quick, runner)(config, hermes_home, is_existing))])

@@ -120,8 +120,9 @@ def _fake_docker(tmp_path, monkeypatch, ps_output: str) -> Path:
 def test_pending_needs_docker_backend_unpinned_and_a_stale_container(home, tmp_path, monkeypatch):
     from hermes_cli import sandbox_image_switch as sw
     from hermes_cli.config_defaults import DEFAULT_SANDBOX_IMAGE, LEGACY_SANDBOX_IMAGE
+    from tools.terminal_tool_backends import _create_environment
 
-    _fake_docker(tmp_path, monkeypatch, f"hermes-abc\t{LEGACY_SANDBOX_IMAGE}\nhermes-def\t{DEFAULT_SANDBOX_IMAGE}\n")
+    _fake_docker(tmp_path, monkeypatch, f"hermes-abc\t{LEGACY_SANDBOX_IMAGE}\n")
 
     _write(home, {"backend": "local"})
     assert sw.pending() is None, "local backend has no sandbox to switch"
@@ -130,9 +131,11 @@ def test_pending_needs_docker_backend_unpinned_and_a_stale_container(home, tmp_p
     assert sw.pending() is None, "a pinned image is a decision already made"
 
     _write(home, {"backend": "docker"})
-    p = sw.pending()
-    assert p is not None
-    assert (p.current_image, p.target_image, p.containers) == (LEGACY_SANDBOX_IMAGE, DEFAULT_SANDBOX_IMAGE, ["hermes-abc"])
+    assert DEFAULT_SANDBOX_IMAGE == ""
+    assert sw.pending() is None, "no default image means there is no proposed pull"
+    for backend in ("docker", "singularity", "modal", "daytona"):
+        with pytest.raises(ValueError, match=f"terminal.{backend}_image"):
+            _create_environment(backend, image="", cwd=str(tmp_path), timeout=5)
 
     _fake_docker(tmp_path, monkeypatch, f"hermes-def\t{DEFAULT_SANDBOX_IMAGE}\n")
     assert sw.pending() is None, "every container already on the target: nothing to ask"
@@ -140,15 +143,14 @@ def test_pending_needs_docker_backend_unpinned_and_a_stale_container(home, tmp_p
 
 def test_decide_pins_and_either_answer_ends_the_offer(home, tmp_path, monkeypatch):
     from hermes_cli import sandbox_image_switch as sw
-    from hermes_cli.config_defaults import DEFAULT_SANDBOX_IMAGE, LEGACY_SANDBOX_IMAGE
+    from hermes_cli.config_defaults import LEGACY_SANDBOX_IMAGE
 
     _fake_docker(tmp_path, monkeypatch, f"hermes-abc\t{LEGACY_SANDBOX_IMAGE}\n")
     _write(home, {"backend": "docker"})
     evicted = []
     monkeypatch.setattr("tools.terminal_tool_lifecycle._evict_environment_for_task", lambda task: evicted.append(task))
 
-    p = sw.pending()
-    assert p is not None
+    p = sw.PendingSwitch(LEGACY_SANDBOX_IMAGE, "ghcr.io/example/sandbox:1", ["hermes-abc"])
     assert sw.decide(p, approve=False) == LEGACY_SANDBOX_IMAGE
     raw = yaml.safe_load((home / "config.yaml").read_text(encoding="utf-8"))
     assert raw["terminal"]["docker_image"] == LEGACY_SANDBOX_IMAGE, "keep = pin the running image"
@@ -158,12 +160,10 @@ def test_decide_pins_and_either_answer_ends_the_offer(home, tmp_path, monkeypatc
     for var in ("TERMINAL_DOCKER_IMAGE", "TERMINAL_DOCKER_IMAGE_PINNED"):
         monkeypatch.delenv(var, raising=False)
     _write(home, {"backend": "docker"})
-    p = sw.pending()
-    assert p is not None
-    assert sw.decide(p, approve=True) == DEFAULT_SANDBOX_IMAGE
+    p = sw.PendingSwitch(LEGACY_SANDBOX_IMAGE, "ghcr.io/example/sandbox:1", ["hermes-abc"])
+    assert sw.decide(p, approve=True) == p.target_image
     raw = yaml.safe_load((home / "config.yaml").read_text(encoding="utf-8"))
-    assert raw["terminal"]["docker_image"] == DEFAULT_SANDBOX_IMAGE, \
-        "approve = pin the target even though it equals the default (a pin is what recreates)"
+    assert raw["terminal"]["docker_image"] == p.target_image, "approval pins the selected image"
     assert os.environ["TERMINAL_DOCKER_IMAGE_PINNED"] == "1", "the live process is re-bridged"
     assert evicted == [None], "the cached env is dropped so the next terminal call recreates"
     assert sw.pending() is None
@@ -171,7 +171,7 @@ def test_decide_pins_and_either_answer_ends_the_offer(home, tmp_path, monkeypatc
 
 def test_interactive_offer_writes_only_on_a_yes_or_no(home, tmp_path, monkeypatch):
     from hermes_cli import sandbox_image_switch as sw
-    from hermes_cli.config_defaults import DEFAULT_SANDBOX_IMAGE, LEGACY_SANDBOX_IMAGE
+    from hermes_cli.config_defaults import LEGACY_SANDBOX_IMAGE
 
     _fake_docker(tmp_path, monkeypatch, f"hermes-abc\t{LEGACY_SANDBOX_IMAGE}\n")
     monkeypatch.setattr("tools.terminal_tool_lifecycle._evict_environment_for_task", lambda task: None)
@@ -180,12 +180,12 @@ def test_interactive_offer_writes_only_on_a_yes_or_no(home, tmp_path, monkeypatc
 
     assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "") is None
     assert "docker_image" not in (yaml.safe_load((home / "config.yaml").read_text())["terminal"]), "Enter = ask later"
-    assert any("/root and /workspace" in line for line in printed), "the offer states what carries over"
+    assert printed == [], "no image is offered when the default is unset"
 
-    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is True
-    assert yaml.safe_load((home / "config.yaml").read_text())["terminal"]["docker_image"] == DEFAULT_SANDBOX_IMAGE
+    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None
+    assert "docker_image" not in yaml.safe_load((home / "config.yaml").read_text())["terminal"]
 
-    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None, "pinned: never asked again"
+    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None, "no image is offered"
 
 
 def test_pending_reads_a_bound_terminal_scope_not_the_launch_env(home, tmp_path, monkeypatch):
@@ -199,6 +199,6 @@ def test_pending_reads_a_bound_terminal_scope_not_the_launch_env(home, tmp_path,
     assert sw.pending() is None, "launch env pin"
     token = set_terminal_scope({"TERMINAL_ENV": "docker", "TERMINAL_DOCKER_IMAGE_PINNED": "0"})
     try:
-        assert sw.pending() is not None, "the routed profile's scope says unpinned; the launch env is not consulted"
+        assert sw.pending() is None, "the routed profile has no default image to offer"
     finally:
         reset_terminal_scope(token)

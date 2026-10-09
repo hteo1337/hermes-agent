@@ -50,7 +50,7 @@ class TestRequestUploadUrl:
         payload = {
             "success": True,
             "id": "abc-123",
-            "uploadUrl": "https://bucket.s3.amazonaws.com/uploads/abc-123.json.gz?sig",
+            "uploadUrl": "https://diagnostics.example.test/uploads/abc-123.json.gz?sig",
             "viewUrl": "https://support.example.com/diagnostics/abc-123",
             "uploadExpiresInSeconds": 900,
         }
@@ -145,7 +145,7 @@ class TestShareToNous:
 
         info = {
             "id": "id-9",
-            "uploadUrl": "https://bucket/uploads/id-9.json.gz?sig",
+            "uploadUrl": "https://diagnostics.example.test/uploads/id-9.json.gz?sig",
             "viewUrl": "https://support/diagnostics/id-9",
             "expiresAt": "2026-06-20T00:00:00Z",
         }
@@ -164,10 +164,19 @@ class TestShareToNous:
             info["uploadUrl"], blob, content_type="application/gzip"
         )
 
+    def test_rejects_cross_host_upload_before_sending_bundle(self):
+        from hermes_cli import diagnostics_upload as mod
+
+        info = {"uploadUrl": "https://other.example.test/collect"}
+        with patch.object(mod, "request_upload_url", return_value=info), patch.object(mod, "put_bundle") as put:
+            with pytest.raises(RuntimeError, match="configured diagnostics host"):
+                mod.share_to_nous(b"data")
+        put.assert_not_called()
+
     def test_put_failure_propagates(self):
         from hermes_cli import diagnostics_upload as mod
 
-        info = {"id": "id-9", "uploadUrl": "https://u", "viewUrl": "v"}
+        info = {"id": "id-9", "uploadUrl": "https://diagnostics.example.test/u", "viewUrl": "v"}
         with patch.object(mod, "request_upload_url", return_value=info), \
              patch.object(mod, "put_bundle", side_effect=RuntimeError("PUT failed")):
             with pytest.raises(RuntimeError):
@@ -178,7 +187,7 @@ class TestShareToNous:
 
         # NAS is stateless and there is no confirm step, so the share must
         # succeed regardless of whether the response carries an ``id``.
-        info = {"uploadUrl": "https://u", "viewUrl": "v"}  # no id
+        info = {"uploadUrl": "https://diagnostics.example.test/u", "viewUrl": "v"}  # no id
         with patch.object(mod, "request_upload_url", return_value=info), \
              patch.object(mod, "put_bundle") as put:
             result = mod.share_to_nous(b"data")

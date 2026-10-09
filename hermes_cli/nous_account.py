@@ -150,8 +150,7 @@ def nous_portal_billing_url(account_info: Optional[NousPortalAccountInfo] = None
     """Return the billing URL for a normalized Nous account snapshot."""
     from hermes_cli.endpoints import endpoint
 
-    base = account_info.portal_base_url if account_info is not None else None
-    base = base if _nonblank(base) else endpoint("portal")
+    base = endpoint("portal")
     return f"{base.rstrip('/')}/billing" if base else ""
 
 
@@ -414,7 +413,7 @@ def _info_from_oauth_pool(
     if entry is None or not _pool_entry_is_portal_oauth(entry):
         return None
     access_token = entry.access_token  # non-blank str: checked by _pool_entry_is_portal_oauth
-    entry_portal_url = getattr(entry, "portal_base_url", None) or portal_base_url
+    entry_portal_url = portal_base_url
     state = {
         "access_token": access_token, "client_id": getattr(entry, "client_id", None),
         "inference_base_url": _pool_entry_inference_url(entry), "agent_key": getattr(entry, "agent_key", None),
@@ -482,7 +481,7 @@ def _pool_entry_is_portal_oauth(entry: Any) -> bool:
 def _fetch_nous_account_info(access_token: str, portal_base_url: Optional[str] = None) -> dict[str, Any]:
     from hermes_cli.endpoints import endpoint
 
-    base = (portal_base_url or endpoint("portal")).rstrip("/")
+    base = endpoint("portal").rstrip("/")
     if not base:
         return {}
     headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
@@ -610,8 +609,9 @@ def resolve_nous_portal_base_url() -> str:
 
 
 def _portal_base_url(state: dict[str, Any]) -> Optional[str]:
-    value = state.get("portal_base_url")
-    return value.strip().rstrip("/") if _nonblank(value) else None
+    from hermes_cli.endpoints import endpoint
+
+    return endpoint("portal").rstrip("/") or None
 
 
 def _parse_iso_timestamp(value: Any) -> Optional[float]:
