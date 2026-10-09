@@ -16,6 +16,7 @@ import {
   matchingWorkArea,
   MIN_HEIGHT,
   MIN_WIDTH,
+  resolveChatRestoreBounds,
   sanitizeWindowState
 } from './window-state'
 
@@ -23,6 +24,22 @@ import {
 const PRIMARY = [{ workArea: { x: 0, y: 0, width: 1920, height: 1040 } }]
 // A laptop panel left behind after a bigger external monitor is unplugged.
 const LAPTOP = [{ workArea: { x: 0, y: 0, width: 1366, height: 728 } }]
+
+test('chat morph keeps a connected saved position and centers after a monitor disconnect', () => {
+  const workArea = LAPTOP[0].workArea
+  const connected = { x: 100, y: 20, width: 1200, height: 700 }
+  const disconnected = { x: 1500, y: 40, width: 1600, height: 900 }
+  const external = { workArea: { x: 1366, y: 0, width: 1920, height: 1040 } }
+
+  assert.deepEqual(resolveChatRestoreBounds(connected, LAPTOP, workArea), connected)
+  assert.deepEqual(resolveChatRestoreBounds(disconnected, [...LAPTOP, external], workArea), disconnected)
+  assert.deepEqual(resolveChatRestoreBounds(disconnected, LAPTOP, workArea), {
+    x: 0,
+    y: 0,
+    width: 1366,
+    height: 728
+  })
+})
 
 // ─── sanitizeWindowState ───────────────────────────────────────────────────
 

@@ -7,16 +7,96 @@
 
 import assert from 'node:assert/strict'
 
-import { test } from 'vitest'
+import { test, vi } from 'vitest'
 
 import {
   clampRectToWorkArea,
   createSerialQueue,
   morphSteps,
   petOverlayClickThrough,
+  recoverChatAfterFailedMorph,
   resolvePetOverlayBounds,
   shouldPopInOnOverlayClosed
 } from './pet-overlay'
+
+test('failed pet creation restores the hidden chat and clears the pet marker', () => {
+  const win = {
+    setMinimumSize: vi.fn(),
+    setBounds: vi.fn(),
+    isMinimized: () => false,
+    show: vi.fn(),
+    focus: vi.fn()
+  }
+
+  const actions = {
+    markAppSized: vi.fn(),
+    clearPetSized: vi.fn(),
+    closeOverlay: vi.fn(),
+    log: vi.fn()
+  }
+
+  const chat = { x: 100, y: 80, width: 1200, height: 800 }
+
+  assert.equal(recoverChatAfterFailedMorph(win, chat, { width: 400, height: 620 }, actions), true)
+  assert.deepEqual(win.setBounds.mock.calls[0], [chat])
+  assert.equal(win.show.mock.calls.length, 1)
+  assert.equal(actions.clearPetSized.mock.calls.length, 1)
+  assert.equal(actions.closeOverlay.mock.calls.length, 1)
+})
+
+test('failed chat bounds recovery still shows the window and retains the pet marker', () => {
+  const win = {
+    setMinimumSize: vi.fn(),
+    setBounds: vi.fn(() => {
+      throw new Error('native bounds failure')
+    }),
+    isMinimized: () => false,
+    show: vi.fn(),
+    focus: vi.fn()
+  }
+
+  const actions = {
+    markAppSized: vi.fn(),
+    clearPetSized: vi.fn(),
+    closeOverlay: vi.fn(),
+    log: vi.fn()
+  }
+
+  assert.equal(
+    recoverChatAfterFailedMorph(win, { x: 100, y: 80, width: 1200, height: 800 }, { width: 400, height: 620 }, actions),
+    false
+  )
+  assert.equal(win.show.mock.calls.length, 1)
+  assert.equal(actions.clearPetSized.mock.calls.length, 0)
+  assert.equal(actions.closeOverlay.mock.calls.length, 0)
+})
+
+test('a native show failure keeps the recovery bounds and overlay available', () => {
+  const win = {
+    setMinimumSize: vi.fn(),
+    setBounds: vi.fn(),
+    isMinimized: () => false,
+    show: vi.fn(() => {
+      throw new Error('native show failure')
+    }),
+    focus: vi.fn()
+  }
+
+  const actions = {
+    markAppSized: vi.fn(),
+    clearPetSized: vi.fn(),
+    closeOverlay: vi.fn(),
+    log: vi.fn()
+  }
+
+  assert.equal(
+    recoverChatAfterFailedMorph(win, { x: 100, y: 80, width: 1200, height: 800 }, { width: 400, height: 620 }, actions),
+    false
+  )
+  assert.equal(win.setBounds.mock.calls.length, 1)
+  assert.equal(actions.clearPetSized.mock.calls.length, 0)
+  assert.equal(actions.closeOverlay.mock.calls.length, 0)
+})
 
 test('petOverlayClickThrough is off on Linux, where forward:true never re-arms the sprite', () => {
   assert.equal(petOverlayClickThrough('darwin'), true)
@@ -39,6 +119,10 @@ test('a quit suppresses the pop-in echo, so the popped-out state survives for th
   // before-quit teardown and the non-macOS primary-window close both latch the
   // quit flag before closePetOverlay() fires the overlay's 'closed' handler.
   assert.equal(shouldPopInOnOverlayClosed({ appQuitting: true, mainWindowAlive: true }), false)
+})
+
+test('an intentional morph close does not queue a second chat restore', () => {
+  assert.equal(shouldPopInOnOverlayClosed({ appQuitting: false, intentionalClose: true, mainWindowAlive: true }), false)
 })
 
 // ─── morph animation (toPet/toChat window steps) ────────────────────────────

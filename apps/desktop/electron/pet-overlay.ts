@@ -31,6 +31,68 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi))
  */
 export const petOverlayClickThrough = (platform = process.platform) => platform !== 'linux'
 
+// A failed overlay creation may happen after the chat window was hidden. Each
+// native recovery step is independent so one failed setBounds cannot also
+// prevent show(). Keep the pet marker until chat bounds are really restored.
+export function recoverChatAfterFailedMorph(win, bounds, minimum, actions): boolean {
+  try {
+    win.setMinimumSize(1, 1)
+  } catch (error) {
+    actions.log(error)
+  }
+
+  let boundsRestored = false
+
+  try {
+    actions.markAppSized(win, bounds)
+    win.setBounds(bounds)
+    boundsRestored = true
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    if (win.isMinimized()) {
+      win.restore()
+    }
+  } catch (error) {
+    actions.log(error)
+  }
+
+  let shown = false
+
+  try {
+    win.show()
+    shown = true
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    win.focus()
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    win.setMinimumSize(minimum.width, minimum.height)
+  } catch (error) {
+    actions.log(error)
+  }
+
+  if (boundsRestored && shown) {
+    actions.clearPetSized(win)
+
+    try {
+      actions.closeOverlay()
+    } catch (error) {
+      actions.log(error)
+    }
+  }
+
+  return boundsRestored && shown
+}
+
 /**
  * Whether the overlay window's 'closed' handler should tell the main renderer
  * to pop the pet back in (#55920).
@@ -45,12 +107,14 @@ export const petOverlayClickThrough = (platform = process.platform) => platform 
  */
 export function shouldPopInOnOverlayClosed({
   appQuitting,
-  mainWindowAlive
+  mainWindowAlive,
+  intentionalClose = false
 }: {
   appQuitting: boolean
   mainWindowAlive: boolean
+  intentionalClose?: boolean
 }): boolean {
-  return !appQuitting && mainWindowAlive
+  return !appQuitting && !intentionalClose && mainWindowAlive
 }
 
 /**

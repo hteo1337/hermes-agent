@@ -253,6 +253,26 @@ function computeWindowOptions(state: WindowOptions, displays, platform = process
   return opts
 }
 
+// A live morph cannot rely on Electron centering a stale saved position when a
+// display disappears: setBounds requires concrete coordinates.
+function resolveChatRestoreBounds(state: WindowOptions, displays, fallbackWorkArea) {
+  const options = computeWindowOptions(state, displays)
+
+  if (options.x !== undefined && options.y !== undefined) {
+    return { x: options.x, y: options.y, width: options.width, height: options.height }
+  }
+
+  const width = Math.min(options.width, fallbackWorkArea.width)
+  const height = Math.min(options.height, fallbackWorkArea.height)
+
+  return {
+    width,
+    height,
+    x: options.x ?? Math.round(fallbackWorkArea.x + (fallbackWorkArea.width - width) / 2),
+    y: options.y ?? Math.round(fallbackWorkArea.y + (fallbackWorkArea.height - height) / 2)
+  }
+}
+
 // Trailing debounce: collapse a burst of resize/move events (Linux fires many
 // mid-drag) into a single run `delayMs` after the last. `.flush()` runs now and
 // cancels the pending timer — used on close, before the window is gone.
@@ -304,6 +324,7 @@ export {
   MIN_HEIGHT,
   MIN_VISIBLE,
   MIN_WIDTH,
+  resolveChatRestoreBounds,
   sanitizeWindowState,
   windowSize
 }

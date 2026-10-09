@@ -428,13 +428,8 @@ import { wireOauthSessionResponse } from './oauth-session-response'
 import { listWindowsProcesses, reapPackageRootedProcesses } from './package-process-reap'
 import { createParentStartMarkerResolver, parentWatchdogEnv } from './parent-process-identity'
 import { bundledPayload, installIdForRoot, type PayloadInfo, payloadPythonPath } from './payload-backend'
-import {
-  createSerialQueue,
-  MORPH_STEP_MS,
-  morphSteps,
-  petOverlayClickThrough,
-  shouldPopInOnOverlayClosed
-} from './pet-overlay'
+import { createPetMorphController } from './pet-morph-window'
+import { petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
 import { placePetOverlay, registerPetOverlayIpc } from './pet-overlay-ipc'
 import {
   buildRegistryProfileRoutes,
@@ -678,7 +673,14 @@ import {
 } from './window-connection-route'
 import { registerWindowControlIpc, windowControlState } from './window-controls'
 import { revealAction, shouldFocusToTakeKeyboard } from './window-focus-policy'
-import { clearPetSized, isAppSized, isPetSized, markAppSized, markPetSized, registerWindowSizing } from './window-growth'
+import {
+  clearPetSized,
+  isAppSized,
+  isPetSized,
+  markAppSized,
+  markPetSized,
+  registerWindowSizing
+} from './window-growth'
 import { windowMenuTemplate } from './window-menu'
 import { createWindowOpenHandler } from './window-open-policy'
 import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
@@ -4709,7 +4711,11 @@ async function applyUpdates(): Promise<UpdaterApplyResultWire> {
       const packaged: UpdaterStrategy | null = await resolvePackagedUpdateStrategy()
 
       if (!packaged) {
-        return { ok: false, error: 'source-updates-external', message: 'Source checkout updates are managed outside the app' }
+        return {
+          ok: false,
+          error: 'source-updates-external',
+          message: 'Source checkout updates are managed outside the app'
+        }
       }
 
       const strategy: UpdaterStrategy = packaged
@@ -4834,8 +4840,6 @@ async function handOffWindowsBootstrapRecovery(reason) {
 
   return true
 }
-
-
 
 // macOS/Linux update hand-off: spawn the repo-owned posix orchestrator
 // (scripts/desktop-update/posix.sh) detached and QUIT. The script waits us
@@ -12756,8 +12760,7 @@ function reportPrimaryRecoveryCrashLoop(code: number | null, signal: string | nu
     return false
   }
 
-  const message =
-    `Hermes backend keeps crashing right after it restarts; not restarting it again. Relaunch ${BRAND.name}.`
+  const message = `Hermes backend keeps crashing right after it restarts; not restarting it again. Relaunch ${BRAND.name}.`
 
   rememberLog(`[supervisor] ${message}`)
   sendBackendExit({ code, signal, error: message })
@@ -14039,75 +14042,90 @@ function spawnPetOverlayWindow(bounds) {
     }
   })
 
-  // Float above other apps and follow the user across desktops so the pet is
-  // always reachable. `floating` + `type: panel` is the macOS NSPanel path; the
-  // more aggressive `screen-saver` level can interfere with normal app/window
-  // switching semantics.
-  win.setAlwaysOnTop(true, IS_MAC ? 'floating' : 'screen-saver')
-  win.setHiddenInMissionControl?.(true)
-
-  // The overlay is a transparent rectangle; only the sprite pixels should be
-  // interactive. The renderer toggles click-through as the cursor enters/
-  // leaves the sprite (hermes:pet-overlay:ignore-mouse), but the window MUST
-  // start click-through from the main process: if the overlay page is slow to
-  // load, blank, or its renderer has died, a mouse-enabled transparent window
-  // sits over the desktop eating clicks (the invisible "dead zone" bug). The
-  // wake indicator already uses this spawn-time ignore pattern. forward:true
-  // keeps mousemove flowing to the page so the renderer can re-arm
-  // interactivity the moment the cursor touches a solid sprite pixel. Linux
-  // has no forward, so there the overlay stays a solid window instead.
-  if (petOverlayClickThrough()) {
-    win.setIgnoreMouseEvents(true, { forward: true })
-  }
-
   try {
-    // Electron docs: macOS may transform process type on each
-    // setVisibleOnAllWorkspaces() call unless skipTransformProcessType=true,
-    // which briefly hides the Dock/cmd-tab presence. Keep Hermes in the normal
-    // ForegroundApplication class so shift-clicking the pet never drops the app
-    // out of app switchers.
-    win.setVisibleOnAllWorkspaces(
-      true,
-      IS_MAC ? { visibleOnFullScreen: true, skipTransformProcessType: true } : undefined
-    )
-  } catch {
-    // Not supported everywhere — best effort.
+    // Float above other apps and follow the user across desktops so the pet is
+    // always reachable. `floating` + `type: panel` is the macOS NSPanel path; the
+    // more aggressive `screen-saver` level can interfere with normal app/window
+    // switching semantics.
+    win.setAlwaysOnTop(true, IS_MAC ? 'floating' : 'screen-saver')
+    win.setHiddenInMissionControl?.(true)
+
+    // The overlay is a transparent rectangle; only the sprite pixels should be
+    // interactive. The renderer toggles click-through as the cursor enters/
+    // leaves the sprite (hermes:pet-overlay:ignore-mouse), but the window MUST
+    // start click-through from the main process: if the overlay page is slow to
+    // load, blank, or its renderer has died, a mouse-enabled transparent window
+    // sits over the desktop eating clicks (the invisible "dead zone" bug). The
+    // wake indicator already uses this spawn-time ignore pattern. forward:true
+    // keeps mousemove flowing to the page so the renderer can re-arm
+    // interactivity the moment the cursor touches a solid sprite pixel. Linux
+    // has no forward, so there the overlay stays a solid window instead.
+    if (petOverlayClickThrough()) {
+      win.setIgnoreMouseEvents(true, { forward: true })
+    }
+
+    try {
+      // Electron docs: macOS may transform process type on each
+      // setVisibleOnAllWorkspaces() call unless skipTransformProcessType=true,
+      // which briefly hides the Dock/cmd-tab presence. Keep Hermes in the normal
+      // ForegroundApplication class so shift-clicking the pet never drops the app
+      // out of app switchers.
+      win.setVisibleOnAllWorkspaces(
+        true,
+        IS_MAC ? { visibleOnFullScreen: true, skipTransformProcessType: true } : undefined
+      )
+    } catch {
+      // Not supported everywhere — best effort.
+    }
+
+    // Pet overlay opts out of global UI zoom (see zoomWiringForWindowKind): it
+    // owns its window-fit + scale, and inheriting zoom would crop the sprite.
+    wireCommonWindowHandlers(win, zoomWiringForWindowKind('petOverlay'))
+
+    wireWindowReveal(win, { show: () => win.showInactive() })
+
+    // Log-only renderer lifecycle (#81290): a dead overlay must never resurrect
+    // itself over the app, but its loss belongs in desktop.log.
+    installWindowRendererLifecycle(win, { kind: 'overlay', callbacks: { log: rememberLog } })
+
+    win.on('closed', () => {
+      // A stale window openPetOverlay replaced must not touch its replacement.
+      if (petOverlayWindow !== win) {
+        return
+      }
+
+      const intentionalClose = petOverlayClosing
+      petOverlayWindow = null
+      petOverlayClosing = false
+
+      // If the overlay went away on its own (e.g. ⌘W), tell the main renderer to
+      // pop the pet back in so it doesn't stay hidden. Never during a quit:
+      // popInPet() persists $petOverlayActive=false, which would wipe the
+      // popped-out state the next boot's restorePetOverlay() needs (#55920).
+      if (
+        shouldPopInOnOverlayClosed({
+          appQuitting,
+          intentionalClose,
+          mainWindowAlive: Boolean(mainWindow && !mainWindow.isDestroyed())
+        })
+      ) {
+        mainWindow.webContents.send('hermes:pet-overlay:control', { type: 'pop-in' })
+      }
+    })
+
+    attachRendererConsoleCapture(win, 'pet-overlay', rememberLog)
+    loadWindowUrl(win, petOverlayUrl(), 'Pet overlay')
+
+    return win
+  } catch (error) {
+    try {
+      win.destroy()
+    } catch (destroyError) {
+      rememberLog(`[pet-morph] could not destroy incomplete overlay: ${destroyError}`)
+    }
+
+    throw error
   }
-
-  // Pet overlay opts out of global UI zoom (see zoomWiringForWindowKind): it
-  // owns its window-fit + scale, and inheriting zoom would crop the sprite.
-  wireCommonWindowHandlers(win, zoomWiringForWindowKind('petOverlay'))
-
-  wireWindowReveal(win, { show: () => win.showInactive() })
-
-  // Log-only renderer lifecycle (#81290): a dead overlay must never resurrect
-  // itself over the app, but its loss belongs in desktop.log.
-  installWindowRendererLifecycle(win, { kind: 'overlay', callbacks: { log: rememberLog } })
-
-  win.on('closed', () => {
-    // A stale window openPetOverlay replaced must not touch its replacement.
-    if (petOverlayWindow !== win) {
-      return
-    }
-
-    petOverlayWindow = null
-    petOverlayClosing = false
-
-    // If the overlay went away on its own (e.g. ⌘W), tell the main renderer to
-    // pop the pet back in so it doesn't stay hidden. Never during a quit:
-    // popInPet() persists $petOverlayActive=false, which would wipe the
-    // popped-out state the next boot's restorePetOverlay() needs (#55920).
-    if (
-      shouldPopInOnOverlayClosed({ appQuitting, mainWindowAlive: Boolean(mainWindow && !mainWindow.isDestroyed()) })
-    ) {
-      mainWindow.webContents.send('hermes:pet-overlay:control', { type: 'pop-in' })
-    }
-  })
-
-  attachRendererConsoleCapture(win, 'pet-overlay', rememberLog)
-  loadWindowUrl(win, petOverlayUrl(), 'Pet overlay')
-
-  return win
 }
 
 function openPetOverlay(bounds) {
@@ -14187,151 +14205,21 @@ function rehomePetOverlay() {
   }
 }
 
-// Morph: main window ⇄ pet overlay (PLAN-ENVOY-INTEGRATION A). queueMorph
-// serializes toPet/toChat so an overlapping call queues instead of clobbering.
-let savedChatBounds = null
-let morphAnimTimer: ReturnType<typeof setInterval> | null = null
-const queueMorph = createSerialQueue()
-
-function cancelMorphAnimation() {
-  if (morphAnimTimer) {
-    clearInterval(morphAnimTimer)
-    morphAnimTimer = null
-  }
-}
-
-// Steps `win` from where it is to `to` (or jumps, if not animate). Resolves
-// false if `win` is destroyed mid-flight or a step's setBounds throws.
-function animateWindowBounds(win, to, animate: boolean): Promise<boolean> {
-  cancelMorphAnimation()
-
-  const applyBounds = rect => {
-    try {
-      markAppSized(win, rect)
-      win.setBounds(rect)
-
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  if (!animate) {
-    return Promise.resolve(applyBounds(to))
-  }
-
-  const steps = morphSteps(win.getBounds(), to)
-
-  return new Promise(resolve => {
-    let i = 0
-
-    morphAnimTimer = setInterval(() => {
-      if (!win || win.isDestroyed()) {
-        cancelMorphAnimation()
-        resolve(false)
-
-        return
-      }
-
-      if (!applyBounds(steps[i])) {
-        cancelMorphAnimation()
-        resolve(false)
-
-        return
-      }
-
-      i += 1
-
-      if (i >= steps.length) {
-        cancelMorphAnimation()
-        resolve(true)
-      }
-    }, MORPH_STEP_MS)
-  })
-}
-
-// toPet: shrink the main window into `bounds`, then hide it and open the
-// overlay there. Chat bounds are flushed to disk now, not kept memory-only.
-function morphMainWindowToPet(bounds, animate: boolean) {
-  return queueMorph(async () => {
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      return null
-    }
-
-    // A toPet while already in pet mode (savedChatBounds set) must not
-    // overwrite it with the current pet-sized bounds.
-    const capturedChatBounds = savedChatBounds === null
-
-    if (capturedChatBounds) {
-      savedChatBounds = mainWindow.getBounds()
-      persistWindowState()
-    }
-
-    let landed = false
-
-    try {
-      mainWindow.setMinimumSize(1, 1)
-      landed = await animateWindowBounds(mainWindow, bounds, animate)
-
-      if (landed) {
-        markPetSized(mainWindow)
-        mainWindow.hide()
-        openPetOverlay(bounds)
-      }
-    } catch {
-      landed = false
-    }
-
-    if (!landed) {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-      }
-
-      if (capturedChatBounds) {
-        savedChatBounds = null
-      }
-
-      return null
-    }
-
-    return bounds
-  })
-}
-
-// toChat: grow the window back to the saved chat bounds, then close the
-// overlay. try/finally so a setBounds/show/animation failure can't strand it.
-function morphPetToMainWindow(animate: boolean) {
-  return queueMorph(async () => {
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      return null
-    }
-
-    const from =
-      petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
-
-    const to = savedChatBounds ?? from
-    let landed = false
-
-    try {
-      markAppSized(mainWindow, from)
-      mainWindow.setBounds(from)
-      mainWindow.show()
-      landed = await animateWindowBounds(mainWindow, to, animate)
-    } catch {
-      landed = false
-    } finally {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-        clearPetSized(mainWindow)
-      }
-
-      closePetOverlay()
-      savedChatBounds = null
-    }
-
-    return landed ? to : null
-  })
-}
+// Morph lifecycle lives beside the pure pet/window geometry helpers.
+const petMorph = createPetMorphController({
+  getMainWindow: () => mainWindow,
+  getOverlayWindow: () => petOverlayWindow,
+  openOverlay: openPetOverlay,
+  closeOverlay: closePetOverlay,
+  persistChatBounds: persistWindowState,
+  screen,
+  minimum: { width: WINDOW_MIN_WIDTH, height: WINDOW_MIN_HEIGHT },
+  markAppSized,
+  markPetSized,
+  clearPetSized,
+  isPetSized,
+  log: rememberLog
+})
 
 // ── HUD mode ────────────────────────────────────────────────────────────────
 //
@@ -15930,10 +15818,11 @@ ipcMain.on('hermes:zoom:set-percent', (event, percent) => {
 registerPetOverlayIpc({
   getMainWindow: () => mainWindow,
   getPetOverlayWindow: () => petOverlayWindow,
+  isMorphActive: petMorph.isActive,
   openPetOverlay,
   closePetOverlay,
-  morphToPet: morphMainWindowToPet,
-  morphToChat: morphPetToMainWindow
+  morphToPet: petMorph.morphToPet,
+  morphToChat: petMorph.morphToChat
 })
 
 // --- Local pet skins (<userData>/pets/<id>/{pet.json,atlas.png}) ---------
@@ -17040,7 +16929,7 @@ ipcMain.handle('hermes:connection-config:oauth-logout', async (_event, rawUrl) =
 // per-agent cascade. See the discovery/cascade helpers above.
 ipcMain.handle('hermes:cloud:status', async () => ({
   portalBaseUrl: resolvePortalBaseUrl(),
-  signedIn: Boolean(ENDPOINTS.portal) && await hasLivePortalSession()
+  signedIn: Boolean(ENDPOINTS.portal) && (await hasLivePortalSession())
 }))
 ipcMain.handle('hermes:cloud:login', async () => {
   await openPortalLoginWindow()

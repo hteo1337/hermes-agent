@@ -7,6 +7,7 @@ import { petOverlayClickThrough, resolvePetOverlayBounds } from './pet-overlay'
 export interface PetOverlayIpcDeps {
   getMainWindow: () => BrowserWindow | null
   getPetOverlayWindow: () => BrowserWindow | null
+  isMorphActive: () => boolean
   openPetOverlay: (bounds: unknown) => void
   closePetOverlay: () => void
   // toPet/toChat: morph the main window into the overlay's spot and back.
@@ -74,6 +75,7 @@ function resolveScreenBounds(request, mainWindow: BrowserWindow | null) {
 export function registerPetOverlayIpc({
   getMainWindow,
   getPetOverlayWindow,
+  isMorphActive,
   openPetOverlay,
   closePetOverlay,
   morphToPet,
@@ -209,6 +211,12 @@ export function registerPetOverlayIpc({
     // back if it's minimized/buried. Pure window control — nothing for the
     // renderer to do, so don't forward it.
     if (payload && payload.type === 'toggle-app') {
+      if (isMorphActive()) {
+        mainWindow.webContents.send('hermes:pet-overlay:control', { type: 'pop-in' })
+
+        return
+      }
+
       if (mainWindow.isMinimized() || !mainWindow.isVisible()) {
         mainWindow.show()
         mainWindow.focus()
@@ -222,6 +230,12 @@ export function registerPetOverlayIpc({
     // The mail icon means "take me to the app": raise the main window (it may be
     // minimized or buried) before the renderer navigates to the latest thread.
     if (payload && payload.type === 'open-app') {
+      if (isMorphActive()) {
+        mainWindow.webContents.send('hermes:pet-overlay:control', payload)
+
+        return
+      }
+
       if (mainWindow.isMinimized()) {
         mainWindow.restore()
       }

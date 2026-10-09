@@ -273,17 +273,27 @@ export function restorePetOverlay(): void {
 
 // Pop the pet back into the window: morphs the main window back to chat size,
 // falling back to a plain close when the morph API isn't available.
-export function popInPet(): void {
+export async function popInPet(): Promise<boolean> {
   const api = window.hermesDesktop?.petOverlay
+
+  try {
+    if (api?.morphToChat) {
+      const result = await api.morphToChat({ animate: !prefersReducedMotion() })
+
+      if (!result?.ok) {
+        return false
+      }
+    } else {
+      await api?.close()
+    }
+  } catch {
+    return false
+  }
 
   stopStateMirror()
   $petOverlayActive.set(false)
 
-  if (api?.morphToChat) {
-    void api.morphToChat({ animate: !prefersReducedMotion() })
-  } else {
-    void api?.close()
-  }
+  return true
 }
 
 /** Register the handler that turns an overlay composer submit into a real send. */
@@ -314,7 +324,7 @@ export function initPetOverlayBridge(): () => void {
 
   controlUnsub = api.onControl(payload => {
     if (payload?.type === 'pop-in') {
-      popInPet()
+      void popInPet()
     } else if (payload?.type === 'ready') {
       // The overlay just mounted — hand it the current frame.
       pushNow()
@@ -337,10 +347,13 @@ export function initPetOverlayBridge(): () => void {
         console.warn('pet chip answer failed', error)
       )
     } else if (payload?.type === 'open-app') {
-      // Mail icon: surface the app on the most recent thread (main.ts already
-      // focused the window before forwarding this) and mark it read.
-      clearPetUnread()
-      openAppHandler?.()
+      // A morphed main window is still pet-sized until restoration finishes.
+      void popInPet().then(restored => {
+        if (restored) {
+          clearPetUnread()
+          openAppHandler?.()
+        }
+      })
     }
   })
 
