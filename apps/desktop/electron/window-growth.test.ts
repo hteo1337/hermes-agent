@@ -6,7 +6,7 @@
 import type { Rectangle } from 'electron'
 import { describe, expect, it } from 'vitest'
 
-import { isAppSized, markAppSized } from './window-growth'
+import { clearPetSized, isAppSized, isPetSized, markAppSized, markPetSized } from './window-growth'
 
 function placedWindow(initial: Rectangle) {
   let bounds = { ...initial }
@@ -38,5 +38,19 @@ describe('isAppSized', () => {
     win.moveTo(40, 60)
 
     expect(isAppSized(win)).toBe(false)
+  })
+})
+
+describe('isPetSized', () => {
+  it('stays true through a maximize, unlike isAppSized', () => {
+    const win = placedWindow(GIVEN)
+
+    markPetSized(win)
+    win.isMaximized = () => true
+
+    expect(isPetSized(win)).toBe(true)
+
+    clearPetSized(win)
+    expect(isPetSized(win)).toBe(false)
   })
 })

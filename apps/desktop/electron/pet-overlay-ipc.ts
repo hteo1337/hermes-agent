@@ -31,28 +31,43 @@ export function placePetOverlay(bounds, mainWindow: BrowserWindow | null) {
   return resolvePetOverlayBounds(bounds, screen.getAllDisplays(), anchor)
 }
 
+// A renderer rect is rejected outright, not laundered — `|| 0` on NaN silently
+// becomes a valid 0, and the display clamp below only fits bad sizes, never refuses them.
+const MAX_DIM = 10000
+
+function isValidRect(bounds): boolean {
+  if (!bounds) {
+    return false
+  }
+
+  const { x, y, width, height } = bounds
+
+  return (
+    [x, y, width, height].every(Number.isFinite) && width > 0 && height > 0 && width <= MAX_DIM && height <= MAX_DIM
+  )
+}
+
 // `request` is `{ bounds, screen }`: viewport-space (screen=false, converted via
 // the main window's content origin) or a remembered screen-space spot (screen=true).
 function resolveScreenBounds(request, mainWindow: BrowserWindow | null) {
   const bounds = request && request.bounds ? request.bounds : request
+
+  if (!isValidRect(bounds)) {
+    return null
+  }
+
   const isScreen = Boolean(request && request.screen)
   let screenBounds = bounds
 
   try {
-    if (bounds && !isScreen && mainWindow && !mainWindow.isDestroyed()) {
+    if (!isScreen && mainWindow && !mainWindow.isDestroyed()) {
       const content = mainWindow.getContentBounds()
-      screenBounds = {
-        x: content.x + (bounds.x || 0),
-        y: content.y + (bounds.y || 0),
-        width: bounds.width,
-        height: bounds.height
-      }
+      screenBounds = { x: content.x + bounds.x, y: content.y + bounds.y, width: bounds.width, height: bounds.height }
     }
   } catch {
     // Fall back to raw bounds if the window geometry is unavailable.
   }
 
-  // Null (missing/non-finite bounds) propagates — never fall back to garbage input.
   return placePetOverlay(screenBounds, mainWindow)
 }
 

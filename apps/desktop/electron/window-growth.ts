@@ -16,6 +16,22 @@ type PlacedWindow = Pick<BrowserWindow, 'getNormalBounds' | 'isMaximized'>
 
 const appSized = new WeakMap<PlacedWindow, Rectangle>()
 
+// Pet-morph: unlike appSized, this stays true through a maximize, so a
+// maximized-from-pet-size window can never persist pet geometry.
+const petSized = new WeakSet<PlacedWindow>()
+
+export function markPetSized(win: PlacedWindow): void {
+  petSized.add(win)
+}
+
+export function clearPetSized(win: PlacedWindow): void {
+  petSized.delete(win)
+}
+
+export function isPetSized(win: PlacedWindow): boolean {
+  return petSized.has(win)
+}
+
 export function markAppSized(win: PlacedWindow, bounds: Rectangle): void {
   appSized.set(win, bounds)
 }

@@ -682,7 +682,7 @@ import {
 } from './window-connection-route'
 import { registerWindowControlIpc, windowControlState } from './window-controls'
 import { revealAction, shouldFocusToTakeKeyboard } from './window-focus-policy'
-import { isAppSized, markAppSized, registerWindowSizing } from './window-growth'
+import { clearPetSized, isAppSized, isPetSized, markAppSized, markPetSized, registerWindowSizing } from './window-growth'
 import { windowMenuTemplate } from './window-menu'
 import { createWindowOpenHandler } from './window-open-policy'
 import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
@@ -3632,7 +3632,13 @@ function readWindowState() {
 // broken transition behind #94319 — so record that provenance and let recovery
 // on the next launch recognize the snapshot instead of guessing from geometry.
 function persistWindowState() {
-  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized() || isAppSized(mainWindow)) {
+  if (
+    !mainWindow ||
+    mainWindow.isDestroyed() ||
+    mainWindow.isMinimized() ||
+    isPetSized(mainWindow) ||
+    isAppSized(mainWindow)
+  ) {
     return
   }
 
@@ -14321,7 +14327,7 @@ function animateWindowBounds(win, to, animate: boolean): Promise<boolean> {
 }
 
 // toPet: shrink the main window into `bounds`, then hide it and open the
-// overlay there. minWidth/minHeight is relaxed first — it's bigger than any pet.
+// overlay there. Chat bounds are flushed to disk now, not kept memory-only.
 function morphMainWindowToPet(bounds, animate: boolean) {
   return queueMorph(async () => {
     if (!mainWindow || mainWindow.isDestroyed()) {
@@ -14334,13 +14340,28 @@ function morphMainWindowToPet(bounds, animate: boolean) {
 
     if (capturedChatBounds) {
       savedChatBounds = mainWindow.getBounds()
+      persistWindowState()
     }
 
-    mainWindow.setMinimumSize(1, 1)
-    const landed = await animateWindowBounds(mainWindow, bounds, animate)
+    let landed = false
 
-    if (!landed || !mainWindow || mainWindow.isDestroyed()) {
-      mainWindow?.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+    try {
+      mainWindow.setMinimumSize(1, 1)
+      landed = await animateWindowBounds(mainWindow, bounds, animate)
+
+      if (landed) {
+        markPetSized(mainWindow)
+        mainWindow.hide()
+        openPetOverlay(bounds)
+      }
+    } catch {
+      landed = false
+    }
+
+    if (!landed) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+      }
 
       if (capturedChatBounds) {
         savedChatBounds = null
@@ -14349,15 +14370,12 @@ function morphMainWindowToPet(bounds, animate: boolean) {
       return null
     }
 
-    mainWindow.hide()
-    openPetOverlay(bounds)
-
     return bounds
   })
 }
 
-// toChat: show the main window at the overlay's spot, grow it back to the
-// saved chat bounds, then close the overlay and restore its minimum size.
+// toChat: grow the window back to the saved chat bounds, then close the
+// overlay. try/finally so a setBounds/show/animation failure can't strand it.
 function morphPetToMainWindow(animate: boolean) {
   return queueMorph(async () => {
     if (!mainWindow || mainWindow.isDestroyed()) {
@@ -14368,17 +14386,24 @@ function morphPetToMainWindow(animate: boolean) {
       petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
 
     const to = savedChatBounds ?? from
+    let landed = false
 
-    mainWindow.setBounds(from)
-    mainWindow.show()
-    const landed = await animateWindowBounds(mainWindow, to, animate)
+    try {
+      markAppSized(mainWindow, from)
+      mainWindow.setBounds(from)
+      mainWindow.show()
+      landed = await animateWindowBounds(mainWindow, to, animate)
+    } catch {
+      landed = false
+    } finally {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+        clearPetSized(mainWindow)
+      }
 
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+      closePetOverlay()
+      savedChatBounds = null
     }
-
-    closePetOverlay()
-    savedChatBounds = null
 
     return landed ? to : null
   })
