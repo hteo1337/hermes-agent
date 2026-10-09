@@ -362,6 +362,7 @@ import {
   writeNvidiaEglMarker
 } from './linux-nvidia-egl-fallback'
 import { createLocalBackendLifecycle, waitForTeardown } from './local-backend-lifecycle'
+import { scanLocalPets } from './local-pets'
 import { resolveIpcFileReadPath, resolveMediaStreamFile, resolvePreviewTargetPath } from './local-read-path'
 import { localSkinProfileKey, readLocalSkinPayload } from './local-skin'
 import { ACTIVE_LOG_POLL_MS, planLogRotation, reclaimActiveLogIfOversized } from './log-rotation'
@@ -425,7 +426,7 @@ import { wireOauthSessionResponse } from './oauth-session-response'
 import { listWindowsProcesses, reapPackageRootedProcesses } from './package-process-reap'
 import { createParentStartMarkerResolver, parentWatchdogEnv } from './parent-process-identity'
 import { bundledPayload, installIdForRoot, type PayloadInfo, payloadPythonPath } from './payload-backend'
-import { petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
+import { MORPH_STEP_MS, morphSteps, petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
 import { placePetOverlay, registerPetOverlayIpc } from './pet-overlay-ipc'
 import {
   buildRegistryProfileRoutes,
@@ -14250,6 +14251,84 @@ function rehomePetOverlay() {
   }
 }
 
+// Morph: main window ⇄ pet overlay (PLAN-ENVOY-INTEGRATION A). savedChatBounds
+// is null unless the window is currently morphed into the pet.
+let savedChatBounds = null
+let morphAnimTimer: ReturnType<typeof setInterval> | null = null
+
+function cancelMorphAnimation() {
+  if (morphAnimTimer) {
+    clearInterval(morphAnimTimer)
+    morphAnimTimer = null
+  }
+}
+
+// Steps `win`'s bounds from where it is now to `to`, or jumps straight there
+// when `animate` is false (prefers-reduced-motion, decided by the renderer).
+function animateWindowBounds(win, to, animate: boolean): Promise<void> {
+  cancelMorphAnimation()
+
+  if (!animate) {
+    win.setBounds(to)
+
+    return Promise.resolve()
+  }
+
+  const steps = morphSteps(win.getBounds(), to)
+
+  return new Promise(resolve => {
+    let i = 0
+
+    morphAnimTimer = setInterval(() => {
+      if (!win || win.isDestroyed() || i >= steps.length) {
+        cancelMorphAnimation()
+        resolve()
+
+        return
+      }
+
+      win.setBounds(steps[i])
+      i += 1
+    }, MORPH_STEP_MS)
+  })
+}
+
+// toPet: shrink the main window into `bounds`, then hide it and open the
+// overlay there — the chat window visibly becomes the mascot.
+async function morphMainWindowToPet(bounds, animate: boolean) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return null
+  }
+
+  savedChatBounds = mainWindow.getBounds()
+  await animateWindowBounds(mainWindow, bounds, animate)
+  mainWindow.hide()
+  openPetOverlay(bounds)
+
+  return bounds
+}
+
+// toChat: show the main window at the overlay's spot, grow it back to the
+// saved chat bounds, then close the overlay.
+async function morphPetToMainWindow(animate: boolean) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return null
+  }
+
+  const from =
+    petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
+
+  const to = savedChatBounds ?? from
+
+  mainWindow.setBounds(from)
+  mainWindow.show()
+  await animateWindowBounds(mainWindow, to, animate)
+  closePetOverlay()
+  savedChatBounds = null
+
+  return to
+}
+
 // ── HUD mode ────────────────────────────────────────────────────────────────
 //
 // The chrome-free floating chat: a transparent, frameless, always-on-top
@@ -15848,7 +15927,32 @@ registerPetOverlayIpc({
   getMainWindow: () => mainWindow,
   getPetOverlayWindow: () => petOverlayWindow,
   openPetOverlay,
-  closePetOverlay
+  closePetOverlay,
+  morphToPet: morphMainWindowToPet,
+  morphToChat: morphPetToMainWindow
+})
+
+// --- Local pet skins (<userData>/pets/<id>/{pet.json,atlas.png}) ---------
+// Atlas bytes are fetched separately, never through a file:// protocol.
+function localPetsDir() {
+  return path.join(app.getPath('userData'), 'pets')
+}
+
+ipcMain.handle('hermes:local-pets:list', async () => {
+  const { pets, rejected } = scanLocalPets(localPetsDir())
+
+  return { pets: pets.map(({ atlasPath: _atlasPath, ...meta }) => meta), rejected }
+})
+
+ipcMain.handle('hermes:local-pets:atlas', async (_event, id: string) => {
+  const { pets } = scanLocalPets(localPetsDir())
+  const pet = pets.find(p => p.id === id)
+
+  if (!pet) {
+    return null
+  }
+
+  return fs.readFileSync(pet.atlasPath).toString('base64')
 })
 
 // --- HUD mode (chrome-free floating chat) — see hud-ipc.ts. ---------------

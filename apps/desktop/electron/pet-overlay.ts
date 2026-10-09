@@ -121,9 +121,36 @@ export function resolvePetOverlayBounds(requested, displays, anchor) {
   }
 }
 
-// The work area of the display whose bounds contain the anchor's center (the
-// display the main window sits on), or the first display when the anchor is
-// missing/unknown. Null when there are no usable displays at all.
+// Morph animation timing (main window ⇄ pet overlay): mirrors Envoy's spring,
+// ~380ms stepped every 4ms. prefers-reduced-motion skips it (one jump).
+export const MORPH_DURATION_MS = 380
+export const MORPH_STEP_MS = 4
+
+const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3
+
+/** Intermediate rects for animating a window's bounds from `from` to `to`. The
+ *  last step equals `to` exactly, so the caller can land precisely. */
+export function morphSteps(
+  from: { x: number; y: number; width: number; height: number },
+  to: { x: number; y: number; width: number; height: number },
+  { durationMs = MORPH_DURATION_MS, stepMs = MORPH_STEP_MS } = {}
+): Array<{ x: number; y: number; width: number; height: number }> {
+  const steps = Math.max(1, Math.round(durationMs / stepMs))
+
+  return Array.from({ length: steps }, (_, i) => {
+    const t = easeOutCubic((i + 1) / steps)
+
+    return {
+      x: Math.round(from.x + (to.x - from.x) * t),
+      y: Math.round(from.y + (to.y - from.y) * t),
+      width: Math.round(from.width + (to.width - from.width) * t),
+      height: Math.round(from.height + (to.height - from.height) * t)
+    }
+  })
+}
+
+// The work area of the display containing the anchor's center, or the first
+// display's when the anchor is missing. Null when no display has one.
 function workAreaForAnchor(displays, anchor) {
   if (
     anchor &&

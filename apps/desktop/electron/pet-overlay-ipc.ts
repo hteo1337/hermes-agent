@@ -9,6 +9,9 @@ export interface PetOverlayIpcDeps {
   getPetOverlayWindow: () => BrowserWindow | null
   openPetOverlay: (bounds: unknown) => void
   closePetOverlay: () => void
+  // toPet/toChat: morph the main window into the overlay's spot and back.
+  morphToPet: (bounds: unknown, animate: boolean) => Promise<unknown>
+  morphToChat: (animate: boolean) => Promise<unknown>
 }
 
 // Where the overlay may actually sit: `bounds` kept wholly on a connected
@@ -28,43 +31,42 @@ export function placePetOverlay(bounds, mainWindow: BrowserWindow | null) {
   return resolvePetOverlayBounds(bounds, screen.getAllDisplays(), anchor)
 }
 
+// `request` is `{ bounds, screen }`: viewport-space (screen=false, converted via
+// the main window's content origin) or a remembered screen-space spot (screen=true).
+function resolveScreenBounds(request, mainWindow: BrowserWindow | null) {
+  const bounds = request && request.bounds ? request.bounds : request
+  const isScreen = Boolean(request && request.screen)
+  let screenBounds = bounds
+
+  try {
+    if (bounds && !isScreen && mainWindow && !mainWindow.isDestroyed()) {
+      const content = mainWindow.getContentBounds()
+      screenBounds = {
+        x: content.x + (bounds.x || 0),
+        y: content.y + (bounds.y || 0),
+        width: bounds.width,
+        height: bounds.height
+      }
+    }
+  } catch {
+    // Fall back to raw bounds if the window geometry is unavailable.
+  }
+
+  // Lands wholly inside a display's work area; self-healing for a spot saved
+  // on a since-unplugged monitor. The caller echoes this back to persist it.
+  return placePetOverlay(screenBounds, mainWindow) ?? screenBounds
+}
+
 export function registerPetOverlayIpc({
   getMainWindow,
   getPetOverlayWindow,
   openPetOverlay,
-  closePetOverlay
+  closePetOverlay,
+  morphToPet,
+  morphToChat
 }: PetOverlayIpcDeps) {
-  // `request` is `{ bounds, screen }`. A fresh pop-out passes viewport-space
-  // bounds (screen=false): convert to screen space by adding the main window's
-  // content origin so the pet lands where it sat in-window. A remembered/dragged
-  // spot passes screen-space bounds (screen=true) and is used as-is. We return the
-  // resolved screen bounds so the renderer can persist exactly where it opened.
   ipcMain.handle('hermes:pet-overlay:open', async (_event, request) => {
-    const bounds = request && request.bounds ? request.bounds : request
-    const isScreen = Boolean(request && request.screen)
-    const mainWindow = getMainWindow()
-    let screenBounds = bounds
-
-    try {
-      if (bounds && !isScreen && mainWindow && !mainWindow.isDestroyed()) {
-        const content = mainWindow.getContentBounds()
-        screenBounds = {
-          x: content.x + (bounds.x || 0),
-          y: content.y + (bounds.y || 0),
-          width: bounds.width,
-          height: bounds.height
-        }
-      }
-    } catch {
-      // Fall back to raw bounds if the window geometry is unavailable.
-    }
-
-    // Both paths land wholly inside a display's work area: a fresh pop-out near
-    // the window edge or a spot saved on a since-unplugged monitor would
-    // otherwise open the transparent, non-activating overlay (mostly)
-    // off-screen where the pet can't be found. The corrected bounds are echoed
-    // so the renderer persists the on-screen spot (self-healing).
-    screenBounds = placePetOverlay(screenBounds, mainWindow) ?? screenBounds
+    const screenBounds = resolveScreenBounds(request, getMainWindow())
 
     openPetOverlay(screenBounds)
 
@@ -74,6 +76,21 @@ export function registerPetOverlayIpc({
     closePetOverlay()
 
     return { ok: true }
+  })
+  // toPet: shrink the main window into this spot, hide it, open the overlay
+  // there — the chat window visibly becomes the mascot (PLAN-ENVOY-INTEGRATION A).
+  ipcMain.handle('hermes:pet-overlay:morph-to-pet', async (_event, request) => {
+    const screenBounds = resolveScreenBounds(request, getMainWindow())
+    const resolved = await morphToPet(screenBounds, Boolean(request?.animate))
+
+    return resolved ? { bounds: resolved, ok: true } : { ok: false }
+  })
+  // toChat: reverse — show the main window at the overlay's spot, grow it back
+  // to the saved chat bounds, then close the overlay.
+  ipcMain.handle('hermes:pet-overlay:morph-to-chat', async (_event, request) => {
+    const resolved = await morphToChat(Boolean(request?.animate))
+
+    return resolved ? { bounds: resolved, ok: true } : { ok: false }
   })
   // Drag/resize: the overlay reports new absolute screen bounds (it already knows
   // the pointer's screen coords). Drag keeps the size constant; the wheel-to-scale
