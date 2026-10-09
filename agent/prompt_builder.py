@@ -15,6 +15,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from hermes_cli.endpoints import endpoint
 from hermes_constants import (
     get_hermes_home, get_scratch_dir, get_skills_dir, is_wsl, reset_hermes_home_override, set_hermes_home_override,
 )
@@ -168,13 +169,16 @@ DEFAULT_AGENT_IDENTITY = (
     "it. Depth is earned — give it when the user asks for detail, teaches, or the stakes demand it, not by default."
 )
 
+_DOCS_URL = endpoint("docsUrl")
+_HELP_REFERENCE = (f"the documentation at {_DOCS_URL}" if _DOCS_URL else "the installed project help")
+
 HERMES_AGENT_HELP_GUIDANCE = (
     # Injected only when skill_view exists AND the hermes-agent skill is installed (system_prompt.py slot
     # resolution). No "when the two differ" clause: docs-are-authoritative already carries the precedence.
     "You run on Hermes Agent (by Nous Research). When the user needs help with Hermes itself — configuring, "
     "setting up, using, extending, or troubleshooting it — or when you need to understand your own features, "
-    "tools, or capabilities, the documentation at https://hermes-agent.nousresearch.com/docs is your "
-    "authoritative reference and always holds the latest, most up-to-date information. The `hermes-agent` "
+    f"tools, or capabilities, {_HELP_REFERENCE} is your "
+    "available reference. The `hermes-agent` "
     "skill has the actual commands and proven workflows — load it with skill_view(name='hermes-agent') "
     "before configuring, modifying, or troubleshooting Hermes so you don't guess or invent workarounds."
 )
@@ -183,8 +187,8 @@ HERMES_AGENT_HELP_GUIDANCE = (
 HERMES_AGENT_HELP_GUIDANCE_NO_SKILLS = (
     "You run on Hermes Agent (by Nous Research). When the user needs help with Hermes itself — configuring, "
     "setting up, using, extending, or troubleshooting it — or when you need to understand your own features, "
-    "tools, or capabilities, the documentation at https://hermes-agent.nousresearch.com/docs is the "
-    "authoritative reference and always holds the latest, most up-to-date information. Point the user there "
+    f"tools, or capabilities, {_HELP_REFERENCE} is the "
+    "local reference. Point the user there "
     "(or read it yourself if you have a way to fetch web content)."
 )
 

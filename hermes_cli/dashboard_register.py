@@ -17,7 +17,9 @@ import urllib.request
 from typing import Optional
 from urllib.parse import urlparse
 
-_DEFAULT_PORTAL = "https://portal.nousresearch.com"
+from hermes_cli.endpoints import endpoint
+
+_DEFAULT_PORTAL = endpoint("portal")
 
 # Docker-style adjective_noun names; the portal keys on row id, so collisions are harmless.
 _NAME_ADJECTIVES = (
@@ -46,13 +48,7 @@ def _resolve_portal_base_url(override: Optional[str] = None) -> str:
     ``portal_base_url``, then production."""
     if isinstance(override, str) and override.strip():
         return override.rstrip("/")
-    try:
-        from hermes_cli.auth import DEFAULT_NOUS_PORTAL_URL, get_provider_auth_state
-        base = (get_provider_auth_state("nous") or {}).get("portal_base_url")
-        chosen = base if isinstance(base, str) and base.strip() else str(DEFAULT_NOUS_PORTAL_URL)
-        return chosen.rstrip("/")
-    except Exception:
-        return _DEFAULT_PORTAL
+    return endpoint("portal").rstrip("/")
 
 
 def _register_self_hosted_client(
@@ -170,6 +166,12 @@ def cmd_dashboard_register(args) -> None:
               "  The dashboard OAuth client is provisioned by the hosting platform.")
         sys.exit(1)
 
+    portal_override = getattr(args, "portal_url", None) or os.environ.get("HERMES_DASHBOARD_PORTAL_URL")
+    portal_base_url = _resolve_portal_base_url(portal_override)
+    if not portal_base_url:
+        print("✗ Dashboard registration is disabled: no Portal endpoint is configured.")
+        sys.exit(1)
+
     try:
         access_token = resolve_nous_access_token()
     except Exception as exc:
@@ -181,9 +183,7 @@ def cmd_dashboard_register(args) -> None:
         sys.exit(1)
     # An explicitly supplied portal (flag or env) is persisted in place; an inferred one is
     # written only if absent so .env isn't cluttered for the common production case.
-    portal_override = getattr(args, "portal_url", None) or os.environ.get("HERMES_DASHBOARD_PORTAL_URL")
     custom_portal_supplied = bool(isinstance(portal_override, str) and portal_override.strip())
-    portal_base_url = _resolve_portal_base_url(portal_override)
     # Re-sending a locally held client_id makes the portal UPDATE that record (idempotent).
     stored = _env_value("HERMES_DASHBOARD_OAUTH_CLIENT_ID")
     existing_client_id = (stored.strip() or None) if isinstance(stored, str) else None

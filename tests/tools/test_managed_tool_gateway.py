@@ -82,6 +82,17 @@ def test_resolve_managed_tool_gateway_is_disabled_without_subscription():
     assert result is None
 
 
+def test_empty_gateway_never_reads_or_refreshes_token(monkeypatch):
+    monkeypatch.delenv("TOOL_GATEWAY_DOMAIN", raising=False)
+    monkeypatch.delenv("BROWSER_USE_GATEWAY_URL", raising=False)
+    monkeypatch.setattr(managed_tool_gateway, "endpoint", lambda name: "")
+    monkeypatch.setattr(managed_tool_gateway, "managed_nous_tools_enabled", lambda: True)
+    calls = []
+    assert resolve_managed_tool_gateway("browser-use", token_reader=lambda: calls.append(1)) is None
+    assert managed_tool_gateway.resolve_free_search_gateway(token_reader=lambda: calls.append(1)) is None
+    assert calls == []
+
+
 def test_read_nous_access_token_refreshes_expiring_cached_token(tmp_path, monkeypatch):
     monkeypatch.delenv("TOOL_GATEWAY_USER_TOKEN", raising=False)
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
@@ -223,6 +234,7 @@ def test_read_nous_provider_state_falls_back_to_global_root_for_share_auth_profi
     }))
     monkeypatch.setenv("HERMES_HOME", str(profile))
     monkeypatch.setenv("HERMES_GUEST_ONBOARDING", "1")
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: "https://portal.example.invalid")
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
 
     import hermes_constants

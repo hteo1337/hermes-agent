@@ -69,7 +69,7 @@ def _request(
     data = json.dumps(body).encode("utf-8") if body is not None else None
     request_headers = {
         "Authorization": f"Bearer {key}", "Content-Type": "application/json",
-        "User-Agent": "hermes-peer-dm"}
+        "User-Agent": "envoy-peer-dm"}
     if headers:
         request_headers.update(headers)
     req = urllib.request.Request(url, data=data, method=method, headers=request_headers)

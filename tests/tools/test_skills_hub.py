@@ -22,9 +22,12 @@ from tools.skills_hub_search import (
 from tools.skills_hub_skillssh import SkillsShSource
 from tools.skills_hub_sources import LobeHubSource, UrlSource, WellKnownSkillSource
 
-# ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _configured_search_index(monkeypatch):
+    monkeypatch.setattr("tools.skills_hub_search.endpoint", lambda name: "https://index.example.invalid/skills.json")
+
 # GitHubSource._parse_frontmatter_quick
-# ---------------------------------------------------------------------------
 
 class TestParseFrontmatterQuick:
     def test_valid_frontmatter_including_nested_yaml(self):
@@ -46,9 +49,7 @@ class TestParseFrontmatterQuick:
         ):
             assert GitHubSource._parse_frontmatter_quick(content) == {}, repr(content)
 
-# ---------------------------------------------------------------------------
 # GitHubSource skills.sh.json grouping sidecar (category support)
-# ---------------------------------------------------------------------------
 
 class TestSkillsShGroupings:
     """Parsing + stamping of the skills.sh.json grouping sidecar.
@@ -112,9 +113,7 @@ class TestSkillsShGroupings:
 
         assert skills[0].extra["category"] == "Decision Optimization"
 
-# ---------------------------------------------------------------------------
 # GitHubSource.trust_level_for
-# ---------------------------------------------------------------------------
 
 class TestTrustLevelFor:
     def _source(self):
@@ -179,9 +178,7 @@ class TestGitHubSourceFileFetch:
         assert sent[-1]["Accept"] == "application/vnd.github.v3.raw"
         assert auth.rejected[0] == "GITHUB_TOKEN/GH_TOKEN"
 
-# ---------------------------------------------------------------------------
 # SkillsShSource
-# ---------------------------------------------------------------------------
 
 class TestSkillsShSource:
     def _source(self):
@@ -808,9 +805,7 @@ class TestCreateSourceRouter:
         gh_idx = next(i for i, src in enumerate(sources) if isinstance(src, GitHubSource))
         assert url_idx < gh_idx
 
-# ---------------------------------------------------------------------------
 # HubLockFile
-# ---------------------------------------------------------------------------
 
 class TestHubLockFile:
 
@@ -838,7 +833,6 @@ class TestHubLockFile:
         names = {e["name"] for e in installed}
         assert names == {"s1", "s2"}
 
-# ---------------------------------------------------------------------------
 # TapsManager
 # ---------------------------------------------------------------------------
 
@@ -1049,7 +1043,7 @@ class TestOptionalSkillSourceMetadata:
         meta = src.inspect("official/finance/3-statement-model")
 
         assert meta is not None
-        assert meta.repo == "NousResearch/hermes-agent"
+        assert meta.repo == ""
         assert meta.path == "optional-skills/finance/3-statement-model"
 
     def test_scan_all_accepts_install_prefix_but_rejects_nested_support_skills(self, tmp_path):
@@ -1118,6 +1112,9 @@ class TestOptionalSkillSourceBinaryAssets:
         assert bundle is None
 
 class TestOptionalSkillSourceLiveRepoFallback:
+    @pytest.fixture(autouse=True)
+    def _configured_repo(self, monkeypatch):
+        monkeypatch.setattr("tools.skills_hub_official.endpoint", lambda name: "owner/fork")
     """Skills merged to main after the local install was cut must still be
     searchable and installable without `hermes update` (live-repo fallback)."""
 
@@ -1228,7 +1225,7 @@ class TestOptionalSkillSourceLiveRepoFallback:
         meta = src.inspect("official/software-development/ast-grep")
 
         assert meta is not None
-        assert meta.repo == "NousResearch/hermes-agent"
+        assert meta.repo == "owner/fork"
         assert meta.path == "optional-skills/software-development/ast-grep"
 
     def test_offline_degrades_to_local_only(self, tmp_path):
@@ -2070,6 +2067,9 @@ class TestIndexMissFallback:
 # ---------------------------------------------------------------------------
 
 class TestLoadHermesIndex:
+    @pytest.fixture(autouse=True)
+    def _configured_index(self, monkeypatch):
+        monkeypatch.setattr("tools.skills_hub_search.endpoint", lambda name: "https://index.example.invalid/skills.json")
     """Regression coverage for the Skills-Hub index fetch.
 
     The centralized index is a large body served with Content-Encoding: br.

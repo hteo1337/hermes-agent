@@ -17,6 +17,7 @@ def isolated_home(tmp_path, monkeypatch):
     """Isolate HERMES_HOME + reset any module-level catalog cache per test."""
     home = tmp_path / ".hermes"
     home.mkdir()
+    (home / "config.yaml").write_text("model_catalog:\n  url: https://example.invalid/catalog.json\n")
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("HERMES_HOME", str(home))
 
@@ -73,6 +74,16 @@ class TestValidation:
 
 
 class TestFetchSuccess:
+    def test_empty_catalog_url_disables_fetch(self, isolated_home):
+        from hermes_cli import model_catalog
+        from hermes_cli.config_defaults import DEFAULT_CONFIG
+
+        assert DEFAULT_CONFIG["model_catalog"]["url"] == ""
+        with patch.object(model_catalog, "_load_catalog_config", return_value={
+            "enabled": True, "url": "", "ttl_hours": 1, "providers": {},
+        }), patch.object(model_catalog, "_fetch_manifest", side_effect=AssertionError("unexpected fetch")):
+            assert model_catalog.get_catalog(force_refresh=True) == {}
+
     def test_fetch_and_cache_writes_disk(self, isolated_home):
         from hermes_cli import model_catalog
         manifest = _valid_manifest()
@@ -131,12 +142,7 @@ class TestFetchFailure:
 
 
 class TestFallbackChain:
-    """``_fetch_manifest_with_fallback`` walks ``DEFAULT_CATALOG_FALLBACK_URLS``
-    when the primary URL fails. Regression: the Docusaurus site behind Vercel
-    occasionally returns HTTP 403 + x-vercel-mitigated: challenge for urllib;
-    without a fallback URL the user's disk cache freezes and new model
-    releases (opus 4.8, etc.) never reach the picker.
-    """
+    """A configured catalog never falls back to an unconfigured upstream host."""
 
     PRIMARY = "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
     FALLBACK = (
@@ -158,7 +164,7 @@ class TestFallbackChain:
         assert result is not None
         assert calls == [self.PRIMARY], "fallback URLs must not be touched on primary success"
 
-    def test_falls_through_to_raw_github_on_primary_failure(self, isolated_home):
+    def test_primary_failure_does_not_contact_raw_github(self, isolated_home):
         from hermes_cli import model_catalog
         calls: list[str] = []
 
@@ -171,28 +177,28 @@ class TestFallbackChain:
         with patch.object(model_catalog, "_fetch_manifest", side_effect=fake_fetch):
             result = model_catalog._fetch_manifest_with_fallback(self.PRIMARY, 5.0)
 
-        assert result is not None
-        assert calls == [self.PRIMARY, self.FALLBACK]
+        assert result is None
+        assert calls == [self.PRIMARY]
 
 
-    def test_get_catalog_uses_fallback_chain(self, isolated_home):
-        """End-to-end: ``get_catalog`` routes through the fallback helper so
-        a primary URL failure transparently produces a working catalog."""
+    def test_get_catalog_uses_only_configured_url(self, isolated_home):
+        """An explicitly configured failed source cannot redirect to the upstream fallback."""
         from hermes_cli import model_catalog
-        manifest = _valid_manifest()
         calls: list[str] = []
 
         def fake_fetch(url, timeout):
             calls.append(url)
             if url == self.PRIMARY:
                 return None
-            return manifest
+            return _valid_manifest()
 
-        with patch.object(model_catalog, "_fetch_manifest", side_effect=fake_fetch):
+        with patch.object(model_catalog, "_fetch_manifest", side_effect=fake_fetch), patch.object(
+            model_catalog, "_load_catalog_config", return_value={
+                "enabled": True, "url": self.PRIMARY, "ttl_hours": 1, "providers": {}}):
             result = model_catalog.get_catalog(force_refresh=True)
 
-        assert result == manifest
-        assert self.FALLBACK in calls
+        assert result == {}
+        assert calls == [self.PRIMARY]
 
 
 class TestCuratedAccessors:

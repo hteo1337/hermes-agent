@@ -205,6 +205,22 @@ class TestRouteFallback:
         shape = _nous_shared_shape({"auth_method": "anonymous", "anon_token": "anon_x"})
         assert shape["inference_base_url"].rstrip("/") == WELCOME
 
+    def test_saved_guest_cannot_refresh_when_endpoints_are_removed(self, portal, monkeypatch):
+        from hermes_cli.auth import resolve_nous_access_token
+        from hermes_cli.auth_nous import resolve_nous_runtime_credentials
+
+        anon_auth.ensure_portal_identity(explicit=True)
+        before = len(portal.calls)
+        monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda _name: "")
+        monkeypatch.delenv("HERMES_PORTAL_BASE_URL", raising=False)
+        with pytest.raises(anon_auth.AuthError) as stopped:
+            resolve_nous_runtime_credentials(force_refresh=True)
+        assert stopped.value.code == "nous_endpoint_unconfigured"
+        with pytest.raises(anon_auth.AuthError) as stopped:
+            resolve_nous_access_token()
+        assert stopped.value.code == "nous_endpoint_unconfigured"
+        assert len(portal.calls) == before
+
 
 class TestTokenAcquisitionSeam:
     def test_expired_guest_jwt_reexchanges_and_never_hits_oauth_token(self, portal):

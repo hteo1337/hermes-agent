@@ -24,6 +24,7 @@ from gateway.status import (
     runtime_status_heartbeat_age_s, runtime_status_is_stale)
 from hermes_cli import __release_date__
 from hermes_cli.config import get_config_path, get_env_path
+from hermes_cli.endpoints import endpoint
 from hermes_cli.version_info import get_version_info
 from hermes_constants import get_process_hermes_home, profile_name_for_home
 from hermes_cli.web_models import CuratorPause, LearningNodeRef, LearningNodeEdit, DebugShareRequest
@@ -773,7 +774,7 @@ def _get_portal_status_sync():
         # Free tier: a token exists, so logged_in stays true for callers that only ask "is there a
         # credential"; surfaces that render an account must branch on free_tier first.
         "free_tier": bool(auth.get("free_tier")), "account_tier": auth.get("account_tier"),
-        "subscription_url": "https://portal.nousresearch.com/manage-subscription",
+        "subscription_url": f"{endpoint('portal')}/manage-subscription" if endpoint("portal") else "",
         "features": features}
 
 

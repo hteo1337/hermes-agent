@@ -1,4 +1,4 @@
-"""The pulled catalog: packaged JSON is the offline truth, a GitHub fetch
+"""The pulled catalog: packaged JSON is the offline truth, a configured fetch
 swaps entries in memory only, and min_engine gates day-0 models.
 
 Nothing here touches disk beyond the packaged file — the design constraint
@@ -9,7 +9,9 @@ from __future__ import annotations
 import dataclasses
 import io
 import json
+import threading
 import urllib.request
+from types import SimpleNamespace
 
 import pytest
 
@@ -20,6 +22,9 @@ import hermes_cli.local_runtime.catalog as cat
 def _reset_refresh_state(monkeypatch):
     """Each test starts outside the TTL window with the packaged catalog."""
     monkeypatch.setattr(cat, "_last_refresh_attempt", 0.0)
+    monkeypatch.setattr(cat, "_last_refresh_url", "")
+    monkeypatch.setattr(cat, "_refresh_generation", 0)
+    monkeypatch.setattr(cat, "endpoint", lambda name: "https://catalog.example.invalid/models.json")
     packaged = cat._packaged_catalog()
     monkeypatch.setattr(cat, "CATALOG", packaged)
     yield
@@ -45,8 +50,80 @@ def _fetch_returns(monkeypatch, doc):
         def __exit__(self, *a):
             return False
 
-    monkeypatch.setattr(urllib.request, "urlopen",
-                        lambda *a, **k: R(body))
+    def fetch(req, *a, **k):
+        assert req.full_url == "https://catalog.example.invalid/models.json"
+        return R(body)
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+
+
+def test_empty_endpoint_disables_refresh_and_background_thread(monkeypatch):
+    monkeypatch.setattr(cat, "endpoint", lambda name: "")
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: pytest.fail("unexpected fetch"))
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: pytest.fail("unexpected thread"))
+    assert cat.refresh_catalog(force=True) is False
+    cat.refresh_catalog_soon()
+    assert cat._last_refresh_attempt == 0.0
+
+
+def test_source_change_retries_after_failed_refresh(monkeypatch):
+    source = {"url": "https://source-a.example.invalid/models.json"}
+    monkeypatch.setattr(cat, "endpoint", lambda name: source["url"])
+    requests = []
+
+    def fetch(req, *args, **kwargs):
+        requests.append(req.full_url)
+        if req.full_url == "https://source-a.example.invalid/models.json":
+            raise OSError("source A unavailable")
+        return io.BytesIO(json.dumps(_doc_from(lambda models: models)).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    assert cat.refresh_catalog(force=True) is False
+    source["url"] = "https://source-b.example.invalid/models.json"
+    started = []
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: SimpleNamespace(
+        start=lambda: started.append(True)))
+    cat.refresh_catalog_soon()
+    assert started == [True]
+    assert cat.refresh_catalog() is True
+    assert requests == ["https://source-a.example.invalid/models.json", source["url"]]
+
+
+def test_old_background_response_cannot_replace_new_source(monkeypatch):
+    source = {"url": "https://source-a.example.invalid/models.json"}
+    monkeypatch.setattr(cat, "endpoint", lambda name: source["url"])
+    entered_a = threading.Event()
+    release_a = threading.Event()
+    results = []
+    bodies = {
+        "source-a": _doc_from(lambda models: [{**models[0], "id": "source-a"}, *models[1:]]),
+        "source-b": _doc_from(lambda models: [{**models[0], "id": "source-b"}, *models[1:]]),
+    }
+
+    def fetch(req, *args, **kwargs):
+        selected = "source-a" if "source-a" in req.full_url else "source-b"
+        if selected == "source-a":
+            entered_a.set()
+            assert release_a.wait(5)
+        return io.BytesIO(json.dumps(bodies[selected]).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    first = threading.Thread(target=lambda: results.append(("a", cat.refresh_catalog())))
+    first.start()
+    try:
+        assert entered_a.wait(5)
+        source["url"] = "https://source-b.example.invalid/models.json"
+        second = threading.Thread(target=lambda: results.append(("b", cat.refresh_catalog())))
+        second.start()
+        second.join(5)
+        assert not second.is_alive()
+    finally:
+        release_a.set()
+        first.join(5)
+    assert not first.is_alive()
+    assert results == [("b", True), ("a", False)]
+    assert "source-b" in cat.catalog_by_id()
+    assert "source-a" not in cat.catalog_by_id()
 
 
 def test_packaged_json_round_trips_the_catalog():

@@ -24,7 +24,8 @@ _NO_SOCKETS_SUFFIX = " — no sockets found; in-flight request may keep running 
 def _routermint_headers() -> dict:
     """User-Agent RouterMint needs to avoid Cloudflare 1010 blocks."""
     from hermes_cli.version_info import get_version_info
-    return {"User-Agent": f"HermesAgent/{get_version_info().base_version}"}
+    from hermes_cli.endpoints import brand_name
+    return {"User-Agent": f"{brand_name()}/{get_version_info().base_version}"}
 
 
 def _qwen_portal_headers() -> dict:

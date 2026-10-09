@@ -54,9 +54,9 @@ _KEY_URL = "https://www.perplexity.ai/account/api"
 # OpenCode, plus Perplexity's integration header. No per-user identifier and no separate
 # request; the call already carries the user's own API key.
 _HEADERS = {
-    "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-    "X-Title": "Hermes Agent",
-    "User-Agent": f"HermesAgent/{get_version_info().base_version}",
+    "HTTP-Referer": "https://envoy.invalid",
+    "X-Title": "Envoy",
+    "User-Agent": f"Envoy/{get_version_info().base_version}",
     "X-Pplx-Integration": "hermes-agent",
 }
 

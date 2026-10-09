@@ -44,7 +44,7 @@ class TestFastFails:
                 "hermes_cli.auth.resolve_nous_access_token", side_effect=err
             ), patch("hermes_cli.config.is_managed", return_value=False):
                 with pytest.raises(SystemExit) as exc:
-                    dr.cmd_dashboard_register(_ns())
+                    dr.cmd_dashboard_register(_ns(portal_url="https://portal.example.test"))
         assert exc.value.code == 1
         out = capsys.readouterr().out
         assert "not logged into Nous Portal" in out
@@ -123,9 +123,9 @@ class TestHappyPath:
         assert "name" in captured["body"] and captured["body"]["name"]
         assert "custom_redirect_uri" not in captured["body"]
 
-        # env write: client_id present, portal URL NOT written (default portal)
+        # The resolved Portal is persisted when no manifest default exists.
         assert saved["HERMES_DASHBOARD_OAUTH_CLIENT_ID"] == "agent:selfhost-1"
-        assert "HERMES_DASHBOARD_PORTAL_URL" not in saved
+        assert saved["HERMES_DASHBOARD_PORTAL_URL"] == "https://portal.nousresearch.com"
 
         out = capsys.readouterr().out
         assert "Registered dashboard" in out
@@ -245,8 +245,9 @@ class TestCustomPortalPersistence:
         return saved
 
 
-    def test_no_flag_default_portal_not_written(self, capsys):
-        # No custom URL supplied, resolves to default → not written.
+    def test_no_flag_default_portal_not_written(self, capsys, monkeypatch):
+        # A configured manifest default is not redundantly persisted.
+        monkeypatch.setattr(dr, "_DEFAULT_PORTAL", "https://portal.nousresearch.com")
         saved = self._run(
             args=_ns(),
             portal="https://portal.nousresearch.com",
@@ -379,14 +380,14 @@ class TestPortalResolution:
             == "https://preview.example.com"
         )
 
-    def test_falls_back_to_stored_login_portal(self):
+    def test_stored_login_portal_does_not_override_disabled_manifest(self):
         with patch(
             "hermes_cli.auth.get_provider_auth_state",
             return_value={"portal_base_url": "https://portal.staging-nousresearch.com"},
         ):
             assert (
                 dr._resolve_portal_base_url(None)
-                == "https://portal.staging-nousresearch.com"
+                == ""
             )
 
 
@@ -414,3 +415,14 @@ class TestPortalErrors:
         assert code == 1
         assert "re-authenticate" in capsys.readouterr().out
 
+
+
+def test_registration_disabled_without_portal_endpoint(monkeypatch):
+    monkeypatch.setattr(dr, "endpoint", lambda name: "")
+    with patch("hermes_cli.auth.resolve_nous_access_token") as token, \
+         patch.object(dr, "_register_self_hosted_client") as register:
+        with pytest.raises(SystemExit) as stopped:
+            dr.cmd_dashboard_register(_ns())
+    assert stopped.value.code == 1
+    token.assert_not_called()
+    register.assert_not_called()

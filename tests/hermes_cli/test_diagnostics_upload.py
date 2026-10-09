@@ -23,6 +23,22 @@ def _resp(*, status=200, body=b""):
     return m
 
 
+@pytest.fixture(autouse=True)
+def _configured_diagnostics_endpoint(monkeypatch):
+    monkeypatch.setenv("HERMES_DIAGNOSTICS_BASE_URL", "https://diagnostics.example.test")
+
+
+def test_disabled_diagnostics_never_opens_network(monkeypatch):
+    import hermes_cli.diagnostics_upload as mod
+
+    monkeypatch.delenv("HERMES_DIAGNOSTICS_BASE_URL", raising=False)
+    monkeypatch.setattr(mod, "endpoint", lambda name: "")
+    with patch.object(mod.urllib.request, "urlopen") as opened:
+        with pytest.raises(RuntimeError, match="disabled"):
+            mod.request_upload_url(size_bytes=4)
+    opened.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # request_upload_url
 # ---------------------------------------------------------------------------
@@ -34,7 +50,7 @@ class TestRequestUploadUrl:
         payload = {
             "success": True,
             "id": "abc-123",
-            "uploadUrl": "https://bucket.s3.amazonaws.com/uploads/abc-123.json.gz?sig",
+            "uploadUrl": "https://diagnostics.example.test/uploads/abc-123.json.gz?sig",
             "viewUrl": "https://support.example.com/diagnostics/abc-123",
             "uploadExpiresInSeconds": 900,
         }
@@ -71,30 +87,15 @@ class TestRequestUploadUrl:
 
 
     def test_base_url_env_override(self, monkeypatch):
-        # NAS_BASE is read at import time; re-import the module under the
-        # patched env to confirm the override is honoured.
-        import importlib
-
         monkeypatch.setenv("HERMES_DIAGNOSTICS_BASE_URL", "https://staging.example.com")
-        import hermes_cli.diagnostics_upload as mod
+        from hermes_cli.diagnostics_upload import request_upload_url
 
-        mod = importlib.reload(mod)
-        try:
-            assert mod.NAS_BASE == "https://staging.example.com"
-            resp = _resp(
-                status=200,
-                body=json.dumps({"uploadUrl": "u", "id": "i", "viewUrl": "v"}).encode(),
-            )
-            with patch(
-                "hermes_cli.diagnostics_upload.urllib.request.urlopen",
-                return_value=resp,
-            ) as urlopen:
-                mod.request_upload_url()
-            req = urlopen.call_args[0][0]
-            assert req.full_url == "https://staging.example.com/api/diagnostics/upload-url"
-        finally:
-            monkeypatch.delenv("HERMES_DIAGNOSTICS_BASE_URL", raising=False)
-            importlib.reload(mod)
+        resp = _resp(status=200, body=json.dumps({"uploadUrl": "u"}).encode())
+        with patch("hermes_cli.diagnostics_upload.urllib.request.urlopen", return_value=resp) as opened:
+            request_upload_url()
+        assert opened.call_args.args[0].full_url == (
+            "https://staging.example.com/api/diagnostics/upload-url"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +145,7 @@ class TestShareToNous:
 
         info = {
             "id": "id-9",
-            "uploadUrl": "https://bucket/uploads/id-9.json.gz?sig",
+            "uploadUrl": "https://diagnostics.example.test/uploads/id-9.json.gz?sig",
             "viewUrl": "https://support/diagnostics/id-9",
             "expiresAt": "2026-06-20T00:00:00Z",
         }
@@ -163,10 +164,19 @@ class TestShareToNous:
             info["uploadUrl"], blob, content_type="application/gzip"
         )
 
+    def test_rejects_cross_host_upload_before_sending_bundle(self):
+        from hermes_cli import diagnostics_upload as mod
+
+        info = {"uploadUrl": "https://other.example.test/collect"}
+        with patch.object(mod, "request_upload_url", return_value=info), patch.object(mod, "put_bundle") as put:
+            with pytest.raises(RuntimeError, match="configured diagnostics host"):
+                mod.share_to_nous(b"data")
+        put.assert_not_called()
+
     def test_put_failure_propagates(self):
         from hermes_cli import diagnostics_upload as mod
 
-        info = {"id": "id-9", "uploadUrl": "https://u", "viewUrl": "v"}
+        info = {"id": "id-9", "uploadUrl": "https://diagnostics.example.test/u", "viewUrl": "v"}
         with patch.object(mod, "request_upload_url", return_value=info), \
              patch.object(mod, "put_bundle", side_effect=RuntimeError("PUT failed")):
             with pytest.raises(RuntimeError):
@@ -177,7 +187,7 @@ class TestShareToNous:
 
         # NAS is stateless and there is no confirm step, so the share must
         # succeed regardless of whether the response carries an ``id``.
-        info = {"uploadUrl": "https://u", "viewUrl": "v"}  # no id
+        info = {"uploadUrl": "https://diagnostics.example.test/u", "viewUrl": "v"}  # no id
         with patch.object(mod, "request_upload_url", return_value=info), \
              patch.object(mod, "put_bundle") as put:
             result = mod.share_to_nous(b"data")

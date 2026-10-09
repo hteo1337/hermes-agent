@@ -979,7 +979,7 @@ class TestRunDebugShareNous:
             "viewUrl": "https://support.example.com/diagnostics/id-1",
             "expiresAt": "2026-06-20T00:00:00Z",
         }
-        with patch("hermes_cli.dump.run_dump"), patch(
+        with patch("hermes_cli.diagnostics_upload.diagnostics_base_url", return_value="https://diagnostics.example.test"), patch("hermes_cli.dump.run_dump"), patch(
             "hermes_cli.diagnostics_upload.share_to_nous", return_value=res
         ) as share:
             run_debug_share(self._args())
@@ -994,7 +994,7 @@ class TestRunDebugShareNous:
     def test_nous_failure_suggests_local(self, hermes_home, capsys):
         from hermes_cli.debug import run_debug_share
 
-        with patch("hermes_cli.dump.run_dump"), patch(
+        with patch("hermes_cli.diagnostics_upload.diagnostics_base_url", return_value="https://diagnostics.example.test"), patch("hermes_cli.dump.run_dump"), patch(
             "hermes_cli.diagnostics_upload.share_to_nous",
             side_effect=RuntimeError("service down"),
         ):
@@ -1008,7 +1008,7 @@ class TestRunDebugShareNous:
         from hermes_cli.debug import run_debug_share
 
         res = {"id": "id-1", "viewUrl": "https://v"}
-        with patch("hermes_cli.dump.run_dump"), patch(
+        with patch("hermes_cli.diagnostics_upload.diagnostics_base_url", return_value="https://diagnostics.example.test"), patch("hermes_cli.dump.run_dump"), patch(
             "hermes_cli.diagnostics_upload.share_to_nous", return_value=res
         ), patch("hermes_cli.debug.upload_to_pastebin") as paste:
             run_debug_share(self._args())

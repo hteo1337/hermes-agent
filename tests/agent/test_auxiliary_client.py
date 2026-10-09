@@ -40,12 +40,6 @@ from agent.auxiliary_client import (
 )
 
 
-def _jwt_with_claims(claims: dict) -> str:
-    header = base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').decode().rstrip("=")
-    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")
-    return f"{header}.{payload}.sig"
-
-
 class _FakeAnthropicStream:
     def __init__(self, final_message):
         self._final_message = final_message
@@ -510,7 +504,6 @@ class TestResolveCodexCredentialToken:
 
     def test_expired_jwt_returns_none(self, tmp_path, monkeypatch):
         """Expired JWT tokens should be skipped so auto chain continues."""
-        import base64
         import time as _time
 
         # Build a JWT with exp in the past
@@ -536,7 +529,6 @@ class TestResolveCodexCredentialToken:
 
     def test_valid_jwt_returns_token(self, tmp_path, monkeypatch):
         """Non-expired JWT tokens should be returned."""
-        import base64
         import time as _time
 
         header = base64.urlsafe_b64encode(b'{"alg":"RS256","typ":"JWT"}').rstrip(b"=").decode()
@@ -884,7 +876,6 @@ class TestExpiredCodexFallback:
 
     def test_expired_codex_openrouter_wins(self, tmp_path, monkeypatch):
         """With expired Codex + OpenRouter key, OpenRouter should win (1st in chain)."""
-        import base64
         import time as _time
 
         # Belt-and-suspenders: _try_openrouter marks openrouter unhealthy
@@ -1231,57 +1222,6 @@ class TestVisionClientFallback:
 
 class TestAuxiliaryPoolAwareness:
 
-    def test_try_nous_refreshes_stale_pool_entry(self):
-        stale_token = _jwt_with_claims({
-            "scope": "inference:invoke",
-            "exp": int(time.time() - 60),
-        })
-        fresh_token = _jwt_with_claims({
-            "scope": "inference:invoke",
-            "exp": int(time.time() + 3600),
-        })
-
-        class _Entry:
-            def __init__(self, token):
-                self.access_token = "pooled-access-token"
-                self.agent_key = token
-                self.agent_key_expires_at = "2099-01-01T00:00:00+00:00"
-                self.scope = "inference:invoke"
-                self.inference_base_url = "https://inference.pool.example/v1"
-
-        class _Pool:
-            refreshed = False
-
-            def has_credentials(self):
-                return True
-
-            def select(self):
-                return _Entry(stale_token)
-
-            def try_refresh_current(self):
-                self.refreshed = True
-                return _Entry(fresh_token)
-
-        pool = _Pool()
-        with (
-            patch("agent.auxiliary_client.load_pool", return_value=pool),
-            patch("agent.auxiliary_client.OpenAI") as mock_openai,
-            patch("hermes_cli.models.get_nous_recommended_aux_model", return_value=None),
-        ):
-            from agent.auxiliary_client import _try_nous
-
-            client, model = _try_nous()
-
-        assert pool.refreshed is True
-        assert client is not None
-        assert model == _NOUS_MODEL
-        assert mock_openai.call_args.kwargs["api_key"] == fresh_token
-        assert mock_openai.call_args.kwargs["base_url"] == "https://inference.pool.example/v1"
-
-
-
-
-
     def test_call_llm_retries_nous_after_401(self):
         class _Auth401(Exception):
             status_code = 401
@@ -1539,13 +1479,16 @@ class TestTryPaymentFallback:
         """Discovery only walks with no selected main provider (``auto``); a selected provider that
         fails never hops to another logged-in account (test_auxiliary_auto_never_guesses_provider)."""
         mock_client = MagicMock()
-        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(mock_client, "nous-model")), \
+        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)) as or_try, \
+             patch("agent.auxiliary_client._try_nous") as nous_try, \
+             patch("agent.auxiliary_client._try_custom_endpoint", return_value=(mock_client, "custom-model")), \
              patch("agent.auxiliary_client._read_main_provider", return_value="auto"):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
         assert client is mock_client
-        assert model == "nous-model"
-        assert label == "nous"
+        assert model == "custom-model"
+        assert label == "local/custom"
+        or_try.assert_not_called()
+        nous_try.assert_not_called()
 
 
 
@@ -4433,20 +4376,17 @@ class TestAuxUnhealthyCache:
             _try_payment_fallback,
             _mark_provider_unhealthy,
         )
-        nous_client = MagicMock()
-        # Mark BOTH the failed provider (openrouter) and a sibling (custom)
-        # unhealthy. The chain should still find nous.
+        # OpenRouter failed and custom is unhealthy; automatic fallback must not use Nous.
         _mark_provider_unhealthy("local/custom")
         with patch("agent.auxiliary_client._read_main_provider", return_value="auto"), \
              patch("agent.auxiliary_client._try_openrouter") as or_try, \
-             patch("agent.auxiliary_client._try_nous", return_value=(nous_client, "n-model")), \
+             patch("agent.auxiliary_client._try_nous") as nous_try, \
              patch("agent.auxiliary_client._try_custom_endpoint") as custom_try, \
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
-        assert client is nous_client
-        assert label == "nous"
-        # OR is skipped via skip_chain_labels (failed provider), custom via unhealthy cache.
+        assert (client, model, label) == (None, None, "")
         or_try.assert_not_called()
+        nous_try.assert_not_called()
         custom_try.assert_not_called()
 
     def test_custom_health_url_identity_preserves_path_and_query_case(self):

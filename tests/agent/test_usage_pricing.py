@@ -924,3 +924,12 @@ def test_anthropic_fast_response_without_a_fast_rate_is_unknown():
     result = estimate_usage_cost("claude-sonnet-4-6", _anthropic_usage("fast"), provider="anthropic")
     assert result.amount_usd is None
     assert result.status == "unknown"
+
+
+def test_nous_pricing_route_never_invents_inference_url():
+    from agent.usage_pricing import resolve_billing_route
+
+    disabled = resolve_billing_route("model", provider="nous")
+    configured = resolve_billing_route("model", provider="nous", base_url="https://inference.example.test/v1")
+    assert disabled.base_url == ""
+    assert configured.base_url == "https://inference.example.test/v1"

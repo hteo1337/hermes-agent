@@ -22,11 +22,22 @@ These tests verify:
 from __future__ import annotations
 
 import logging
+import pytest
 
 from hermes_cli.auth import (
     DEFAULT_NOUS_INFERENCE_URL,
     _validate_nous_inference_url_from_network,
 )
+
+CONFIGURED_INFERENCE = "https://inference-api.nousresearch.com/v1"
+
+
+@pytest.fixture(autouse=True)
+def _configured_nous_endpoints(monkeypatch):
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: {
+        "portal": "https://portal.nousresearch.com",
+        "nousInferenceUrl": CONFIGURED_INFERENCE,
+    }.get(name, ""))
 
 class TestValidatorRules:
 
@@ -38,18 +49,9 @@ class TestValidatorRules:
             )
         assert any("attacker.com" in rec.message for rec in caplog.records)
 
-    def test_default_inference_url_is_in_allowlist(self):
-        """Sanity check: DEFAULT_NOUS_INFERENCE_URL must itself validate.
-
-        If anyone retargets the default away from
-        ``inference-api.nousresearch.com``, they MUST update the allowlist
-        in the same change — otherwise the allowlist would reject the
-        Portal's own legitimate default and break every install.
-        """
-        assert (
-            _validate_nous_inference_url_from_network(DEFAULT_NOUS_INFERENCE_URL)
-            == DEFAULT_NOUS_INFERENCE_URL.rstrip("/")
-        )
+    def test_empty_default_and_configured_inference_url(self):
+        assert DEFAULT_NOUS_INFERENCE_URL == ""
+        assert _validate_nous_inference_url_from_network(CONFIGURED_INFERENCE) == CONFIGURED_INFERENCE
 
 class TestCallSiteWiring:
     """Verify the validator is actually wired into all auth.py NETWORK call sites.
@@ -148,8 +150,8 @@ class TestHealsPoisonedStoredValue:
 
         result = auth.refresh_nous_oauth_from_state(state, force_refresh=True)
 
-        assert result["inference_base_url"] == auth.DEFAULT_NOUS_INFERENCE_URL, (
-            "rejected Portal URL must heal to the production default, "
+        assert result["inference_base_url"] == CONFIGURED_INFERENCE, (
+            "rejected Portal URL must heal to the configured endpoint, "
             f"got {result['inference_base_url']!r}"
         )
 
@@ -215,13 +217,13 @@ class TestEnvOverrideWins:
         back into the stored state (auth.json)."""
         from hermes_cli import auth
 
-        state = self._base_state(auth, auth.DEFAULT_NOUS_INFERENCE_URL)
+        state = self._base_state(auth, CONFIGURED_INFERENCE)
         self._patch_no_refresh(monkeypatch, auth, state)
         monkeypatch.setenv("NOUS_INFERENCE_BASE_URL", self.STAGING)
 
         auth.resolve_nous_runtime_credentials()
 
-        assert state["inference_base_url"] == auth.DEFAULT_NOUS_INFERENCE_URL, (
+        assert state["inference_base_url"] == CONFIGURED_INFERENCE, (
             "env override leaked into persisted state — it must stay a "
             f"runtime overlay, got {state['inference_base_url']!r}"
         )
@@ -237,8 +239,8 @@ class TestEnvOverrideWins:
         monkeypatch.delenv("NOUS_INFERENCE_BASE_URL", raising=False)
 
         result = auth.resolve_nous_runtime_credentials()
-        assert result["base_url"] == auth.DEFAULT_NOUS_INFERENCE_URL, (
-            "poisoned stored URL must heal to the production default on the "
+        assert result["base_url"] == CONFIGURED_INFERENCE, (
+            "poisoned stored URL must heal to the configured endpoint on the "
             f"no-refresh read path, got {result['base_url']!r}"
         )
 

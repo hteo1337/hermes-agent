@@ -158,6 +158,10 @@ def guest_enabled() -> bool:
     True) has not switched it off."""
     if (os.environ.get(GUEST_ONBOARDING_ENV) or "").strip() != "1":
         return False
+    from hermes_cli.endpoints import endpoint
+    from hermes_cli.auth_nous import _nous_portal_env_override
+    if not (_nous_portal_env_override() or endpoint("portal")) or not endpoint("nousWelcomeUrl"):
+        return False
     try:
         from hermes_cli.config import load_config_readonly
         nous_cfg = load_config_readonly().get("nous")
@@ -217,7 +221,7 @@ def free_tier_route() -> bool:
     return has_free_tier_account() and resolve_provider("auto") == "nous"
 
 
-WELCOME_HOSTS = frozenset({"welcome-api.nousresearch.com"})
+WELCOME_HOSTS = frozenset()
 # Dev-only: extra hostnames that count as the welcome host, comma-separated (for example
 # ``127.0.0.1`` while ``NOUS_INFERENCE_BASE_URL`` points at a local stand-in). Read from the
 # environment, which the user controls, so it sits at the same trust level as the URL override
@@ -229,7 +233,10 @@ def welcome_hosts() -> frozenset[str]:
     """``WELCOME_HOSTS`` plus any ``HERMES_EXTRA_WELCOME_HOSTS`` entries (lowercased hostnames)."""
     raw = os.environ.get(EXTRA_WELCOME_HOSTS_ENV) or ""
     extra = {part.strip().lower() for part in raw.split(",") if part.strip()}
-    return WELCOME_HOSTS | frozenset(extra) if extra else WELCOME_HOSTS
+    from urllib.parse import urlparse
+    from hermes_cli.endpoints import endpoint
+    configured = urlparse(endpoint("nousWelcomeUrl")).hostname
+    return frozenset(({configured.lower()} if configured else set()) | extra)
 
 
 def pin_model_for_route(provider: Any, base_url: Any, model: Any) -> Any:
@@ -422,7 +429,8 @@ def apply_exchange_to_state(state: dict[str, Any], exchanged: dict[str, Any]) ->
 
 def _portal_base_url() -> str:
     from hermes_cli.auth_nous import _nous_portal_env_override
-    return (_nous_portal_env_override() or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
+    from hermes_cli.endpoints import endpoint
+    return (_nous_portal_env_override() or endpoint("portal")).rstrip("/")
 
 
 def _shared_identity_key(state: Any) -> Optional[str]:

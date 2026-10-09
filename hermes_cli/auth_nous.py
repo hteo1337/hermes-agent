@@ -213,22 +213,9 @@ def _nous_portal_env_override() -> Optional[str]:
 
 
 def _nous_portal_base_url(state: dict[str, Any]) -> str:
-    """HERMES_PORTAL_BASE_URL / NOUS_PORTAL_BASE_URL is the trusted operator override and wins
-    OUTRIGHT, bypassing the host allowlist (which exists to reject an untrusted network-provided
-    value, not one the operator configured). Otherwise the stored/default value, allowlist-gated."""
-    env_portal_override = _nous_portal_env_override()
-    if env_portal_override:
-        return env_portal_override.rstrip("/")
-    from hermes_cli.auth import _NOUS_PORTAL_ALLOWED_HOSTS, _optional_base_url
-    portal_base_url = _optional_base_url(state.get("portal_base_url")) or DEFAULT_NOUS_PORTAL_URL
-    portal_base_url = portal_base_url.rstrip("/")
-    host = urlparse(portal_base_url).hostname
-    if host and host not in _NOUS_PORTAL_ALLOWED_HOSTS:
-        logger.warning(
-            "auth: ignoring invalid portal_base_url %r (host %r not in allowlist), using default",
-            portal_base_url, host)
-        return DEFAULT_NOUS_PORTAL_URL
-    return portal_base_url
+    """Use only current operator configuration, never persisted service metadata."""
+    from hermes_cli.endpoints import endpoint
+    return (_nous_portal_env_override() or endpoint("portal")).rstrip("/")
 
 
 def _scope_values(raw_scope: Any) -> set[str]:
@@ -720,14 +707,10 @@ def _apply_nous_refreshed_tokens(
 
 
 def _healed_nous_inference_url(refreshed: dict[str, Any]) -> str:
-    """Validated network-provenance inference URL from a refresh payload, healed to the default.
-
-    A Portal URL rejected by the allowlist resets to the production default instead of leaving a
-    previously-persisted bad host (e.g. a stale staging URL) in place — otherwise a poisoned
-    auth.json re-validates to None on every refresh and silently re-uses the dead endpoint.
-    """
+    """Prefer the configured recipient over a Portal-provided route."""
+    from hermes_cli.endpoints import endpoint
     url = _validate_nous_inference_url_from_network(refreshed.get("inference_base_url"))
-    return url or DEFAULT_NOUS_INFERENCE_URL
+    return endpoint("nousInferenceUrl") or url or DEFAULT_NOUS_INFERENCE_URL
 
 
 def _nous_http_client(timeout_seconds: float, verify: Any) -> httpx.Client:
@@ -811,6 +794,12 @@ def refresh_nous_oauth_from_state(
     src: dict[str, Any], *, timeout_seconds: float = 15.0, force_refresh: bool = False,
     on_state_update: Optional[Callable[[dict[str, Any], str], None]] = None) -> dict[str, Any]:
     """Refresh Nous OAuth from a state dict (defaults filled in) without mutating auth.json."""
+    from hermes_cli.endpoints import endpoint
+    route = "nousWelcomeUrl" if src.get("auth_method") == "anonymous" else "nousInferenceUrl"
+    portal_url = _nous_portal_env_override() or endpoint("portal")
+    inference_url = _nous_inference_env_override() or endpoint(route)
+    if not portal_url or not inference_url:
+        raise _nous_err("Nous endpoints are not configured.", "nous_endpoint_unconfigured")
     from hermes_cli.auth import (
         _assert_nous_inference_jwt_usable, _refresh_access_token, _resolve_verify,
         _select_nous_invoke_jwt)
@@ -819,9 +808,8 @@ def refresh_nous_oauth_from_state(
     state: dict[str, Any] = {
         "access_token": src.get("access_token", ""), "refresh_token": src.get("refresh_token", ""),
         "client_id": src.get("client_id") or DEFAULT_NOUS_CLIENT_ID,
-        "portal_base_url": (src.get("portal_base_url") or DEFAULT_NOUS_PORTAL_URL).rstrip("/"),
-        "inference_base_url": (
-            src.get("inference_base_url") or DEFAULT_NOUS_INFERENCE_URL).rstrip("/"),
+        "portal_base_url": portal_url.rstrip("/"),
+        "inference_base_url": inference_url.rstrip("/"),
         "token_type": src.get("token_type") or "Bearer",
         "scope": src.get("scope") or DEFAULT_NOUS_SCOPE,
         "obtained_at": src.get("obtained_at"), "expires_at": src.get("expires_at"),
@@ -882,37 +870,12 @@ def _sync_nous_pool_from_auth_store() -> None:
 
 
 def _nous_effective_routing(state: dict[str, Any]) -> tuple[str, str, str, str]:
-    """``(portal_url, stored_inference_url, effective_inference_url, client_id)`` from *state*.
-
-    The stored inference URL is re-validated network-provenance (persisted); the effective one
-    layers the runtime-only ``NOUS_INFERENCE_BASE_URL`` override on top and is never persisted.
-    """
-    from hermes_cli.auth import _NOUS_PORTAL_ALLOWED_HOSTS, _optional_base_url
-    portal_url = (_optional_base_url(state.get("portal_base_url")) or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
-    # A persisted/stale portal_base_url is where the refresh token gets POSTed — reject any host
-    # outside the allowlist so a poisoned value can't exfiltrate the bearer, healing to the
-    # default. Trusted operator env overrides bypass this network-value gate.
-    env_portal_override = _nous_portal_env_override()
-    if env_portal_override:
-        portal_url = env_portal_override.rstrip("/")
-    else:
-        parsed_portal_url = urlparse(portal_url)
-        portal_host, scheme = parsed_portal_url.hostname, parsed_portal_url.scheme
-        trusted_scheme = scheme == "https" or (
-            scheme == "http" and portal_host in {"localhost", "127.0.0.1"})
-        if not portal_host or portal_host not in _NOUS_PORTAL_ALLOWED_HOSTS or not trusted_scheme:
-            logger.warning(
-                "auth: ignoring invalid portal_base_url %r "
-                "(host %r or scheme not allowed), using default",
-                portal_url, portal_host)
-            portal_url = DEFAULT_NOUS_PORTAL_URL
-    # A guest never falls back to the paid host: the gateway cross-refuses an anonymous JWT there
-    # (400 naming the welcome host), so an absent or disallowed URL heals to the welcome literal.
+    """Resolve current configured routes without trusting persisted URLs."""
+    from hermes_cli.endpoints import endpoint
     from hermes_cli.anon_auth import is_guest_state
-    stored_inference_url = (
-        _validate_nous_inference_url_from_network(
-            _optional_base_url(state.get("inference_base_url")))
-        or (DEFAULT_NOUS_WELCOME_URL if is_guest_state(state) else DEFAULT_NOUS_INFERENCE_URL))
+    portal_url = (_nous_portal_env_override() or endpoint("portal")).rstrip("/")
+    route = "nousWelcomeUrl" if is_guest_state(state) else "nousInferenceUrl"
+    stored_inference_url = endpoint(route).rstrip("/")
     return (
         portal_url, stored_inference_url, _nous_inference_env_override() or stored_inference_url,
         str(state.get("client_id") or DEFAULT_NOUS_CLIENT_ID))
@@ -1111,6 +1074,12 @@ def _resolve_nous_runtime_credentials(
     with _provider_state_transaction("nous") as (auth_store, state, state_source_path):
         if not state:
             raise _nous_err("Hermes is not logged into Nous Portal.", "nous_auth_missing", relogin=True)
+        from hermes_cli.anon_auth import is_guest_state
+        from hermes_cli.endpoints import endpoint
+        route = "nousWelcomeUrl" if is_guest_state(state) else "nousInferenceUrl"
+        if not (_nous_portal_env_override() or endpoint("portal")) or not (
+                _nous_inference_env_override() or endpoint(route)):
+            raise _nous_err("Nous endpoints are not configured.", "nous_endpoint_unconfigured")
         run = _NousRuntimeResolve(
             auth_store, state, state_source_path, force_refresh=force_refresh,
             stale_access_token=stale_access_token, timeout_seconds=timeout_seconds)

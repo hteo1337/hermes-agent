@@ -1812,10 +1812,9 @@ def resolve_nous_access_token(
     insecure: Optional[bool] = None,
     ca_bundle: Optional[str] = None,
     refresh_skew_seconds: int = ACCESS_TOKEN_REFRESH_SKEW_SECONDS) -> str:
-    """Resolve a refresh-aware Nous Portal access token for managed tool gateways.
-
-    A free-tier exchange may be answered with a browser challenge (``anon_challenge``); it is worked
-    here, after the exchange's locks have unwound, and the exchange is then run once more."""
+    """Resolve a refresh-aware Nous Portal access token for managed tools."""
+    if not _nous_portal_base_url({}):
+        raise AuthError("Nous Portal endpoint is not configured.", code="nous_endpoint_unconfigured")
     from hermes_cli.anon_challenge import run_with_challenge
     return run_with_challenge(lambda: _resolve_nous_access_token(
         timeout_seconds=timeout_seconds, insecure=insecure, ca_bundle=ca_bundle,

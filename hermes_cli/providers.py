@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from utils import base_url_host_matches, base_url_hostname
+from hermes_cli.endpoints import endpoint
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class HermesOverlay:
 HERMES_OVERLAYS: dict[str, HermesOverlay] = {
     "moa": HermesOverlay(auth_type="virtual", base_url_override="moa://local"),
     "openrouter": HermesOverlay(is_aggregator=True, base_url_env_var="OPENROUTER_BASE_URL"),
-    "nous": HermesOverlay(auth_type="oauth_device_code", base_url_override="https://inference-api.nousresearch.com/v1"),
+    "nous": HermesOverlay(auth_type="oauth_device_code", base_url_override=endpoint("nousInferenceUrl")),
     "openai-codex": HermesOverlay(transport="codex_responses", auth_type="oauth_external",
                                   base_url_override="https://chatgpt.com/backend-api/codex"),
     "openai-api": HermesOverlay(transport="codex_responses", base_url_override="https://api.openai.com/v1",
@@ -203,11 +204,13 @@ def get_provider(name: str, *, allow_network: bool = True) -> Optional[ProviderD
         for ev in ov.extra_env_vars:
             if ev not in env_vars:
                 env_vars.append(ev)
-        return _overlay_pdef(canonical, ov, mdev_info.name, tuple(env_vars), ov.base_url_override or mdev_info.api,
+        base_url = endpoint("nousInferenceUrl") if canonical == "nous" else ov.base_url_override or mdev_info.api
+        return _overlay_pdef(canonical, ov, mdev_info.name, tuple(env_vars), base_url,
                              mdev_info.doc, "models.dev")
     if overlay is not None:
+        base_url = endpoint("nousInferenceUrl") if canonical == "nous" else overlay.base_url_override
         return _overlay_pdef(canonical, overlay, _LABEL_OVERRIDES.get(canonical, canonical), overlay.extra_env_vars,
-                             overlay.base_url_override, "", "hermes")
+                             base_url, "", "hermes")
     # Plugin-registered profiles (plugins/model-providers/<name>/) absent from models.dev and
     # HERMES_OVERLAYS would otherwise be "Unknown provider" in /model, --provider and model-switch
     # even though the picker lists them. Only profiles with a literal or env-configured endpoint

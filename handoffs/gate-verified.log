@@ -1,0 +1,56 @@
+▶ not activated — using HERMES_PYTHON: /private/tmp/envoy-d3b-gate.twJfNj/hermes/installs/df33685e3cec15a2/test-environment/gen-39ef43284a4341b9a1ad3e6cd42bb431/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 27 test files (~644 tests) under ['tests/hermes_cli/test_anon_auth_core.py', 'tests/hermes_cli/test_auth_nous_provider.py', 'tests/hermes_cli/test_endpoints.py', 'tests/hermes_cli/test_model_catalog.py', 'tests/hermes_cli/test_nous_inference_url_validation.py', 'tests/hermes_cli/test_nous_portal_staging_allowlist.py', 'tests/hermes_cli/test_resolve_token_memo.py', 'tests/hermes_cli/test_skills_hub.py', 'tests/agent/test_auxiliary_client.py', 'tests/agent/test_auxiliary_nous_endpoint.py', 'tests/agent/test_provider_parity.py', 'tests/hermes_cli/test_catalog_json.py', 'tests/hermes_cli/test_plugin_catalog.py', 'tests/hermes_cli/test_plugins_hub_live_catalog.py', 'tests/hermes_cli/test_diagnostics_upload.py', 'tests/hermes_cli/test_nous_account.py', 'tests/agent/test_usage_pricing.py', 'tests/agent/test_billing_links.py', 'tests/agent/test_billing_view.py', 'tests/agent/test_prompt_builder.py', 'tests/hermes_cli/test_shared_metrics_send_config.py', 'tests/hermes_cli/test_dashboard_register.py', 'tests/hermes_cli/test_telegram_managed_bot.py', 'tests/hermes_cli/test_billing_portal_url.py', 'tests/hermes_cli/test_models.py', 'tests/hermes_cli/test_telegram_onboarding_endpoint.py', 'tests/hermes_cli/test_update_sqlite_remediation.py']; running with -j 6
+[  0.3% |     2/~644 | ✓2 | ✗0] ✓ tests/agent/test_billing_links.py (2✓, 4.3s)
+[  1.1% |     7/~644 | ✓7 | ✗0] ✓ tests/agent/test_auxiliary_nous_endpoint.py (5✓, 9.2s)
+[  3.0% |    19/~644 | ✓33 | ✗ 0] ✓ tests/agent/test_billing_view.py (26✓, 37.9s)
+[  8.9% |    57/~644 | ✓72 | ✗ 0] ✓ tests/agent/test_provider_parity.py (39✓, 66.0s)
+[  9.2% |    59/~644 | ✓74 | ✗ 0] ✓ tests/hermes_cli/test_billing_portal_url.py (2✓, 5.1s)
+[ 14.8% |    95/~644 | ✓115 | ✗  0] ✓ tests/hermes_cli/test_anon_auth_core.py (41✓, 77.2s)
+[ 16.1% |   104/~644 | ✓124 | ✗  0] ✓ tests/hermes_cli/test_catalog_json.py (9✓, 17.1s)
+[ 23.8% |   153/~644 | ✓184 | ✗  0] ✓ tests/agent/test_usage_pricing.py (60✓, 90.5s)
+[ 32.8% |   211/~644 | ✓241 | ✗  0] ✓ tests/agent/test_prompt_builder.py (57✓ 1s, 101.4s)
+[ 33.4% |   215/~644 | ✓245 | ✗  0] ✓ tests/hermes_cli/test_endpoints.py (4✓, 6.8s)
+[ 34.8% |   224/~644 | ✓254 | ✗  0] ✓ tests/hermes_cli/test_diagnostics_upload.py (9✓, 13.4s)
+[ 38.8% |   250/~644 | ✓293 | ✗  0] ✓ tests/hermes_cli/test_auth_nous_provider.py (39✓ 1s, 66.6s)
+[ 41.0% |   264/~644 | ✓309 | ✗  0] ✓ tests/hermes_cli/test_dashboard_register.py (16✓, 23.1s)
+[ 41.8% |   269/~644 | ✓314 | ✗  0] ✓ tests/hermes_cli/test_nous_inference_url_validation.py (5✓, 9.0s)
+[ 42.1% |   271/~644 | ✓316 | ✗  0] ✓ tests/hermes_cli/test_nous_portal_staging_allowlist.py (2✓, 4.3s)
+[ 42.9% |   276/~644 | ✓324 | ✗  0] ✓ tests/hermes_cli/test_nous_account.py (8✓, 14.8s)
+[ 43.5% |   280/~644 | ✓328 | ✗  0] ✓ tests/hermes_cli/test_resolve_token_memo.py (4✓, 6.0s)
+[ 44.1% |   284/~644 | ✓332 | ✗  0] ✓ tests/hermes_cli/test_plugins_hub_live_catalog.py (4✓, 8.7s)
+[ 46.1% |   297/~644 | ✓346 | ✗  0] ✓ tests/hermes_cli/test_plugin_catalog.py (14✓, 22.6s)
+[ 48.6% |   313/~644 | ✓365 | ✗  0] ✓ tests/hermes_cli/test_shared_metrics_send_config.py (19✓, 22.4s)
+[ 48.9% |   315/~644 | ✓367 | ✗  0] ✓ tests/hermes_cli/test_telegram_onboarding_endpoint.py (2✓, 2.7s)
+[ 50.9% |   328/~644 | ✓384 | ✗  0] ✓ tests/hermes_cli/test_skills_hub.py (17✓, 25.1s)
+[ 52.3% |   337/~644 | ✓393 | ✗  0] ✓ tests/hermes_cli/test_telegram_managed_bot.py (9✓, 11.8s)
+[ 56.2% |   362/~644 | ✓418 | ✗  0] ✓ tests/hermes_cli/test_model_catalog.py (25✓, 49.2s)
+[ 56.5% |   364/~644 | ✓432 | ✗  0] ✓ tests/hermes_cli/test_update_sqlite_remediation.py (14✓, 15.3s)
+[ 68.3% |   440/~644 | ✓508 | ✗  0] ✓ tests/hermes_cli/test_models.py (76✓, 86.5s)
+[100.0% |   644/~644 | ✓747 | ✗  0] ✓ tests/agent/test_auxiliary_client.py (239✓, 211.6s)
+
+=== Summary: 27 files, 747 tests passed, 0 failed, 2 skipped (100% complete) in 212.2s (6 workers) ===
+
+  note: platforms('linux') tests (in 1 file) were SKIPPED on this host (darwin); they run on the main Linux CI lane.
+  note: platforms('not macos') tests (in 1 file) were SKIPPED on this host (darwin); they run on the main Linux CI lane, the Windows Python-tests lane.
+  Durations cached to test_durations.json (27 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   27
+  Total subprocess CPU-wall: 1008.6s  (runner wall: 212.2s, parallelism: 6x)
+  P50: 17.14s  P90: 90.49s  P95: 101.37s  P99: 211.62s  Max: 211.62s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+    211.62s  tests/agent/test_auxiliary_client.py
+    101.37s  tests/agent/test_prompt_builder.py
+     90.49s  tests/agent/test_usage_pricing.py
+     86.51s  tests/hermes_cli/test_models.py
+     77.24s  tests/hermes_cli/test_anon_auth_core.py
+     66.62s  tests/hermes_cli/test_auth_nous_provider.py
+     65.97s  tests/agent/test_provider_parity.py
+     49.25s  tests/hermes_cli/test_model_catalog.py
+     37.90s  tests/agent/test_billing_view.py
+     25.13s  tests/hermes_cli/test_skills_hub.py

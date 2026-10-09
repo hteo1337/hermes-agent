@@ -14,7 +14,18 @@ from pathlib import Path
 
 import pytest
 
-from hermes_cli.update_cmd_git import UpstreamTargetBroken, _sync_with_upstream_if_needed
+from hermes_cli.update_cmd_git import UpstreamTargetBroken, _require_update_source, _sync_with_upstream_if_needed
+
+
+@pytest.fixture(autouse=True)
+def _configured_update_source(monkeypatch):
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: "owner/repo")
+
+
+def test_empty_update_source_never_fetches_or_adds_remote(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: "")
+    assert _sync_with_upstream_if_needed(["git"], tmp_path, assume_yes=True) is False
+    assert "No update source configured" in capsys.readouterr().out
 
 
 def _env(home: Path) -> dict:
@@ -48,6 +59,7 @@ def test_a_local_branch_named_upstream_main_never_changes_what_the_sync_counts_o
     clone = tmp_path / "clone"
     _git(tmp_path, "clone", "-q", str(origin), str(clone))
     _git(clone, "remote", "add", "upstream", str(upstream))
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: str(upstream))
     # The shadow: a local branch literally named upstream/main, one commit behind upstream.
     _git(clone, "fetch", "-q", "upstream")
     _git(clone, "branch", "upstream/main", commits[1])
@@ -94,7 +106,41 @@ def _fork_behind_upstream(tmp_path, monkeypatch):
     clone = tmp_path / "clone"
     _git(tmp_path, "clone", "-q", str(origin), str(clone))
     _git(clone, "remote", "add", "upstream", str(upstream))
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: str(upstream))
     return clone, commits
+
+
+def test_configured_source_rejects_other_origin_and_upstream_before_fetch(tmp_path, monkeypatch, capsys):
+    from hermes_cli import update_custody
+
+    clone, commits = _fork_behind_upstream(tmp_path, monkeypatch)
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: str(tmp_path / "different"))
+    real_run_git = update_custody.run_git
+
+    def run_without_fetch(git_cmd, args, **kwargs):
+        if args[0] == "fetch":
+            pytest.fail("unexpected fetch")
+        return real_run_git(git_cmd, args, **kwargs)
+
+    monkeypatch.setattr(update_custody, "run_git", run_without_fetch)
+    with pytest.raises(SystemExit, match="1"):
+        _require_update_source(clone)
+    assert _sync_with_upstream_if_needed(["git"], clone, assume_yes=True) is False
+    assert "does not match the configured update source" in capsys.readouterr().out
+    assert _git(clone, "rev-parse", "HEAD") == commits[1]
+
+
+def test_configured_source_accepts_matching_origin(tmp_path, monkeypatch):
+    clone, _ = _fork_behind_upstream(tmp_path, monkeypatch)
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: str(tmp_path / "origin.git"))
+    _require_update_source(clone)
+
+
+def test_configured_github_source_accepts_same_ssh_origin(tmp_path, monkeypatch):
+    clone, _ = _fork_behind_upstream(tmp_path, monkeypatch)
+    _git(clone, "remote", "set-url", "origin", "git@github.com:owner/envoy.git")
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", lambda name: "owner/envoy")
+    _require_update_source(clone)
 
 
 def test_an_upstream_sync_whose_marker_cannot_be_written_never_moves_the_tree(tmp_path, monkeypatch):

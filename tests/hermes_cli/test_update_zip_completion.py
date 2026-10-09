@@ -24,6 +24,9 @@ def _swap_leftovers(root):
 
 @pytest.fixture
 def zip_update(tmp_path, monkeypatch, isolated_source_completion):
+    configured_source = lambda name: "fixture/envoy" if name == "updateRepository" else ""
+    monkeypatch.setattr("hermes_cli.update_cmd_git.endpoint", configured_source)
+    monkeypatch.setattr("hermes_cli.source_releases.endpoint", configured_source)
     home = tmp_path / "home"
     active = home / ".hermes"
     sibling = active / "profiles/other"
@@ -41,7 +44,6 @@ def zip_update(tmp_path, monkeypatch, isolated_source_completion):
     jobs.parent.mkdir()
     original_jobs = {"jobs": [{"id": "keep-me", "prompt": "retained schedule"}]}
     jobs.write_text(json.dumps(original_jobs), encoding="utf-8")
-
     root = tmp_path / "checkout"
     root.mkdir()
     (root / "pyproject.toml").write_text('[project]\nversion="1.0"\n', encoding="utf-8")
@@ -74,7 +76,6 @@ def zip_update(tmp_path, monkeypatch, isolated_source_completion):
     monkeypatch.setattr(main, "_desktop_dist_exists", lambda root: False)
     monkeypatch.setattr(update_cmd, "_source_update_channel", lambda args: "main")
     monkeypatch.setattr(update_cmd, "_sweep_bytecode_after_update", lambda branch: None)
-
     def prepare(selected, *, desktop):
         assert selected == root and desktop is False
         assert (root / "payload.txt").read_text() == "new"
@@ -95,7 +96,6 @@ def zip_update(tmp_path, monkeypatch, isolated_source_completion):
     monkeypatch.setattr(update_cmd, "_surviving_pre_update_serve_runtimes", lambda plan: [])
     monkeypatch.setattr(fleet_verify, "_collect_fleet_snapshot", lambda *args: [])
     monkeypatch.setattr("hermes_cli.gateway_migrate.maybe_auto_migrate_after_update", lambda: None)
-
     def resume(received):
         assert received is token
         assert token["resume_needed"], "completion must resume only once"
@@ -175,7 +175,7 @@ def test_zip_helper_propagates_completion_status_after_real_verification(zip_upd
     request = update_cmd._source_completion_request(
         update_cmd._resolve_update_options(args, True), plan, snapshot, state.token, False, True)
     # Contract C3: the swapped code is committed, so neither verdict fails the update (was SystemExit(1)).
-    assert update_cmd_zip._update_via_zip(args, completion_request=request) is True
+    assert update_cmd_zip._update_via_zip(args, completion_request=request, target_repository="fixture/envoy") is True
     # The gateway watcher hears success for every verdict (was False for unsafe SQLite).
     assert state.events == ["prepare", ("marker", True), "restart", "resume", "finalize"]
     receipt = json.loads((state.active / "logs/update_receipts/latest.json").read_text())
@@ -461,7 +461,7 @@ def test_unpinned_zip_update_owes_the_restart_for_the_archive_commit(tmp_path, m
     armed, completed = [], []
     monkeypatch.setattr(update_cmd_commit, "arm_commit_obligations", lambda _root, expected: armed.append(expected))
     monkeypatch.setattr(update_cmd, "_complete_source_update", lambda request: completed.append(dict(request)))
-    update_cmd_zip._update_via_zip(SimpleNamespace(branch="main"), completion_request={})
+    update_cmd_zip._update_via_zip(SimpleNamespace(branch="main"), completion_request={}, target_repository="fixture/envoy")
     assert (root / "payload.txt").read_text(encoding="utf-8-sig") == "new"
     assert armed == [sha]
     assert [request["expected_sha"] for request in completed] == [sha]

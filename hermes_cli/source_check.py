@@ -17,6 +17,7 @@ import urllib.error
 import urllib.request
 
 from hermes_constants import get_hermes_home
+from hermes_cli.endpoints import endpoint
 from hermes_cli.source_releases import OFFICIAL_REPOSITORY, _GITHUB_ORIGIN, resolve_source_target
 
 logger = logging.getLogger(__name__)
@@ -129,7 +130,7 @@ def _request(url: str, accept: str = "application/vnd.github+json") -> str:
 
 
 def _request_with(url: str, accept: str, token: str | None) -> str:
-    headers = {"Accept": accept, "User-Agent": "hermes-update-check"}
+    headers = {"Accept": accept, "User-Agent": "envoy-update-check"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(url, headers=headers)
@@ -231,6 +232,15 @@ def _read_checkout(root: Path, git: str, embedded: Optional[str]) -> _Checkout:
     repository = OFFICIAL_REPOSITORY if embedded else (match[1] if match else None)
     dirty = False if embedded else bool(_git_stdout(["status", "--porcelain"], cwd=root, git=git))
     return _Checkout(root, git, embedded, head, current_branch, origin, repository, dirty)
+
+
+def _origin_matches_update_source(origin: str, configured: str) -> bool:
+    configured_url = configured if "://" in configured or configured.startswith(("git@", "/")) else f"https://github.com/{configured}"
+    expected = _GITHUB_ORIGIN.fullmatch(configured_url)
+    actual = _GITHUB_ORIGIN.fullmatch(origin)
+    if expected and actual:
+        return expected[1].lower() == actual[1].lower()
+    return origin.rstrip("/").removesuffix(".git") == configured_url.rstrip("/").removesuffix(".git")
 
 
 def _configured_branch(desktop_config) -> Optional[str]:
@@ -393,11 +403,16 @@ def check_for_updates(*, install_root: Path | None = None, home: Path | None = N
                                       explicit_root=install_root is not None, embedded=embedded)
     if unsupported:
         return {**result, **unsupported}
+    update_source = endpoint("updateRepository")
+    if not update_source:
+        return {**result, "reason": "no-update-source"}
     config = require_readable_config_before_write(home / "config.yaml")
     if passive and (config.get("updates") or {}).get("check") is False:
         return {**result, "reason": "disabled"}
     channel = resolve_update_channel(config, root) if channel is None else validate_name(channel)
     co = _read_checkout(root, git, embedded)
+    if not embedded and not _origin_matches_update_source(co.origin, update_source):
+        return {**result, "reason": "update-source-mismatch"}
     desktop_config = _read_json(branch_config_path) if branch_config_path else None
     configured_branch = _configured_branch(desktop_config)
     selected_branch = branch or configured_branch or _checked_out_branch(co.current_branch, "main")

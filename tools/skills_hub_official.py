@@ -5,6 +5,7 @@ from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Tuple, Union
 
 from agent.skill_utils import is_excluded_skill_path
+from hermes_cli.endpoints import endpoint
 from tools.skills_hub_github import GitHubAuth, GitHubSource, _skip_bundle_file, _tree_members
 from tools.skills_hub_models import (
     SkillBundle, SkillMeta, SkillSource, _hermes_tags, _matches_query, _memo_json, _parse_frontmatter, hub,
@@ -38,8 +39,11 @@ class OptionalSkillSource(SkillSource):
 
     SOURCE_ID = "official"
     TRUST_LEVEL = "builtin"
-    OFFICIAL_REPO = "NousResearch/hermes-agent"
     OPTIONAL_SKILLS_PREFIX = "optional-skills"
+
+    @property
+    def OFFICIAL_REPO(self) -> str:
+        return endpoint("officialSkillsRepository")
 
     _parse_frontmatter = staticmethod(_parse_frontmatter)
 
@@ -157,6 +161,8 @@ class OptionalSkillSource(SkillSource):
         """Fetch an optional skill straight from the live default branch. Local installs lag
         ``main``; rather than demanding ``hermes update`` first, resolve against the live repo.
         ``rel`` is ``category/skill`` (used verbatim) or a bare skill name (located via the repo tree)."""
+        if not self.OFFICIAL_REPO:
+            return None
         parts = _clean_rel_parts(rel.strip("/"))
         if parts is None:
             return None
@@ -196,6 +202,8 @@ class OptionalSkillSource(SkillSource):
         """``category/skill`` dirs under optional-skills/ on live main. One repo-tree call (cached
         per-process by GitHubSource + the on-disk index cache). {} when the network/API is
         unavailable — callers degrade to local-only."""
+        if not self.OFFICIAL_REPO:
+            return {}
         if self._remote_dirs is not None:
             return self._remote_dirs
 

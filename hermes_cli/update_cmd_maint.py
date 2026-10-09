@@ -33,24 +33,15 @@ _PRE_UPDATE_SNAPSHOT_KEEP = 1
 # small hard-to-regenerate state, not a multi-GB state.db (24 GB cost ~60s + 24 GB/update).
 _PRE_UPDATE_SNAPSHOT_MAX_FILE_SIZE = 1 << 30  # 1 GiB
 
-#: Reinstalling through the official installer swaps in a Python whose SQLite is safe; the
-#: one-liner differs per OS (mirrors ``uninstall._REINSTALL_HINT``). windows -> command
-_REINSTALL_ONE_LINER = {
-    True: "iex (irm https://hermes-agent.nousresearch.com/install.ps1)",
-    False: "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash",
-}
-
-
 def _sqlite_partial_completion_lines(sqlite_version: str) -> list[str]:
     """Shared ``⚠ Update partially complete`` wording for a vulnerable post-update SQLite, so the
-    two completion banners cannot drift. The lead names the consequence, the second line the
-    exact fix command."""
-    from hermes_cli.update_cmd import _m
+    two completion banners cannot drift. The lead names the consequence and the second line
+    gives remediation without assuming an upstream installer."""
     return [
         f"⚠ Update partially complete — your Python's SQLite ({sqlite_version}) has a known "
         "corruption bug. Hermes works, but sessions could be damaged.",
-        f"  Fix: run the installer again ({_REINSTALL_ONE_LINER[bool(_m()._is_windows())]}) "
-        "which installs a safe Python, then run `hermes doctor` to confirm.",
+        "  Fix: run the installer again from your configured Envoy source with a safe SQLite version, "
+        "then run `hermes doctor` to confirm.",
     ]
 
 
@@ -102,7 +93,10 @@ def _print_curator_first_run_notice() -> None:
     )
     print("  Preview now:  hermes curator run --dry-run")
     print("  Pause it:     hermes curator pause")
-    print("  Docs:         https://hermes-agent.nousresearch.com/docs/user-guide/features/curator")
+    from hermes_cli.endpoints import endpoint
+
+    if endpoint("docsUrl"):
+        print(f"  Docs:         {endpoint('docsUrl')}/user-guide/features/curator")
 
 
 def _print_fts_optimize_available_notice() -> None:

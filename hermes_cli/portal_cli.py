@@ -6,10 +6,16 @@ import webbrowser
 
 from hermes_cli.colors import Colors, color
 from hermes_cli.config import load_config
+from hermes_cli.endpoints import endpoint
 
-DEFAULT_PORTAL_URL = "https://portal.nousresearch.com"
-SUBSCRIPTION_URL = "https://portal.nousresearch.com/manage-subscription"
-DOCS_URL = "https://hermes-agent.nousresearch.com/docs/user-guide/features/tool-gateway"
+def _subscription_url() -> str:
+    base = endpoint("portal")
+    return f"{base.rstrip('/')}/manage-subscription" if base else ""
+
+
+def _docs_url() -> str:
+    base = endpoint("docsUrl")
+    return f"{base.rstrip('/')}/user-guide/features/tool-gateway" if base else ""
 # Static `portal tools` catalog — the partners Tool Gateway routes to today: (key, label, partner).
 _CATALOG = [
     ("web", "Web search & extract", "Nous-managed"),
@@ -56,12 +62,13 @@ def _cmd_status(args) -> int:
             print(f"  API:     {auth['inference_base_url']}")
     elif logged_in:
         print(f"  Auth:    {color('✓ logged in', Colors.GREEN)}")
-        print(f"  Portal:  {auth.get('portal_base_url') or DEFAULT_PORTAL_URL}")
+        print(f"  Portal:  {auth.get('portal_base_url') or endpoint('portal')}")
         if auth.get("inference_base_url"):
             print(f"  API:     {auth['inference_base_url']}")
     else:
         print(f"  Auth:    {color('not logged in', Colors.YELLOW)}")
-        print(f"  Sign up: {SUBSCRIPTION_URL}")
+        if _subscription_url():
+            print(f"  Sign up: {_subscription_url()}")
         print("  Login:   hermes portal")
 
     # Provider selection (independent of auth)
@@ -84,15 +91,20 @@ def _cmd_status(args) -> int:
         print(f"  {label:<{width}}   {state}")
     if not logged_in:
         print()
-        print(color(f"  Docs: {DOCS_URL}", Colors.DIM))
+        if _docs_url():
+            print(color(f"  Docs: {_docs_url()}", Colors.DIM))
     return 0
 
 
 def _cmd_open(args) -> int:
     """Open the Portal subscription page in the default browser."""
-    print(f"Opening {SUBSCRIPTION_URL}")
+    url = _subscription_url()
+    if not url:
+        print("Portal is disabled: no endpoint is configured.")
+        return 1
+    print(f"Opening {url}")
     try:
-        opened = webbrowser.open(SUBSCRIPTION_URL)
+        opened = webbrowser.open(url)
     except Exception:
         opened = False
     if opened:
@@ -127,8 +139,10 @@ def _cmd_tools(args) -> int:
         print(f"  {label:<{label_width}}  partner: {partner:<14} {state}")
 
     print()
-    print(color(f"  Manage your subscription: {SUBSCRIPTION_URL}", Colors.DIM))
-    print(color(f"  Docs: {DOCS_URL}", Colors.DIM))
+    if _subscription_url():
+        print(color(f"  Manage your subscription: {_subscription_url()}", Colors.DIM))
+    if _docs_url():
+        print(color(f"  Docs: {_docs_url()}", Colors.DIM))
     return 0
 
 

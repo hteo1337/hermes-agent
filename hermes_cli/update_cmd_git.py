@@ -15,6 +15,7 @@ from typing import Optional
 
 from hermes_cli._subprocess_compat import NO_LAZY_FETCH_ENV, noninteractive_git_env, windows_hide_flags
 from hermes_cli.update_cmd_common import _record_stop
+from hermes_cli.endpoints import endpoint
 
 logger = logging.getLogger("hermes_cli.update_cmd")  # log-record parity with the origin module
 
@@ -27,7 +28,23 @@ _ORPHAN_RESCUE_REF_MAX_AGE_DAYS = 30
 _GIT_TEXT_KW = dict(capture_output=True, text=True, encoding="utf-8", errors="replace",
                    creationflags=windows_hide_flags())
 _BAR = "=" * 68
-_UPSTREAM_ADD_CMD = "git remote add upstream https://github.com/NousResearch/hermes-agent.git"
+def _update_repository_url() -> str:
+    repository = endpoint("updateRepository").strip().removesuffix(".git")
+    if not repository:
+        return ""
+    return repository if "://" in repository or repository.startswith(("git@", "/")) else f"https://github.com/{repository}"
+
+
+def _require_update_source(root: Optional[Path] = None) -> None:
+    if not _update_repository_url():
+        print("No update source configured.")
+        raise SystemExit(0)
+    if root is not None and (root / ".git").exists():
+        _require_update_remote(["git"], root)
+
+
+def _upstream_add_cmd() -> str:
+    return f"git remote add upstream {_update_repository_url()}.git"
 
 
 def _git_ok(git_cmd, args, cwd, **kw) -> bool:
@@ -269,13 +286,8 @@ def _print_parked_branch_kept_notice(current_branch: str, target_branch: str, un
     )
 
 
-OFFICIAL_REPO_URLS = {
-    "https://github.com/NousResearch/hermes-agent.git",
-    "git@github.com:NousResearch/hermes-agent.git",
-    "https://github.com/NousResearch/hermes-agent",
-    "git@github.com:NousResearch/hermes-agent",
-}
-OFFICIAL_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
+OFFICIAL_REPO_URL = f"{_update_repository_url()}.git" if _update_repository_url() else ""
+OFFICIAL_REPO_URLS = {OFFICIAL_REPO_URL, OFFICIAL_REPO_URL.removesuffix(".git")} if OFFICIAL_REPO_URL else set()
 SKIP_UPSTREAM_PROMPT_FILE = ".skip_upstream_prompt"
 
 
@@ -284,16 +296,35 @@ def _get_origin_url(git_cmd: list[str], cwd: Path) -> Optional[str]:
     return _git_stdout(git_cmd, ["remote", "get-url", "origin"], cwd)
 
 
+def _remote_matches_update_source(git_cmd: list[str], cwd: Path, remote: str) -> bool:
+    configured = _update_repository_url().rstrip("/").removesuffix(".git")
+    actual = _git_stdout(git_cmd, ["remote", "get-url", remote], cwd)
+    from hermes_cli.source_releases import _GITHUB_ORIGIN
+
+    configured_repo = _GITHUB_ORIGIN.fullmatch(configured)
+    actual_repo = _GITHUB_ORIGIN.fullmatch(actual or "")
+    if configured_repo and actual_repo:
+        return configured_repo[1].lower() == actual_repo[1].lower()
+    return bool(configured and actual and actual.rstrip("/").removesuffix(".git") == configured)
+
+
+def _require_update_remote(git_cmd: list[str], cwd: Path) -> None:
+    if not _remote_matches_update_source(git_cmd, cwd, "origin"):
+        print("✗ Origin remote does not match the configured update source.")
+        raise SystemExit(1)
+
+
 def _is_fork(origin_url: Optional[str]) -> bool:
     """Check if the origin remote points to a fork (not the official repo)."""
-    if not origin_url:
+    official_url = _update_repository_url()
+    if not origin_url or not official_url:
         return False
 
     def _norm(url: str) -> str:
         url = url.rstrip("/")
         return url[:-4] if url.endswith(".git") else url
 
-    return _norm(origin_url) not in {_norm(official) for official in OFFICIAL_REPO_URLS}
+    return _norm(origin_url) != _norm(official_url)
 
 
 def _has_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
@@ -303,7 +334,8 @@ def _has_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
 
 def _add_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
     """Add the official repo as the 'upstream' remote. Returns True on success."""
-    return _git_ok(git_cmd, ["remote", "add", "upstream", OFFICIAL_REPO_URL], cwd)
+    url = _update_repository_url()
+    return bool(url) and _git_ok(git_cmd, ["remote", "add", "upstream", url + ".git"], cwd)
 
 
 def _count_commits_between(git_cmd: list[str], cwd: Path, base: str, head: str) -> int:
@@ -338,12 +370,15 @@ def _offer_upstream_remote(git_cmd: list[str], cwd: Path, *, assume_yes: bool, i
 
     ``--yes`` means "don't block", not "mutate my remotes", so a non-interactive skip is NOT persisted."""
     from hermes_cli.update_cmd import _add_upstream_remote, _mark_skip_upstream_prompt
+    if not _update_repository_url():
+        print("No update source configured.")
+        return False
     print(
         "\nℹ Your fork is not tracking the official Hermes repository.\n"
-        "  This means you may miss updates from NousResearch/hermes-agent.\n"
+        f"  This means you may miss updates from {_update_repository_url()}.\n"
     )
     if assume_yes or (input_fn is None and not (sys.stdin.isatty() and sys.stdout.isatty())):
-        print(f"  Skipping upstream setup (non-interactive run).\n  Add it later with: {_UPSTREAM_ADD_CMD}")
+        print(f"  Skipping upstream setup (non-interactive run).\n  Add it later with: {_upstream_add_cmd()}")
         return False
     if input_fn is not None:
         response = input_fn("Add official repo as 'upstream' remote? [y/N]", "n").strip().lower()
@@ -354,14 +389,14 @@ def _offer_upstream_remote(git_cmd: list[str], cwd: Path, *, assume_yes: bool, i
             print()
             response = "n"
     if response not in {"", "y", "yes"}:
-        print(f"  Skipped. Run '{_UPSTREAM_ADD_CMD}' to add later.")
+        print(f"  Skipped. Run '{_upstream_add_cmd()}' to add later.")
         _mark_skip_upstream_prompt()
         return False
     print("→ Adding upstream remote...")
     if not _add_upstream_remote(git_cmd, cwd):
         print("  ✗ Failed to add upstream remote. Skipping upstream sync.")
         return False
-    print("  ✓ Added upstream: https://github.com/NousResearch/hermes-agent.git")
+    print(f"  ✓ Added upstream: {_update_repository_url()}.git")
     return True
 
 
@@ -387,12 +422,18 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path, *, assume_yes: 
 
     See #97052.
     """
+    if not _update_repository_url():
+        print("No update source configured.")
+        return False
     from hermes_cli.update_cmd import _count_commits_between, _has_upstream_remote, _no_prompt_git_kwargs, _should_skip_upstream_prompt
     from hermes_cli.update_cmd_check import tracking_refspec
     from hermes_cli.update_custody import run_git
     if not _has_upstream_remote(git_cmd, cwd) and (
         _should_skip_upstream_prompt() or not _offer_upstream_remote(git_cmd, cwd, assume_yes=assume_yes, input_fn=input_fn)
     ):
+        return False
+    if not _remote_matches_update_source(git_cmd, cwd, "upstream"):
+        print("  ✗ Upstream remote does not match the configured update source. Skipping upstream sync.")
         return False
     print("\n→ Fetching upstream...")
     try:
@@ -519,8 +560,7 @@ _FETCH_FAILURE_RULES = (
     # to the generic message below and left an SSH-remote user with no idea their
     # key (or lack of one) was the cause (#82169).
     (lambda s: "Permission denied (publickey)" in s or "Host key verification failed" in s,
-     "✗ SSH authentication failed — check your SSH key is added to GitHub, or switch"
-     " `origin` to HTTPS: `git remote set-url origin https://github.com/NousResearch/hermes-agent.git`."),
+     "✗ SSH authentication failed — check your SSH key or use the configured update source over HTTPS."),
 )
 
 

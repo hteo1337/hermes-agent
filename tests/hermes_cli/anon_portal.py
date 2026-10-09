@@ -116,6 +116,14 @@ def install_portal(monkeypatch, tmp_path, fake: FakePortal | None = None) -> Fak
     from hermes_cli import auth as auth_mod
 
     fake = fake or FakePortal()
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: {
+        "portal": PORTAL, "nousWelcomeUrl": WELCOME,
+        "nousInferenceUrl": "https://inference-api.nousresearch.com/v1",
+    }.get(name, ""))
+    monkeypatch.setattr("hermes_cli.auth_nous.DEFAULT_NOUS_WELCOME_URL", WELCOME)
+    monkeypatch.setattr("hermes_cli.anon_auth.DEFAULT_NOUS_WELCOME_URL", WELCOME)
+    monkeypatch.setattr("hermes_cli.auth_nous.DEFAULT_NOUS_INFERENCE_URL",
+                        "https://inference-api.nousresearch.com/v1")
     monkeypatch.setenv("HERMES_PORTAL_BASE_URL", PORTAL)
     monkeypatch.setenv("HERMES_ANON_API_SECRET", "test-secret")
     monkeypatch.setenv("HERMES_SHARED_AUTH_DIR", str(tmp_path / "shared-store"))

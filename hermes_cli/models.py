@@ -27,9 +27,11 @@ from typing import Any, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import TypeGuard
 
+from hermes_cli.endpoints import endpoint
 from hermes_cli.route_identity import normalize_route_base_url
 from hermes_cli.urllib_security import open_credentialed_url
 from hermes_cli.version_info import get_version_info
+from hermes_cli.endpoints import brand_name
 from hermes_cli.models_catalog_static import (
     CuratedFallbackModels,
     CANONICAL_PROVIDERS,
@@ -67,9 +69,8 @@ from hermes_cli.models_local import (
 
 logger = logging.getLogger(__name__)
 
-# Identify ourselves so endpoints fronted by Cloudflare's Browser Integrity
-# Check (error 1010) don't reject the default ``Python-urllib/*`` signature.
-_HERMES_USER_AGENT = f"hermes-cli/{get_version_info().base_version}"
+# Identify Envoy for Cloudflare's Browser Integrity Check.
+_HERMES_USER_AGENT = f"{brand_name()}/{get_version_info().base_version}"
 
 COPILOT_BASE_URL = "https://api.githubcopilot.com"
 COPILOT_MODELS_URL = f"{COPILOT_BASE_URL}/models"
@@ -403,7 +404,8 @@ def fetch_nous_recommended_models(
     process restarts. ``force_refresh`` bypasses both caches. Stale disk data remains a fallback
     on live failure; reading it never renews its freshness.
     """
-    base = (portal_base_url or "https://portal.nousresearch.com").rstrip("/")
+    base = (portal_base_url or endpoint("portal")).rstrip("/")
+    if not base: return {}
     now = time.monotonic()
     cache_key = (_pricing_profile_key(), base)
     cached = _nous_recommended_cache.get(cache_key)
@@ -430,18 +432,16 @@ def fetch_nous_recommended_models(
     _nous_recommended_cache[cache_key] = (data, now)
     return data
 
-
 def _resolve_nous_portal_url() -> str:
     """Best-effort lookup of the Portal base URL the user is authed against."""
     try:
-        from hermes_cli.auth import DEFAULT_NOUS_PORTAL_URL, get_provider_auth_state
+        from hermes_cli.auth import get_provider_auth_state
 
         state = get_provider_auth_state("nous") or {}
         portal = str(state.get("portal_base_url") or "").strip()
-        return (portal or str(DEFAULT_NOUS_PORTAL_URL)).rstrip("/")
+        return (portal or endpoint("portal")).rstrip("/")
     except Exception:
-        return "https://portal.nousresearch.com"
-
+        return endpoint("portal")
 
 def _extract_model_name(entry: Any) -> Optional[str]:
     """Pull the ``modelName`` field from a recommended-model entry, else None."""
@@ -2291,7 +2291,7 @@ def copilot_default_headers(*, is_agent_turn: bool = True) -> dict[str, str]:
     except ImportError:
         return {
             "Editor-Version": COPILOT_EDITOR_VERSION,
-            "User-Agent": "HermesAgent/1.0",
+            "User-Agent": "Envoy/1.0",
             "Openai-Intent": "conversation-edits",
             "x-initiator": "agent" if is_agent_turn else "user"}
 

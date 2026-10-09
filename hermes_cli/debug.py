@@ -16,6 +16,7 @@ from typing import Optional
 
 from hermes_constants import get_hermes_home
 from hermes_cli.debug_redaction import redact_debug_support_text
+from hermes_cli.endpoints import brand_name
 from utils import atomic_json_write
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ _REDACTION_BANNER = (
     "run with --no-redact to disable]\n")
 _PASTE_RS_URL = "https://paste.rs/"  # primary; dpaste.com is the fallback
 _DPASTE_COM_URL = "https://dpaste.com/api/"
-_USER_AGENT = "hermes-agent/debug-share"
+_USER_AGENT = f"{brand_name()}/debug-share"
 _MAX_LOG_BYTES = 512_000  # per log file for upload (paste.rs caps at ~1 MB)
 _AUTO_DELETE_SECONDS = 21600  # 6 hours
 
@@ -558,8 +559,7 @@ def run_debug_share(args):
 
 
 _NOUS_PRIVACY_NOTICE = """\
-⚠️  --nous: This uploads your debug bundle to Nous-INTERNAL storage (AWS S3),
-    NOT a public paste service. The following is included:
+⚠️  --nous: This uploads your debug bundle to {destination}. The bundle includes:
   • System info (OS, Python/Hermes version, provider, which API keys are
     configured — NOT the actual keys)
   • Full agent.log, gateway.log, and desktop.log (up to 512 KB each — likely
@@ -567,17 +567,19 @@ _NOUS_PRIVACY_NOTICE = """\
     update.log and desktop-update-handoff.log when present (update/hand-off
     output — the root cause of update failures)
 
-  • The bundle is viewable only by Nous staff (and allowlisted Discord mods)
-    via a Google-login-gated viewer.
-  • It is NOT a public paste — there is no public URL to the contents.
-  • It auto-deletes after 14 days.
+  • Access and retention depend on the configured diagnostics service.
+  • Check the returned view URL before sharing it.
 """
 
 
 def _run_debug_share_nous(args, *, log_lines: int, redact: bool) -> None:
-    """``hermes debug share --nous``: gzip the same bundle into the Nous envelope → Nous-S3."""
-    from hermes_cli.diagnostics_upload import share_to_nous
-    print(_NOUS_PRIVACY_NOTICE)
+    """``hermes debug share --nous``: upload the gzip bundle to the configured service."""
+    from hermes_cli.diagnostics_upload import diagnostics_base_url, share_to_nous
+    destination = diagnostics_base_url()
+    if not destination:
+        print("Diagnostics upload is disabled: no diagnostics endpoint is configured", file=sys.stderr)
+        sys.exit(1)
+    print(_NOUS_PRIVACY_NOTICE.format(destination=destination))
     if not _confirm_upload(args):
         return
     if not redact:
@@ -587,29 +589,23 @@ def _run_debug_share_nous(args, *, log_lines: int, redact: bool) -> None:
     bundle = collect_share_bundle(log_lines=log_lines, redact=redact)
     if redact:
         logger.info("hermes debug share --nous: applied force-mode redaction before upload")
-    print("Uploading to Nous diagnostics storage...")
+    print(f"Uploading to {destination}...")
     try:
         res = share_to_nous(build_nous_bundle(bundle, redact=redact))
     except Exception as exc:
         error = redact_debug_support_text(exc)
-        print(f"\nNous upload failed: {error}\n"
-              "\nThe Nous diagnostics service may be unavailable or not yet provisioned.\n"
+        print(f"\nDiagnostics upload failed: {error}\n"
               "Run `hermes debug share --local` to print the report instead, "
               "or `hermes debug share` to upload to a public paste service.\n", file=sys.stderr)
         sys.exit(1)
     view_url = res.get("viewUrl") or res.get("view_url")
     expires_at = res.get("expiresAt") or res.get("expires_at")
-    print("\nDebug bundle uploaded to Nous (private):")
+    print("\nDebug bundle uploaded:")
     print(f"  View URL  {view_url}" if view_url
           else f"  (no view URL returned; upload id: {res.get('id', '?')})")
-    print(f"\n⏱  Auto-deletes at {expires_at} (14-day retention)." if expires_at
-          else "\n⏱  Auto-deletes after 14 days.")
-    print("\nShare this private link with the Nous team — only Nous staff "
-          "(via Google login) can open it.\n"
-          "\nPick up the discussion in:\n"
-          "  GitHub Issues        https://github.com/NousResearch/hermes-agent/issues\n"
-          "  Nous Portal Support  https://portal.nousresearch.com/help\n"
-          "  Discord              https://discord.gg/NousResearch")
+    if expires_at:
+        print(f"\nService-reported expiry: {expires_at}")
+    print("\nCheck the view URL and share it only with your intended support contact.")
 
 
 def run_debug_delete(args):

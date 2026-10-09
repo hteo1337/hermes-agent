@@ -98,7 +98,7 @@ from hermes_cli.update_cmd_git import (
     _ORPHAN_RESCUE_REF_MAX_AGE_DAYS, _add_upstream_remote, _assess_parked_branch_switch,
     _branch_head_label, _branch_head_suffix, _classify_fetch_failure, _count_commits_between,
     _discard_lockfile_churn, _ensure_non_trampoline_git, _get_origin_url, _git_is_trampoline,
-    _has_upstream_remote, _is_fork, _locate_real_git, _mark_skip_upstream_prompt,
+    _has_upstream_remote, _is_fork, _locate_real_git, _mark_skip_upstream_prompt, _require_update_remote, _require_update_source,
     _normalize_managed_eol, _park_detached_head, _portable_git_candidates, _print_fetch_failure,
     _print_parked_branch_kept_notice, _print_parked_branch_skip_warning,
     _prune_orphan_rescue_refs, _push_synced_fork, _should_skip_upstream_prompt, _sync_fork_with_upstream,
@@ -639,6 +639,7 @@ def _cmd_update_check(branch: str = "main", *, branch_explicit: bool = False, ch
     Installs that can't honor non-default branches (e.g. Docker) surface a
     one-line notice instead of silently dropping the flag.
     """
+    _require_update_source()
     # Shared admission gate (#91277 Phase 3): same marker-first decision as
     # the apply path, so --check can never report git state for an install
     # whose real update mechanism is an image pull.
@@ -659,6 +660,7 @@ def _cmd_update_check(branch: str = "main", *, branch_explicit: bool = False, ch
         sys.exit(1)
 
     git_cmd = _base_git_cmd()
+    _require_update_remote(git_cmd, root)
     # The check fetches over HTTPS too; give git the same CA bundle Python
     # uses, or --check fails where the apply path succeeds (see
     # _map_ssl_cert_file_for_git).
@@ -1592,7 +1594,7 @@ def _prepare_git_command(*, checkout_move=None) -> tuple[bool, list, bool]:
     use_zip_update = not git_dir.exists()
     if use_zip_update and sys.platform != "win32":
         print("✗ Not a git repository. Please reinstall:")
-        print("  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash")
+        print("  Reinstall from your configured update source.")
         _record_stop("not_git_checkout")
         sys.exit(1)
 
@@ -1779,6 +1781,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
     # _old_updater.in_historical_update(); historical on-disk updaters do not
     # declare this local, so only they hand off through retired shims.
     _hermes_current_updater_frame = True
+    _require_update_source(_m().PROJECT_ROOT)
     _commit.begin_update_attempt()  # nothing an earlier update in this process armed is ours (O5)
     git_operation = git_operation_in_progress(_m().PROJECT_ROOT)
     if git_operation:
@@ -1838,7 +1841,8 @@ def _cmd_update_impl(args, gateway_mode: bool):
     completion_request["branch"] = branch
     target_ref = f"origin/{branch}"
     release_sha = None
-    target_repository = None
+    from hermes_cli.source_releases import configured_repository
+    target_repository = configured_repository()
     selected_channel = _source_update_channel(args)
     if not getattr(args, "branch", None):
         from hermes_cli.release_channels import retrying_reads
@@ -1923,7 +1927,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
         if fetch_result.returncode != 0:
             if is_partial_clone_pack_objects_crash(fetch_result.stderr or ""):
                 print("✗ git still crashed after marking this checkout's packs. See 'Fetch fails with"
-                      " should_include_obj' in https://hermes-agent.nousresearch.com/docs/getting-started/updating")
+                      " should_include_obj' in the update troubleshooting guide.")
             _print_fetch_failure(fetch_result.stderr)
             _m()._resume_windows_gateways_after_update(_windows_gateway_resume)
             _record_stop("git_timeout" if fetch_result.returncode == 124 else "disk_full"

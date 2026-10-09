@@ -14,7 +14,9 @@ from typing import Optional
 import httpx
 
 # Nous-hosted pairing API; override for PoC/staging with TELEGRAM_ONBOARDING_URL.
-DEFAULT_API_URL = "https://setup.hermes-agent.nousresearch.com"
+from hermes_cli.endpoints import endpoint
+
+DEFAULT_API_URL = endpoint("managedBotSetupUrl")
 TELEGRAM_ONBOARDING_URL_ENV = "TELEGRAM_ONBOARDING_URL"
 DEFAULT_BOT_NAME = "Hermes Agent"
 DEFAULT_POLL_TIMEOUT = 180
@@ -89,8 +91,11 @@ def create_pairing(
     api_url: str | None = None, bot_name: str = DEFAULT_BOT_NAME, timeout: float = 10.0
 ) -> TelegramPairing | None:
     """POST a pairing; the returned poll token is only used as a bearer credential while polling."""
+    base = _api_url(api_url)
+    if not base:
+        return None
     try:
-        resp = httpx.post(f"{_api_url(api_url)}/v1/telegram/pairings", json={"bot_name": bot_name}, timeout=timeout)
+        resp = httpx.post(f"{base}/v1/telegram/pairings", json={"bot_name": bot_name}, timeout=timeout)
         if resp.status_code not in (200, 201):
             return None
         data = resp.json()

@@ -80,6 +80,6 @@ def test_every_route_hands_off_once(route, tmp_path, monkeypatch):
         update_cmd._finish_already_up_to_date(
             ["git"], "main", "main", plan, gw_input_fn=None, completion_request=request)
     else:
-        assert update_cmd_zip._update_via_zip(SimpleNamespace(), completion_request=request) is True
+        assert update_cmd_zip._update_via_zip(SimpleNamespace(), completion_request=request, target_repository="fixture/envoy") is True
         swap.assert_called_once()
     assert handed_off == [request]

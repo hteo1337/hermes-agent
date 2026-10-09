@@ -159,7 +159,7 @@ def _setup_backend_singularity(config: dict) -> None:
     _report_binary(shutil.which("apptainer") or shutil.which("singularity"),
                    "Singularity/Apptainer not found in PATH!",
                    "Install: https://apptainer.org/docs/admin/main/installation.html")
-    config["terminal"].setdefault("singularity_image", f"docker://{_SANDBOX_IMAGE}")
+    config["terminal"].setdefault("singularity_image", f"docker://{_SANDBOX_IMAGE}" if _SANDBOX_IMAGE else "")
 
 
 def _setup_backend_modal(config: dict) -> None:

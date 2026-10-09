@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from pathlib import Path
 from typing import Any, Optional
 from hermes_cli.config import OPTIONAL_ENV_VARS, write_platform_config_field
+from hermes_cli.endpoints import endpoint
 from hermes_cli.setup_hidden_env import is_setup_hidden_env as _is_setup_hidden_env
 from hermes_cli.version_info import get_version_info
 
@@ -367,7 +368,7 @@ def _restart_gateway_after_whatsapp_onboarding(profile: Optional[str] = None) ->
     return _restart_gateway_after(profile, what="WhatsApp onboarding", label="WhatsApp onboarding")
 
 
-_TELEGRAM_ONBOARDING_DEFAULT_URL = "https://setup.hermes-agent.nousresearch.com"
+_TELEGRAM_ONBOARDING_DEFAULT_URL = endpoint("managedBotSetupUrl")
 _TELEGRAM_ONBOARDING_USER_AGENT = f"HermesDashboard/{get_version_info().base_version}"
 
 
@@ -415,9 +416,12 @@ def _telegram_onboarding_request_sync(
         request_kwargs["json"] = body
     if bearer_token:
         headers["Authorization"] = f"Bearer {bearer_token}"
+    base = _telegram_onboarding_base_url()
+    if not base:
+        raise HTTPException(status_code=503, detail="Telegram setup service is not configured.")
     try:
         with httpx.Client(timeout=httpx.Timeout(10.0)) as client:
-            response = client.request(method, f"{_telegram_onboarding_base_url()}{path}", headers=headers, **request_kwargs)
+            response = client.request(method, f"{base}{path}", headers=headers, **request_kwargs)
             response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         try:

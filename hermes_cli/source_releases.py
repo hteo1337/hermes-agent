@@ -11,14 +11,24 @@ import urllib.error
 import urllib.request
 
 from hermes_cli.update_channel import STABLE_TAG_RE, is_canary_tag
+from hermes_cli.endpoints import endpoint
 
 logger = logging.getLogger(__name__)
-_PUBLIC_BASE = "https://hermes-assets.nousresearch.com"
-OFFICIAL_REPOSITORY = "NousResearch/hermes-agent"
+_PUBLIC_BASE = endpoint("sourceChannelBaseUrl").rstrip("/")
 _GITHUB_ORIGIN = re.compile(
     r"^(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)"
     r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?)(?:\.git)?/?$", re.IGNORECASE,
 )
+
+
+def configured_repository() -> str:
+    repository = endpoint("updateRepository").strip()
+    url = repository if "://" in repository or repository.startswith("git@") else f"https://github.com/{repository}"
+    match = _GITHUB_ORIGIN.fullmatch(url)
+    return match[1] if match else ""
+
+
+OFFICIAL_REPOSITORY = configured_repository()
 _SHA = re.compile(r"[0-9a-f]{40}")
 
 
@@ -67,8 +77,10 @@ def _resolve_channel(name: str, repository: str):
     GitHub fallback is allowed when a record is unavailable; the one exception
     is an unpublished ``main`` record, which resolves to the main branch.
     """
-    from hermes_cli.release_channels import ChannelReader
+    from hermes_cli.release_channels import ChannelNotFound, ChannelReader
 
+    if not _PUBLIC_BASE:
+        raise ChannelNotFound("No source channel feed configured")
     return ChannelReader(_PUBLIC_BASE, repository=repository).resolve(name)
 
 
@@ -156,7 +168,7 @@ def _refuse_retirement_downgrade(request: dict, terminal: dict, git_cmd, cwd) ->
 
 def _read(url: str, *, missing_ok: bool = False) -> str | None:
     request = urllib.request.Request(url, headers={
-        "User-Agent": "hermes-update", "Cache-Control": "no-cache",
+        "User-Agent": "envoy-update", "Cache-Control": "no-cache",
         "Accept": "application/json, text/html",
     })
     try:
@@ -220,6 +232,8 @@ def _published_fallback(channel: str, base: str) -> dict:
 
 
 def _release_pointer(channel: str) -> tuple[str | None, str | None]:
+    if not _PUBLIC_BASE:
+        return None, None
     # Stable's completion job writes this before publishing the GitHub draft.
     # Publication is checked separately, so that interval fails closed.
     if channel == "stable":

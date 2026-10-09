@@ -5,11 +5,8 @@ docs of config.yaml.
 """
 
 
-#: Image every container terminal backend (docker/modal/daytona/singularity) uses unless the
-#: user pins one. LEGACY_SANDBOX_IMAGES are the plain defaults that preceded the desktop stack
-#: (the 3.14 pin shipped between the two without a migration); a saved config still holding one
-#: is the template copied, and the config migration unsets it, never a user's own pin.
-DEFAULT_SANDBOX_IMAGE = "nousresearch/hermes-sandbox:desktop"
+#: Container backends require an explicitly configured image.
+DEFAULT_SANDBOX_IMAGE = ""
 LEGACY_SANDBOX_IMAGES = ("nikolaik/python-nodejs:python3.11-nodejs20", "nikolaik/python-nodejs:python3.14-nodejs22")
 LEGACY_SANDBOX_IMAGE = LEGACY_SANDBOX_IMAGES[0]
 # Vercel Sandbox managed image (Vercel deprecated its `runtime` presets in Aug 2026).
@@ -345,16 +342,14 @@ DEFAULT_CONFIG = {
         # go first because n/nvm/asdf write PATH exports there without an interactivity guard. Turn
         # off if an rc file misbehaves when sourced non-interactively (exits on TTY check).
         "auto_source_bashrc": True,
-        # The default sandbox for every container backend: the nikolaik/python-nodejs base
-        # (Python 3.13 / Node 26) plus a display stack, so Bot Screen, computer_use and the
-        # bot's browser run INSIDE the sandbox and the pane can watch them (see bot_desktop).
+        # Set an image explicitly before using a container terminal backend.
         "docker_image": DEFAULT_SANDBOX_IMAGE,
         "docker_forward_env": [],
         # Exact key-value env pairs set inside Docker containers (unlike docker_forward_env, which
         # reads host values) — useful under systemd without the user's shell env. Example:
         # {"SSH_AUTH_SOCK": "/run/user/1000/ssh-agent.sock"}
         "docker_env": {},
-        "singularity_image": f"docker://{DEFAULT_SANDBOX_IMAGE}",
+        "singularity_image": "",
         "modal_image": DEFAULT_SANDBOX_IMAGE,
         "daytona_image": DEFAULT_SANDBOX_IMAGE,
         "vercel_image": DEFAULT_VERCEL_IMAGE,  # vercel_sandbox backend only: a Vercel-managed or VCR image
@@ -1826,7 +1821,7 @@ DEFAULT_CONFIG = {
         "chronos": {
             # NAS/portal base URL that arms/cancels one-shots and mints the inbound fire JWT (used
             # as the expected issuer).
-            "portal_url": "https://portal.nousresearch.com",
+            "portal_url": "",
             # This agent's publicly reachable base URL; NAS POSTs {callback_url}/api/cron/fire. ""
             # -> Chronos unavailable, resolver falls back to the built-in ticker.
             "callback_url": "",
@@ -2034,12 +2029,10 @@ DEFAULT_CONFIG = {
         "max_size_mb": 5,      # max size per log file before rotation
         "backup_count": 3,     # rotated backups to keep
     },
-    # Remote model-catalog manifest: curated OpenRouter / Nous Portal model lists fetched from this
-    # URL (falls back to the in-repo snapshot on network failure), so picker lists update without a
-    # release. Default URL is served by the docs-site GitHub Pages deploy.
+    # Remote model catalog is opt-in. An empty URL uses the in-repo picker lists.
     "model_catalog": {
         "enabled": True,
-        "url": "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json",
+        "url": "",
         # Disk cache TTL in minutes. The gateway refreshes in the background on this cadence; the
         # CLI refetches on the next /model or `hermes model` once the cache is older. Network
         # failures silently use the stale cache. Legacy `ttl_hours` is honoured if set.
@@ -2337,7 +2330,7 @@ DEFAULT_CONFIG = {
             "send": False,
             # Ingest endpoint (override for staging/local). Deliberately NOT env- overridable.
             # Non-HTTPS refused unless the host is localhost.
-            "endpoint": "https://telemetry.nousresearch.com/v1/telemetry",
+            "endpoint": "",
         },
     },
 
