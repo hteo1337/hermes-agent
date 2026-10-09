@@ -42,3 +42,10 @@ scripts/run_tests.sh -j 2 --file-timeout 600 tests/hermes_cli/test_debug.py test
 ```
 
 Ruff from the isolated test-environment venv: `All checks passed!`. The same Ruff lint ran in the commit hook and reported `All checks passed!`. `git diff --cached --check` produced no output. Not run for this review fix: the full repository suite, CI, Desktop build, live Portal request, or real container pull. A diagnostics service that returns a third-party presigned storage URL now needs a same-origin upload proxy. An explicitly configured legacy image remains an operator-selected image.
+
+Final control check: the sandbox switch tests retain both paths. With the image default empty, no switch is offered; with an explicitly supplied image, a stale container produces an offer and approving it pins that image. After restoring this positive control, the full file ran again under the same isolated variables:
+
+```
+scripts/run_tests.sh -j 1 tests/hermes_cli/test_sandbox_image_switch.py -q
+=== Summary: 1 files, 8 tests passed, 0 failed (100% complete) in 16.7s (1 workers) ===
+```

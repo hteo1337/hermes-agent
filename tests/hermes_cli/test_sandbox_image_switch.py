@@ -137,7 +137,14 @@ def test_pending_needs_docker_backend_unpinned_and_a_stale_container(home, tmp_p
         with pytest.raises(ValueError, match=f"terminal.{backend}_image"):
             _create_environment(backend, image="", cwd=str(tmp_path), timeout=5)
 
-    _fake_docker(tmp_path, monkeypatch, f"hermes-def\t{DEFAULT_SANDBOX_IMAGE}\n")
+    target = "ghcr.io/example/sandbox:1"
+    monkeypatch.setattr("hermes_cli.config.load_config_readonly",
+                        lambda: {"terminal": {"backend": "docker", "docker_image": target}})
+    pending = sw.pending()
+    assert pending is not None
+    assert (pending.current_image, pending.target_image, pending.containers) == (
+        LEGACY_SANDBOX_IMAGE, target, ["hermes-abc"])
+    _fake_docker(tmp_path, monkeypatch, f"hermes-def\t{target}\n")
     assert sw.pending() is None, "every container already on the target: nothing to ask"
 
 
@@ -147,10 +154,14 @@ def test_decide_pins_and_either_answer_ends_the_offer(home, tmp_path, monkeypatc
 
     _fake_docker(tmp_path, monkeypatch, f"hermes-abc\t{LEGACY_SANDBOX_IMAGE}\n")
     _write(home, {"backend": "docker"})
+    target = "ghcr.io/example/sandbox:1"
+    monkeypatch.setattr("hermes_cli.config.load_config_readonly",
+                        lambda: {"terminal": {"backend": "docker", "docker_image": target}})
     evicted = []
     monkeypatch.setattr("tools.terminal_tool_lifecycle._evict_environment_for_task", lambda task: evicted.append(task))
 
-    p = sw.PendingSwitch(LEGACY_SANDBOX_IMAGE, "ghcr.io/example/sandbox:1", ["hermes-abc"])
+    p = sw.pending()
+    assert p is not None
     assert sw.decide(p, approve=False) == LEGACY_SANDBOX_IMAGE
     raw = yaml.safe_load((home / "config.yaml").read_text(encoding="utf-8"))
     assert raw["terminal"]["docker_image"] == LEGACY_SANDBOX_IMAGE, "keep = pin the running image"
@@ -160,7 +171,8 @@ def test_decide_pins_and_either_answer_ends_the_offer(home, tmp_path, monkeypatc
     for var in ("TERMINAL_DOCKER_IMAGE", "TERMINAL_DOCKER_IMAGE_PINNED"):
         monkeypatch.delenv(var, raising=False)
     _write(home, {"backend": "docker"})
-    p = sw.PendingSwitch(LEGACY_SANDBOX_IMAGE, "ghcr.io/example/sandbox:1", ["hermes-abc"])
+    p = sw.pending()
+    assert p is not None
     assert sw.decide(p, approve=True) == p.target_image
     raw = yaml.safe_load((home / "config.yaml").read_text(encoding="utf-8"))
     assert raw["terminal"]["docker_image"] == p.target_image, "approval pins the selected image"
@@ -182,10 +194,16 @@ def test_interactive_offer_writes_only_on_a_yes_or_no(home, tmp_path, monkeypatc
     assert "docker_image" not in (yaml.safe_load((home / "config.yaml").read_text())["terminal"]), "Enter = ask later"
     assert printed == [], "no image is offered when the default is unset"
 
-    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None
-    assert "docker_image" not in yaml.safe_load((home / "config.yaml").read_text())["terminal"]
+    target = "ghcr.io/example/sandbox:1"
+    monkeypatch.setattr("hermes_cli.config.load_config_readonly",
+                        lambda: {"terminal": {"backend": "docker", "docker_image": target}})
+    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "") is None
+    assert any("/root and /workspace" in line for line in printed)
 
-    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None, "no image is offered"
+    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is True
+    assert yaml.safe_load((home / "config.yaml").read_text())["terminal"]["docker_image"] == target
+
+    assert sw.offer_interactive(cprint=printed.append, ask=lambda _p: "y") is None, "pinned: never asked again"
 
 
 def test_pending_reads_a_bound_terminal_scope_not_the_launch_env(home, tmp_path, monkeypatch):
