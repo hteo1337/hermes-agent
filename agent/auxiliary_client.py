@@ -1958,8 +1958,8 @@ def _read_nous_auth() -> Optional[dict]:
             "access_token": getattr(entry, "access_token", ""),
             "refresh_token": getattr(entry, "refresh_token", None),
             "agent_key": getattr(entry, "agent_key", None),
-            "inference_base_url": (getattr(entry, "inference_base_url", None)
-                                   or _scoped_key_env("NOUS_INFERENCE_BASE_URL") or endpoint("nousInferenceUrl")),
+            "inference_base_url": (_scoped_key_env("NOUS_INFERENCE_BASE_URL")
+                                   or getattr(entry, "inference_base_url", None) or endpoint("nousInferenceUrl")),
             "portal_base_url": getattr(entry, "portal_base_url", None),
             "client_id": getattr(entry, "client_id", None),
             "scope": getattr(entry, "scope", None),
@@ -2356,8 +2356,8 @@ def _describe_openrouter_unavailable(model: str = None) -> str:
 
 def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
     nous = _read_nous_auth()
-    configured_base_url = str((nous or {}).get("inference_base_url")
-                              or _scoped_key_env("NOUS_INFERENCE_BASE_URL")
+    configured_base_url = str(_scoped_key_env("NOUS_INFERENCE_BASE_URL")
+                              or (nous or {}).get("inference_base_url")
                               or endpoint("nousInferenceUrl")).strip().rstrip("/")
     if not configured_base_url:
         return None, None

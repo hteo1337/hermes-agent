@@ -10,6 +10,7 @@ import dataclasses
 import io
 import json
 import urllib.request
+from types import SimpleNamespace
 
 import pytest
 
@@ -20,6 +21,7 @@ import hermes_cli.local_runtime.catalog as cat
 def _reset_refresh_state(monkeypatch):
     """Each test starts outside the TTL window with the packaged catalog."""
     monkeypatch.setattr(cat, "_last_refresh_attempt", 0.0)
+    monkeypatch.setattr(cat, "_last_refresh_url", "")
     monkeypatch.setattr(cat, "endpoint", lambda name: "https://catalog.example.invalid/models.json")
     packaged = cat._packaged_catalog()
     monkeypatch.setattr(cat, "CATALOG", packaged)
@@ -60,6 +62,29 @@ def test_empty_endpoint_disables_refresh_and_background_thread(monkeypatch):
     assert cat.refresh_catalog(force=True) is False
     cat.refresh_catalog_soon()
     assert cat._last_refresh_attempt == 0.0
+
+
+def test_source_change_retries_after_failed_refresh(monkeypatch):
+    source = {"url": "https://source-a.example.invalid/models.json"}
+    monkeypatch.setattr(cat, "endpoint", lambda name: source["url"])
+    requests = []
+
+    def fetch(req, *args, **kwargs):
+        requests.append(req.full_url)
+        if req.full_url == "https://source-a.example.invalid/models.json":
+            raise OSError("source A unavailable")
+        return io.BytesIO(json.dumps(_doc_from(lambda models: models)).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    assert cat.refresh_catalog(force=True) is False
+    source["url"] = "https://source-b.example.invalid/models.json"
+    started = []
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: SimpleNamespace(
+        start=lambda: started.append(True)))
+    cat.refresh_catalog_soon()
+    assert started == [True]
+    assert cat.refresh_catalog() is True
+    assert requests == ["https://source-a.example.invalid/models.json", source["url"]]
 
 
 def test_packaged_json_round_trips_the_catalog():

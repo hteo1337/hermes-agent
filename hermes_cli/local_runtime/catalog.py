@@ -294,6 +294,7 @@ _SCHEMA_VERSION = 2  # bump when an older app would read a newer catalog but lau
 _REFRESH_TTL_S = 6 * 3600
 _refresh_lock = threading.Lock()
 _last_refresh_attempt = 0.0
+_last_refresh_url = ""
 
 
 def _asset_from(d: "dict | None") -> "AssetFile | None":
@@ -351,16 +352,17 @@ def refresh_catalog(force: bool = False) -> bool:
     """Fetch the configured catalog and swap it in memory. Best-effort: any failure
     (offline, GitHub down, unreadable schema) leaves the running catalog untouched and retries
     after the TTL. Returns True when a fetched document replaced the catalog."""
-    global CATALOG, _last_refresh_attempt
+    global CATALOG, _last_refresh_attempt, _last_refresh_url
 
     catalog_url = endpoint("localModelCatalogUrl")
     if not catalog_url:
         return False
     now = time.monotonic()
     with _refresh_lock:
-        if not force and now - _last_refresh_attempt < _REFRESH_TTL_S:
+        if not force and catalog_url == _last_refresh_url and now - _last_refresh_attempt < _REFRESH_TTL_S:
             return False
         _last_refresh_attempt = now
+        _last_refresh_url = catalog_url
     try:
         req = urllib.request.Request(catalog_url, headers={"User-Agent": "envoy-local-runtime"})
         with urllib.request.urlopen(req, timeout=10) as r:
@@ -377,7 +379,9 @@ def refresh_catalog(force: bool = False) -> bool:
 def refresh_catalog_soon() -> None:
     """TTL-gated background refresh; returns immediately. The current request serves the catalog
     it already has — the refresh lands for the next one."""
-    if not endpoint("localModelCatalogUrl") or time.monotonic() - _last_refresh_attempt < _REFRESH_TTL_S:
+    catalog_url = endpoint("localModelCatalogUrl")
+    if not catalog_url or (catalog_url == _last_refresh_url
+                           and time.monotonic() - _last_refresh_attempt < _REFRESH_TTL_S):
         return
     threading.Thread(target=refresh_catalog, daemon=True, name="catalog-refresh").start()
 
