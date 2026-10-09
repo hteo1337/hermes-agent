@@ -364,6 +364,7 @@ import {
   writeNvidiaEglMarker
 } from './linux-nvidia-egl-fallback'
 import { createLocalBackendLifecycle, waitForTeardown } from './local-backend-lifecycle'
+import { scanLocalPets } from './local-pets'
 import { resolveIpcFileReadPath, resolveMediaStreamFile, resolvePreviewTargetPath } from './local-read-path'
 import { localSkinProfileKey, readLocalSkinPayload } from './local-skin'
 import { ACTIVE_LOG_POLL_MS, planLogRotation, reclaimActiveLogIfOversized } from './log-rotation'
@@ -427,7 +428,13 @@ import { wireOauthSessionResponse } from './oauth-session-response'
 import { listWindowsProcesses, reapPackageRootedProcesses } from './package-process-reap'
 import { createParentStartMarkerResolver, parentWatchdogEnv } from './parent-process-identity'
 import { bundledPayload, installIdForRoot, type PayloadInfo, payloadPythonPath } from './payload-backend'
-import { petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
+import {
+  createSerialQueue,
+  MORPH_STEP_MS,
+  morphSteps,
+  petOverlayClickThrough,
+  shouldPopInOnOverlayClosed
+} from './pet-overlay'
 import { placePetOverlay, registerPetOverlayIpc } from './pet-overlay-ipc'
 import {
   buildRegistryProfileRoutes,
@@ -671,7 +678,7 @@ import {
 } from './window-connection-route'
 import { registerWindowControlIpc, windowControlState } from './window-controls'
 import { revealAction, shouldFocusToTakeKeyboard } from './window-focus-policy'
-import { isAppSized, registerWindowSizing } from './window-growth'
+import { clearPetSized, isAppSized, isPetSized, markAppSized, markPetSized, registerWindowSizing } from './window-growth'
 import { windowMenuTemplate } from './window-menu'
 import { createWindowOpenHandler } from './window-open-policy'
 import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
@@ -3621,7 +3628,13 @@ function readWindowState() {
 // broken transition behind #94319 — so record that provenance and let recovery
 // on the next launch recognize the snapshot instead of guessing from geometry.
 function persistWindowState() {
-  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized() || isAppSized(mainWindow)) {
+  if (
+    !mainWindow ||
+    mainWindow.isDestroyed() ||
+    mainWindow.isMinimized() ||
+    isPetSized(mainWindow) ||
+    isAppSized(mainWindow)
+  ) {
     return
   }
 
@@ -14174,6 +14187,152 @@ function rehomePetOverlay() {
   }
 }
 
+// Morph: main window ⇄ pet overlay (PLAN-ENVOY-INTEGRATION A). queueMorph
+// serializes toPet/toChat so an overlapping call queues instead of clobbering.
+let savedChatBounds = null
+let morphAnimTimer: ReturnType<typeof setInterval> | null = null
+const queueMorph = createSerialQueue()
+
+function cancelMorphAnimation() {
+  if (morphAnimTimer) {
+    clearInterval(morphAnimTimer)
+    morphAnimTimer = null
+  }
+}
+
+// Steps `win` from where it is to `to` (or jumps, if not animate). Resolves
+// false if `win` is destroyed mid-flight or a step's setBounds throws.
+function animateWindowBounds(win, to, animate: boolean): Promise<boolean> {
+  cancelMorphAnimation()
+
+  const applyBounds = rect => {
+    try {
+      markAppSized(win, rect)
+      win.setBounds(rect)
+
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  if (!animate) {
+    return Promise.resolve(applyBounds(to))
+  }
+
+  const steps = morphSteps(win.getBounds(), to)
+
+  return new Promise(resolve => {
+    let i = 0
+
+    morphAnimTimer = setInterval(() => {
+      if (!win || win.isDestroyed()) {
+        cancelMorphAnimation()
+        resolve(false)
+
+        return
+      }
+
+      if (!applyBounds(steps[i])) {
+        cancelMorphAnimation()
+        resolve(false)
+
+        return
+      }
+
+      i += 1
+
+      if (i >= steps.length) {
+        cancelMorphAnimation()
+        resolve(true)
+      }
+    }, MORPH_STEP_MS)
+  })
+}
+
+// toPet: shrink the main window into `bounds`, then hide it and open the
+// overlay there. Chat bounds are flushed to disk now, not kept memory-only.
+function morphMainWindowToPet(bounds, animate: boolean) {
+  return queueMorph(async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return null
+    }
+
+    // A toPet while already in pet mode (savedChatBounds set) must not
+    // overwrite it with the current pet-sized bounds.
+    const capturedChatBounds = savedChatBounds === null
+
+    if (capturedChatBounds) {
+      savedChatBounds = mainWindow.getBounds()
+      persistWindowState()
+    }
+
+    let landed = false
+
+    try {
+      mainWindow.setMinimumSize(1, 1)
+      landed = await animateWindowBounds(mainWindow, bounds, animate)
+
+      if (landed) {
+        markPetSized(mainWindow)
+        mainWindow.hide()
+        openPetOverlay(bounds)
+      }
+    } catch {
+      landed = false
+    }
+
+    if (!landed) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+      }
+
+      if (capturedChatBounds) {
+        savedChatBounds = null
+      }
+
+      return null
+    }
+
+    return bounds
+  })
+}
+
+// toChat: grow the window back to the saved chat bounds, then close the
+// overlay. try/finally so a setBounds/show/animation failure can't strand it.
+function morphPetToMainWindow(animate: boolean) {
+  return queueMorph(async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return null
+    }
+
+    const from =
+      petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
+
+    const to = savedChatBounds ?? from
+    let landed = false
+
+    try {
+      markAppSized(mainWindow, from)
+      mainWindow.setBounds(from)
+      mainWindow.show()
+      landed = await animateWindowBounds(mainWindow, to, animate)
+    } catch {
+      landed = false
+    } finally {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+        clearPetSized(mainWindow)
+      }
+
+      closePetOverlay()
+      savedChatBounds = null
+    }
+
+    return landed ? to : null
+  })
+}
+
 // ── HUD mode ────────────────────────────────────────────────────────────────
 //
 // The chrome-free floating chat: a transparent, frameless, always-on-top
@@ -15772,7 +15931,32 @@ registerPetOverlayIpc({
   getMainWindow: () => mainWindow,
   getPetOverlayWindow: () => petOverlayWindow,
   openPetOverlay,
-  closePetOverlay
+  closePetOverlay,
+  morphToPet: morphMainWindowToPet,
+  morphToChat: morphPetToMainWindow
+})
+
+// --- Local pet skins (<userData>/pets/<id>/{pet.json,atlas.png}) ---------
+// Atlas bytes are fetched separately, never through a file:// protocol.
+function localPetsDir() {
+  return path.join(app.getPath('userData'), 'pets')
+}
+
+ipcMain.handle('hermes:local-pets:list', async () => {
+  const { pets, rejected } = scanLocalPets(localPetsDir())
+
+  return { pets: pets.map(({ atlasPath: _atlasPath, ...meta }) => meta), rejected }
+})
+
+ipcMain.handle('hermes:local-pets:atlas', async (_event, id: string) => {
+  const { pets } = scanLocalPets(localPetsDir())
+  const pet = pets.find(p => p.id === id)
+
+  if (!pet) {
+    return null
+  }
+
+  return fs.readFileSync(pet.atlasPath).toString('base64')
 })
 
 // --- HUD mode (chrome-free floating chat) — see hud-ipc.ts. ---------------

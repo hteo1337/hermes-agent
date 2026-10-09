@@ -349,10 +349,8 @@ export function FloatingPet() {
 
     const rect = el.getBoundingClientRect()
 
-    // Shift-click pops the pet out into a free-floating desktop overlay (it can
-    // leave the window and stays visible while Hermes is minimized) instead of
-    // starting an in-window drag. Primary window only — the overlay is anchored
-    // to it.
+    // Shift-click morphs the window into the floating pet overlay (chat
+    // shrinks and hides) instead of starting an in-window drag. Primary only.
     if (e.shiftKey && !isSecondaryWindow()) {
       popOutPet({ height: rect.height, width: rect.width, x: rect.left, y: rect.top })
 

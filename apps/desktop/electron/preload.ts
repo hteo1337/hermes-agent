@@ -91,11 +91,19 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   chatOnboarding: {
     size: mode => ipcRenderer.send('hermes:window:size', mode)
   },
+  // Local pet skins read from <userData>/pets/<id>/{pet.json,atlas.png}.
+  localPets: {
+    atlas: id => ipcRenderer.invoke('hermes:local-pets:atlas', id),
+    list: () => ipcRenderer.invoke('hermes:local-pets:list')
+  },
   petOverlay: {
     // Main renderer → main process: window lifecycle + drag. `request` is
     // `{ bounds, screen }`; resolves with the screen bounds it actually used.
     open: request => ipcRenderer.invoke('hermes:pet-overlay:open', request),
     close: () => ipcRenderer.invoke('hermes:pet-overlay:close'),
+    // toPet/toChat: morph the main window into the overlay's spot and back.
+    morphToPet: request => ipcRenderer.invoke('hermes:pet-overlay:morph-to-pet', request),
+    morphToChat: request => ipcRenderer.invoke('hermes:pet-overlay:morph-to-chat', request),
     setBounds: bounds => ipcRenderer.send('hermes:pet-overlay:set-bounds', bounds),
     setIgnoreMouse: ignore => ipcRenderer.send('hermes:pet-overlay:ignore-mouse', ignore),
     // Flip the overlay focusable (and focus it) while the composer needs keys.

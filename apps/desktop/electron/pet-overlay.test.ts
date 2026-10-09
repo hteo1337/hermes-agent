@@ -11,6 +11,8 @@ import { test } from 'vitest'
 
 import {
   clampRectToWorkArea,
+  createSerialQueue,
+  morphSteps,
   petOverlayClickThrough,
   resolvePetOverlayBounds,
   shouldPopInOnOverlayClosed
@@ -37,6 +39,48 @@ test('a quit suppresses the pop-in echo, so the popped-out state survives for th
   // before-quit teardown and the non-macOS primary-window close both latch the
   // quit flag before closePetOverlay() fires the overlay's 'closed' handler.
   assert.equal(shouldPopInOnOverlayClosed({ appQuitting: true, mainWindowAlive: true }), false)
+})
+
+// ─── morph animation (toPet/toChat window steps) ────────────────────────────
+
+test('morphSteps lands exactly on the target rect and actually moves', () => {
+  const from = { height: 620, width: 960, x: 100, y: 100 }
+  const to = { height: 300, width: 240, x: 800, y: 600 }
+  const steps = morphSteps(from, to)
+
+  assert.deepEqual(steps.at(-1), to)
+  assert.notDeepEqual(steps[0], from)
+  assert.equal(steps.length, 95)
+})
+
+test('createSerialQueue holds an overlapping call until the first settles', async () => {
+  const queue = createSerialQueue()
+  const order: string[] = []
+
+  let releaseFirst: () => void = () => {}
+
+  const first = queue(
+    () =>
+      new Promise<void>(resolve => {
+        releaseFirst = () => {
+          order.push('first')
+          resolve()
+        }
+      })
+  )
+
+  const second = queue(async () => {
+    order.push('second')
+  })
+
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.deepEqual(order, [])
+
+  releaseFirst()
+  await first
+  await second
+  assert.deepEqual(order, ['first', 'second'])
 })
 
 test('no live main window means no echo, quit or not', () => {

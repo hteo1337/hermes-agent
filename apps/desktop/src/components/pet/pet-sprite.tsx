@@ -72,7 +72,10 @@ const STATE_ALIASES: Record<PetState, string[]> = {
   run: ['run', 'running'],
   failed: ['failed'],
   review: ['review'],
-  waiting: ['waiting']
+  waiting: ['waiting'],
+  // Built-in petdex sheets have no dedicated row yet; rowIndexForState falls
+  // back to idle when 'sleeping' isn't found in a pet's stateRows.
+  sleeping: ['sleeping']
 }
 
 const ROW_TO_STATE: Record<string, PetState> = {
@@ -87,7 +90,8 @@ const ROW_TO_STATE: Record<string, PetState> = {
   'running-left': 'run',
   failed: 'failed',
   review: 'review',
-  waiting: 'waiting'
+  waiting: 'waiting',
+  sleeping: 'sleeping'
 }
 
 /**

@@ -1,6 +1,7 @@
 import { atom } from 'nanostores'
 
 import { PRIMARY_SESSION_VIEW } from '@/app/chat/session-view'
+import { prefersReducedMotion } from '@/hooks/use-media-query'
 import { persistBoolean, persistString, storedBoolean, storedString } from '@/lib/storage'
 import { $petActivity, $petInfo, $petUnread, clearPetUnread, type PetActivity, type PetInfo } from '@/store/pet'
 import { $petChips, answerPetChip, type PetChip } from '@/store/pet-chips'
@@ -160,29 +161,13 @@ function pushNow(): void {
   window.hermesDesktop?.petOverlay?.pushState(currentPayload())
 }
 
-/**
- * Open the overlay window and start mirroring live state into it. The main
- * process echoes back the actual screen bounds it used, which we persist so the
- * pet reopens exactly where the user left it.
- */
-function openOverlay(request: PetOverlayOpenRequest): void {
-  const api = window.hermesDesktop?.petOverlay
-
-  if (!api || stateUnsubs.length) {
+// Mirror live state into the overlay; subscribe() fires immediately, so the
+// overlay also gets a first frame the moment it's ready (it asks via 'ready').
+function startStateMirror(): void {
+  if (stateUnsubs.length) {
     return
   }
 
-  $petOverlayActive.set(true)
-  void api.open(request).then(res => {
-    if (res?.bounds) {
-      saveBounds(res.bounds)
-    }
-
-    pushNow()
-  })
-
-  // Mirror live state into the overlay. subscribe() fires immediately, so the
-  // overlay also gets a first frame the moment it's ready (it asks via 'ready').
   stateUnsubs = [
     $petInfo.subscribe(pushNow),
     $petActivity.subscribe(pushNow),
@@ -192,6 +177,48 @@ function openOverlay(request: PetOverlayOpenRequest): void {
     $petReaction.subscribe(pushNow),
     $petChips.subscribe(pushNow)
   ]
+}
+
+function stopStateMirror(): void {
+  for (const off of stateUnsubs) {
+    off()
+  }
+
+  stateUnsubs = []
+}
+
+// Undoes the optimistic active/mirror start when main rejects or fails the
+// request, so the UI doesn't believe an overlay is open that never opened.
+function abortOverlayAttempt(): void {
+  stopStateMirror()
+  $petOverlayActive.set(false)
+}
+
+// Morph the main window into the overlay at `request`'s spot: shrinks it there
+// (unless prefers-reduced-motion), hides it, opens the overlay.
+function morphToPet(request: PetOverlayOpenRequest): void {
+  const api = window.hermesDesktop?.petOverlay
+
+  if (!api?.morphToPet || stateUnsubs.length) {
+    return
+  }
+
+  $petOverlayActive.set(true)
+  startStateMirror()
+
+  void api.morphToPet({ ...request, animate: !prefersReducedMotion() }).then(res => {
+    if (!res?.ok) {
+      abortOverlayAttempt()
+
+      return
+    }
+
+    if (res.bounds) {
+      saveBounds(res.bounds)
+    }
+
+    pushNow()
+  }, abortOverlayAttempt)
 }
 
 /**
@@ -208,7 +235,7 @@ export function popOutPet(petRect: PetOverlayBounds): void {
   const saved = loadSavedBounds()
 
   if (saved) {
-    openOverlay({ bounds: saved, screen: true })
+    morphToPet({ bounds: saved, screen: true })
 
     return
   }
@@ -220,7 +247,7 @@ export function popOutPet(petRect: PetOverlayBounds): void {
   const x = Math.round(petRect.x - (width - petRect.width) / 2)
   const y = Math.round(petRect.y - (height - petRect.height) / 2)
 
-  openOverlay({ bounds: { height, width, x, y }, screen: false })
+  morphToPet({ bounds: { height, width, x, y }, screen: false })
 }
 
 /**
@@ -241,18 +268,22 @@ export function restorePetOverlay(): void {
     return
   }
 
-  openOverlay({ bounds: saved, screen: true })
+  morphToPet({ bounds: saved, screen: true })
 }
 
-/** Pop the pet back into the window (closes the overlay window). */
+// Pop the pet back into the window: morphs the main window back to chat size,
+// falling back to a plain close when the morph API isn't available.
 export function popInPet(): void {
-  for (const off of stateUnsubs) {
-    off()
-  }
+  const api = window.hermesDesktop?.petOverlay
 
-  stateUnsubs = []
+  stopStateMirror()
   $petOverlayActive.set(false)
-  void window.hermesDesktop?.petOverlay?.close()
+
+  if (api?.morphToChat) {
+    void api.morphToChat({ animate: !prefersReducedMotion() })
+  } else {
+    void api?.close()
+  }
 }
 
 /** Register the handler that turns an overlay composer submit into a real send. */

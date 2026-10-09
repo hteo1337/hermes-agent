@@ -5,6 +5,7 @@ import type { TranslucencyState } from '@hermes/shared/translucency'
 import type { ChallengeOutcome } from '../electron/challenge-window'
 import type { ScreenshotApi } from '../electron/command-screenshot-types'
 import type { HudModifierApi } from '../electron/hud-modifier-types'
+import type { LocalPetManifest, LocalPetRejected } from '../electron/local-pets'
 import type { MachineProfile } from '../electron/machine-profile'
 import type { HermesNotification } from '../electron/notification-types'
 import type { PoolLimits } from '../electron/pool-limits'
@@ -134,12 +135,21 @@ declare global {
       chatOnboarding?: {
         size: (mode: WindowSizeMode) => void
       }
+      // Local pet skins read from <userData>/pets/<id>/{pet.json,atlas.png}.
+      localPets: {
+        list: () => Promise<{ pets: LocalPetManifest[]; rejected: LocalPetRejected[] }>
+        atlas: (id: string) => Promise<string | null>
+      }
       // The pop-out pet overlay: a transparent always-on-top window hosting only
       // the mascot. The main renderer drives it (open/close/drag + state push);
       // the overlay sends control messages back (pop-in, composer submit).
       petOverlay: {
         open: (request: PetOverlayOpenRequest) => Promise<{ ok: boolean; bounds?: PetOverlayBounds }>
         close: () => Promise<{ ok: boolean }>
+        morphToPet: (
+          request: PetOverlayOpenRequest & { animate: boolean }
+        ) => Promise<{ ok: boolean; bounds?: PetOverlayBounds }>
+        morphToChat: (request: { animate: boolean }) => Promise<{ ok: boolean; bounds?: PetOverlayBounds }>
         setBounds: (bounds: PetOverlayBounds) => void
         setIgnoreMouse: (ignore: boolean) => void
         setFocusable: (focusable: boolean) => void

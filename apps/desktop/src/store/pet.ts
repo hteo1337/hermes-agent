@@ -13,7 +13,7 @@ import { $activeGatewayProfile, normalizeProfileKey } from '@/store/profile'
  * `agent/pet/state.py` so the Python and TS surfaces never drift.
  */
 
-export type PetState = 'idle' | 'wave' | 'run' | 'failed' | 'review' | 'jump' | 'waiting'
+export type PetState = 'idle' | 'wave' | 'run' | 'failed' | 'review' | 'jump' | 'waiting' | 'sleeping'
 
 export interface PetInfo {
   enabled: boolean
@@ -251,16 +251,34 @@ export const $petAtRest = computed(
   (activity, busy): boolean => deriveLivePetState(activity, busy) === 'idle'
 )
 
+// Continuous rest this long falls asleep (Envoy parity); any activity resets it.
+export const SLEEP_AFTER_MS = 2 * 60 * 1000
+export const $petSleeping = atom<boolean>(false)
+let sleepTimer: ReturnType<typeof setTimeout> | undefined
+
+$petAtRest.subscribe(atRest => {
+  clearTimeout(sleepTimer)
+  sleepTimer = atRest ? setTimeout(() => $petSleeping.set(true), SLEEP_AFTER_MS) : undefined
+
+  if (!atRest) {
+    $petSleeping.set(false)
+  }
+})
+
 /**
  * The live pet state. Activity always wins; only when the agent is at rest does
  * a roam pose (walking → `run`, hopping → `jump`) show through, so the wander
  * reads as deliberate movement.
  */
 export const $petState = computed(
-  [$petActivity, PRIMARY_SESSION_VIEW.$busy, $petMotion],
-  (activity, busy, motion): PetState => {
+  [$petActivity, PRIMARY_SESSION_VIEW.$busy, $petMotion, $petSleeping],
+  (activity, busy, motion, sleeping): PetState => {
     const base = deriveLivePetState(activity, busy)
 
-    return base === 'idle' && motion ? motion : base
+    if (base !== 'idle') {
+      return base
+    }
+
+    return motion ?? (sleeping ? 'sleeping' : 'idle')
   }
 )
