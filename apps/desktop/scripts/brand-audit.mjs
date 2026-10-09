@@ -15,6 +15,7 @@ const skip = /(^|\/)(node_modules|dist|build)(\/|$)|^src\/i18n\/(?!brand-text)|\
 
 // Identifiers the backend and tooling depend on. They are not branding.
 const internal = [
+  /(['"])hermes:[a-z0-9:-]+\1/gi,
   /HERMES_[A-Z0-9_]+/g, /hermes_[a-z_]+/g, /hermes-(?:agent|update|bots|media|dev|home)\b/gi,
   /hermes(?:Desktop|Home|Api|Path|Bots|Root)\w*/g, /\.hermes\b/g, /hermes\.(?:exe|desktop|bots)\b[\w.-]*/g,
   /hermes (?:serve|update|dashboard|gateway)\b/g, /\bhermes-cli\b/gi
