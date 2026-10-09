@@ -120,3 +120,26 @@ def test_configured_portal_routes_use_manifest(tmp_path, monkeypatch):
     with patch("hermes_cli.nous_account.urllib.request.urlopen", return_value=response) as opened:
         assert nous_account._fetch_nous_account_info("test-token") == {}
     assert opened.call_args.args[0].full_url == "https://portal.example.test/api/oauth/account"
+
+
+def test_recommendations_ignore_saved_portal_when_current_endpoint_changes(tmp_path, monkeypatch):
+    from unittest.mock import patch
+    from hermes_cli import auth, models
+
+    brand = tmp_path / "brand.json"
+    monkeypatch.setattr(endpoints, "_BRAND_FILE", brand)
+    monkeypatch.setattr(auth, "get_provider_auth_state", lambda _provider: {
+        "portal_base_url": "https://stale.example.test"})
+
+    brand.write_text(json.dumps({"name": "Envoy", "endpoints": {}}))
+    with patch("hermes_cli.models._get_json") as fetched:
+        assert models.get_nous_recommended_aux_model(free_tier=False, force_refresh=True) is None
+    fetched.assert_not_called()
+
+    brand.write_text(json.dumps({"name": "Envoy", "endpoints": {
+        "portal": "https://configured.example.test"}}))
+    with patch("hermes_cli.models._get_json", return_value={
+        "paidRecommendedCompactionModel": {"modelName": "configured-model"}}) as fetched:
+        assert models.get_nous_recommended_aux_model(free_tier=False, force_refresh=True) == "configured-model"
+    assert fetched.call_args.args[0] == (
+        "https://configured.example.test" + models.NOUS_RECOMMENDED_MODELS_PATH)

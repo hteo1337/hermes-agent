@@ -433,15 +433,8 @@ def fetch_nous_recommended_models(
     return data
 
 def _resolve_nous_portal_url() -> str:
-    """Best-effort lookup of the Portal base URL the user is authed against."""
-    try:
-        from hermes_cli.auth import get_provider_auth_state
-
-        state = get_provider_auth_state("nous") or {}
-        portal = str(state.get("portal_base_url") or "").strip()
-        return (portal or endpoint("portal")).rstrip("/")
-    except Exception:
-        return endpoint("portal")
+    """Use the current operator-configured Portal, never saved auth metadata."""
+    return endpoint("portal").rstrip("/")
 
 def _extract_model_name(entry: Any) -> Optional[str]:
     """Pull the ``modelName`` field from a recommended-model entry, else None."""
