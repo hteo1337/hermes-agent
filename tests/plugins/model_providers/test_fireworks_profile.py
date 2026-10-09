@@ -38,10 +38,10 @@ class TestFireworksHeaders:
         assert headers["HTTP-Referer"] == _OR_HEADERS_BASE["HTTP-Referer"]
         assert headers["X-Title"] == _OR_HEADERS_BASE["X-Title"]
 
-    def test_user_agent_identifies_hermes(self, fireworks_profile):
+    def test_user_agent_identifies_envoy(self, fireworks_profile):
         from hermes_cli.version_info import get_version_info
         assert fireworks_profile.default_headers["User-Agent"] == (
-            f"HermesAgent/{get_version_info().base_version}"
+            f"Envoy/{get_version_info().base_version}"
         )
 
 

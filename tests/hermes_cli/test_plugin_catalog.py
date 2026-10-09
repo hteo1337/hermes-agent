@@ -15,6 +15,11 @@ from hermes_cli import plugin_catalog as pc
 SHA = "38fe0fb53eff98d477f807432e965429e665ca33"
 
 
+@pytest.fixture(autouse=True)
+def _configured_live_catalog(monkeypatch):
+    monkeypatch.setattr(pc, "LIVE_CATALOG_URL", "https://catalog.example.invalid/index.json")
+
+
 def _entry(name="good-plugin", **over):
     data = {"name": name, "repo": "https://github.com/owner/repo", "sha": SHA, "description": "d",
             "maintainer": "owner", "tier": "community", "capabilities": {"provides_tools": ["t1"]}}
@@ -28,7 +33,7 @@ def test_shipped_catalog_entries_are_all_valid_and_pinned():
     root = pc.get_catalog_dir()
     files = [p for p in root.glob("*.yaml") if p.name != "removed.yaml"]
     entries = pc.load_catalog()
-    assert len(entries) == len(files) >= 1
+    assert len(entries) == len(files) == 0
     assert all(pc._SHA_RE.match(e.sha) and e.repo.startswith("https://") for e in entries)
     assert all(e.install_identifier.startswith(e.repo) for e in entries)
 

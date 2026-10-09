@@ -8,15 +8,16 @@ from typing import Any
 
 from agent import reasoning_effort as re_
 from hermes_cli.version_info import get_version_info
+from hermes_cli.endpoints import attribution_referer, brand_name
 from providers import register_provider
 from providers.base import ProviderProfile
 
 # Attribution headers (same values as OpenRouter / Vercel / Fireworks); via
 # default_headers so they survive model switches and credential rotation.
 _ATTRIBUTION_HEADERS = {
-    "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-    "X-Title": "Hermes Agent",
-    "User-Agent": f"HermesAgent/{get_version_info().base_version}",
+    "HTTP-Referer": attribution_referer(),
+    "X-Title": brand_name(),
+    "User-Agent": f"{brand_name()}/{get_version_info().base_version}",
 }
 
 

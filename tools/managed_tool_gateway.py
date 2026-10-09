@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 from hermes_constants import get_hermes_home
+from hermes_cli.endpoints import endpoint
 from tools.tool_backend_helpers import managed_nous_tools_enabled
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_TOOL_GATEWAY_DOMAIN = "nousresearch.com"
 _DEFAULT_TOOL_GATEWAY_SCHEME = "https"
 _NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 120
 
@@ -158,14 +158,18 @@ def build_vendor_gateway_url(vendor: str) -> str:
     """Return the gateway origin for a specific vendor."""
     if explicit_vendor_url := os.getenv(f"{vendor.upper().replace('-', '_')}_GATEWAY_URL", "").strip().rstrip("/"):
         return explicit_vendor_url
-    shared_domain = os.getenv("TOOL_GATEWAY_DOMAIN", "").strip().strip("/") or _DEFAULT_TOOL_GATEWAY_DOMAIN
+    shared_domain = os.getenv("TOOL_GATEWAY_DOMAIN", "").strip().strip("/") or endpoint("toolGatewayDomain")
+    if not shared_domain:
+        return ""
     return f"{get_tool_gateway_scheme()}://{vendor}-gateway.{shared_domain}"
 
 
 def _vendor_gateway(vendor: str, gateway_builder, token_reader) -> Optional[ManagedToolGatewayConfig]:
     gateway_origin = (gateway_builder or build_vendor_gateway_url)(vendor)
+    if not gateway_origin:
+        return None
     nous_user_token = (token_reader or read_nous_access_token)()
-    if not gateway_origin or not nous_user_token:
+    if not nous_user_token:
         return None
     return ManagedToolGatewayConfig(vendor=vendor, gateway_origin=gateway_origin, nous_user_token=nous_user_token, managed_mode=True)
 

@@ -31,7 +31,7 @@ CATALOG_TIERS = ("official", "community")
 # Browse taxonomy for the catalog page / picker. Entries without one land on the Desktop shelf
 # (the common case for community submissions); "general" is for plugins that fit no shelf.
 CATALOG_CATEGORIES = ("desktop", "memory", "platform", "web", "tools", "voice", "automation", "models", "general")
-LIVE_CATALOG_URL = "https://hermes-agent.nousresearch.com/docs/api/plugin-catalog.json"
+LIVE_CATALOG_URL = ""
 LIVE_CATALOG_TTL_SECONDS = 6 * 60 * 60
 # Offline pins expire, but cached removals remain a permanent kill list.
 LIVE_CATALOG_MAX_STALE_SECONDS = 24 * 60 * 60
@@ -357,6 +357,10 @@ def fetch_live_catalog(*, force: bool = False) -> Optional[dict[str, Any]]:
     :data:`LIVE_CATALOG_FAILURE_TTL_SECONDS` so a dead host costs one timeout per TTL window, not one
     per call (``force`` bypasses both caches)."""
     global _live_fetch_failed_until
+    from hermes_cli.endpoints import endpoint
+    live_url = endpoint("pluginCatalogUrl") or LIVE_CATALOG_URL
+    if not live_url:
+        return None
     cache = _live_cache_path()
     try:
         if not force and cache.is_file() and time.time() - cache.stat().st_mtime < LIVE_CATALOG_TTL_SECONDS:
@@ -370,7 +374,7 @@ def fetch_live_catalog(*, force: bool = False) -> Optional[dict[str, Any]]:
         from hermes_constants import mkdir_under_hermes_home
         from utils import atomic_write_text
 
-        resp = httpx.get(LIVE_CATALOG_URL, timeout=_REQUEST_TIMEOUT, follow_redirects=True)
+        resp = httpx.get(live_url, timeout=_REQUEST_TIMEOUT, follow_redirects=True)
         resp.raise_for_status()
         if len(resp.content) > _MAX_LIVE_BYTES:
             raise ValueError("live catalog payload too large")

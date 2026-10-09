@@ -195,7 +195,7 @@ def mcp_call(url: str, tool: str, arguments: dict[str, Any], timeout: int = _TIM
     :class:`KeylessMCPError` on transport failures, non-2xx, JSON-RPC and tool errors."""
     import requests
     payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": tool, "arguments": arguments}}
-    headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream", "User-Agent": "hermes-agent"}
+    headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream", "User-Agent": "Envoy"}
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=timeout)
     except requests.RequestException as exc:

@@ -4,6 +4,7 @@
 from typing import Any
 
 from hermes_cli.version_info import get_version_info
+from hermes_cli.endpoints import attribution_referer, brand_name
 from providers import register_provider
 from providers.base import ProviderProfile
 
@@ -34,9 +35,9 @@ fireworks = FireworksProfile(
     # Attribution headers (canonical Hermes set); via default_headers so they
     # survive switch_model and credential rotation.
     default_headers={
-        "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-        "X-Title": "Hermes Agent",
-        "User-Agent": f"HermesAgent/{get_version_info().base_version}",
+        "HTTP-Referer": attribution_referer(),
+        "X-Title": brand_name(),
+        "User-Agent": f"{brand_name()}/{get_version_info().base_version}",
     },
     default_aux_model="accounts/fireworks/models/glm-5p2",
     # Picker safety net when the live catalog fetch fails.

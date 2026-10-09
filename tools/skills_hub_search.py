@@ -20,11 +20,11 @@ from tools.skills_hub_models import SkillMeta, SkillSource, TRUST_RANK, _dedupe_
 from tools.skills_hub_official import HermesIndexSource, OptionalSkillSource
 from tools.skills_hub_skillssh import SkillsShSource
 from tools.skills_hub_sources import BrowseShSource, LobeHubSource, UrlSource, WellKnownSkillSource
+from hermes_cli.endpoints import endpoint
 
 # Log-record parity with the origin module.
 logger = logging.getLogger("tools.skills_hub")
 
-HERMES_INDEX_URL = "https://hermes-agent.nousresearch.com/docs/api/skills-index.json"
 HERMES_INDEX_TTL = 6 * 3600  # 6 hours
 
 
@@ -43,6 +43,9 @@ def _load_hermes_index() -> Optional[dict]:
     Skills Hub. gzip/deflate first; the identity retry covers proxies that
     ignore the header and return Brotli anyway.
     """
+    index_url = endpoint("skillsIndexUrl")
+    if not index_url:
+        return None
     from tools.skills_hub import _read_json_if_fresh
     cache_file = _hermes_index_cache_file()
     cached = _read_json_if_fresh(cache_file, HERMES_INDEX_TTL)
@@ -52,7 +55,7 @@ def _load_hermes_index() -> Optional[dict]:
     for accept_encoding in ("gzip, deflate", "identity"):
         try:
             resp = hub()._skills_hub_http_get(
-                HERMES_INDEX_URL, timeout=15, follow_redirects=True,
+                index_url, timeout=15, follow_redirects=True,
                 headers={"Accept-Encoding": accept_encoding},
             )
             if resp.status_code != 200:
@@ -118,6 +121,8 @@ def _search_one_source(
     src: SkillSource, query: str, limit: int, provider_filter: str = "",
 ) -> tuple[str, list[SkillMeta]]:
     """Search a single source.  Runs in a thread for parallelism."""
+    if not (endpoint("skillsIndexUrl") or endpoint("officialSkillsRepository")) and src.source_id() != "official":
+        return src.source_id(), []
     try:
         # These sources mix providers in one catalog. Narrow before their top-N
         # cut so another provider cannot crowd every requested match out.

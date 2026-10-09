@@ -82,10 +82,10 @@ class TestBuildAnthropicClient:
             )
             kwargs = mock_sdk.Anthropic.call_args[1]
             headers = kwargs["default_headers"]
-            assert headers["HTTP-Referer"] == "https://hermes-agent.nousresearch.com"
-            assert headers["X-Title"] == "Hermes Agent"
+            assert headers["HTTP-Referer"] == "https://envoy.invalid"
+            assert headers["X-Title"] == "Envoy"
             from hermes_cli.version_info import get_version_info
-            assert headers["User-Agent"] == f"HermesAgent/{get_version_info().base_version}"
+            assert headers["User-Agent"] == f"Envoy/{get_version_info().base_version}"
             # Auth branch is unchanged: x-api-key via api_key, betas kept.
             assert kwargs["api_key"] == "sk-opencode-secret"
             assert "anthropic-beta" in headers

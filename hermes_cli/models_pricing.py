@@ -299,7 +299,7 @@ def _resolve_openrouter_api_key() -> str:
     return os.getenv("OPENROUTER_API_KEY", "").strip()
 
 
-_DEFAULT_NOUS_INFERENCE_BASE = "https://inference-api.nousresearch.com"
+_DEFAULT_NOUS_INFERENCE_BASE = ""
 
 
 def _resolve_nous_pricing_credentials() -> tuple[str, str]:
@@ -323,7 +323,8 @@ def _resolve_nous_pricing_credentials() -> tuple[str, str]:
             creds_base = (creds.get("base_url", "") or "").strip()
     except Exception:
         pass
-    base_url = (env_base or creds_base or _DEFAULT_NOUS_INFERENCE_BASE).rstrip("/")
+    from hermes_cli.endpoints import endpoint
+    base_url = (env_base or creds_base or endpoint("nousInferenceUrl")).rstrip("/")
     if base_url.endswith("/v1"):
         base_url = base_url[:-3]
     return (api_key, base_url)

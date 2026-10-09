@@ -29,7 +29,7 @@ class Installation(tuple):
 
 @pytest.fixture
 def installation(tmp_path, monkeypatch):
-    from hermes_cli import source_releases
+    from hermes_cli import source_check, source_releases
 
     root = tmp_path / "checkout"
     root.mkdir()
@@ -53,6 +53,9 @@ def installation(tmp_path, monkeypatch):
     git("commit", "--allow-empty", "-m", "local")
     head = git("rev-parse", "HEAD")
     git("remote", "add", "origin", "https://github.com/fixture/fork.git")
+    monkeypatch.setattr(source_check, "endpoint", lambda name: git("remote", "get-url", "origin") if name == "updateRepository" else "")
+    monkeypatch.setattr(source_check, "OFFICIAL_REPOSITORY", "NousResearch/hermes-agent")
+    monkeypatch.setattr(source_releases, "OFFICIAL_REPOSITORY", "NousResearch/hermes-agent")
     linked = tmp_path / "linked"
     git("worktree", "add", "-b", "feature/gui", str(linked))
     responses = {MAIN_CHANNEL: (200, lambda: source_channel(
@@ -108,6 +111,26 @@ def installation(tmp_path, monkeypatch):
     server.shutdown()
     server.server_close()
     thread.join()
+
+
+def test_missing_update_source_disables_passive_check_without_requests(installation, monkeypatch):
+    from hermes_cli import source_check
+
+    root, _, home, _, _, _, requests, _ = installation
+    monkeypatch.setattr(source_check, "endpoint", lambda name: "")
+    status = source_check.check_for_updates(install_root=root, home=home, force=True)
+    assert status["supported"] is False and status["reason"] == "no-update-source"
+    assert requests == []
+
+
+def test_other_update_source_rejects_passive_check_without_requests(installation, monkeypatch):
+    from hermes_cli import source_check
+
+    root, _, home, _, _, _, requests, _ = installation
+    monkeypatch.setattr(source_check, "endpoint", lambda name: "someone/else")
+    status = source_check.check_for_updates(install_root=root, home=home, force=True)
+    assert status["supported"] is False and status["reason"] == "update-source-mismatch"
+    assert requests == []
 
 
 def test_target_worktree_owns_admission_and_fork_comparison(installation, monkeypatch):

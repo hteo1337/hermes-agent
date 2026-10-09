@@ -1,9 +1,8 @@
 # Hermes Plugin Catalog
 
-Curated, Nous-approved Hermes plugins. Each YAML file in this directory
-(except `removed.yaml`) is one catalog entry, discoverable via
-`hermes plugins catalog` / `hermes plugins search` and installable with
-`hermes plugins install <name>`.
+The Envoy fork ships no catalog entries. `removed.yaml` remains a local blocklist.
+If this fork curates plugins later, each YAML file (except `removed.yaml`) is one
+entry discoverable via `hermes plugins catalog` / `hermes plugins search`.
 
 ## Admission policy
 

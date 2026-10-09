@@ -116,6 +116,9 @@ def install_portal(monkeypatch, tmp_path, fake: FakePortal | None = None) -> Fak
     from hermes_cli import auth as auth_mod
 
     fake = fake or FakePortal()
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: {
+        "portal": PORTAL, "nousWelcomeUrl": WELCOME,
+    }.get(name, ""))
     monkeypatch.setenv("HERMES_PORTAL_BASE_URL", PORTAL)
     monkeypatch.setenv("HERMES_ANON_API_SECRET", "test-secret")
     monkeypatch.setenv("HERMES_SHARED_AUTH_DIR", str(tmp_path / "shared-store"))
