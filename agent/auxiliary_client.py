@@ -2355,10 +2355,13 @@ def _describe_openrouter_unavailable(model: str = None) -> str:
 
 
 def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
+    if not (_scoped_key_env("HERMES_PORTAL_BASE_URL") or _scoped_key_env("NOUS_PORTAL_BASE_URL")
+            or endpoint("portal")) or not (_scoped_key_env("NOUS_INFERENCE_BASE_URL")
+            or endpoint("nousInferenceUrl") or endpoint("nousWelcomeUrl")):
+        return None, None
     nous = _read_nous_auth()
-    configured_base_url = str(_scoped_key_env("NOUS_INFERENCE_BASE_URL")
-                              or (nous or {}).get("inference_base_url")
-                              or endpoint("nousInferenceUrl")).strip().rstrip("/")
+    from hermes_cli.auth_nous import _nous_effective_routing
+    configured_base_url = _nous_effective_routing(nous or {})[2]
     if not configured_base_url:
         return None, None
     runtime = _resolve_nous_runtime_api(force_refresh=False)
@@ -2395,10 +2398,7 @@ def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
                 reason="Nous Portal rate-limited", level=logging.INFO)
             return None, None
     lane = "vision" if vision else "text"
-    # The free tier's host serves exactly one model, for every lane: asking it for the Portal's
-    # recommended aux model is a guaranteed 429 ``model_not_free``. Pin the route's model instead.
-    # Vision rides the same id (the backing model is multimodal; a backing that is not answers
-    # the request with the upstream's own error, which the ladder handles like any other).
+    # The welcome host uses one model for text and vision; Portal recommendations fail there.
     from hermes_cli.anon_auth import GUEST_MODEL, route_is_welcome_host
     global auxiliary_is_nous
     if route_is_welcome_host(base_url):

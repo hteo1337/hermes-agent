@@ -2034,12 +2034,10 @@ DEFAULT_CONFIG = {
         "max_size_mb": 5,      # max size per log file before rotation
         "backup_count": 3,     # rotated backups to keep
     },
-    # Remote model-catalog manifest: curated OpenRouter / Nous Portal model lists fetched from this
-    # URL (falls back to the in-repo snapshot on network failure), so picker lists update without a
-    # release. Default URL is served by the docs-site GitHub Pages deploy.
+    # Remote model catalog is opt-in. An empty URL uses the in-repo picker lists.
     "model_catalog": {
         "enabled": True,
-        "url": "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json",
+        "url": "",
         # Disk cache TTL in minutes. The gateway refreshes in the background on this cadence; the
         # CLI refetches on the next /model or `hermes model` once the cache is older. Network
         # failures silently use the stale cache. Legacy `ttl_hours` is honoured if set.

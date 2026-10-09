@@ -14,6 +14,14 @@ import pytest
 from hermes_cli.auth import AuthError
 
 
+@pytest.fixture(autouse=True)
+def _configured_nous_endpoints(monkeypatch):
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: {
+        "portal": "https://portal.example.com",
+        "nousInferenceUrl": "https://inference.example.com/v1",
+    }.get(name, ""))
+
+
 # =============================================================================
 # _resolve_verify: CA bundle path validation
 # =============================================================================
@@ -194,8 +202,8 @@ def test_resolve_nous_runtime_credentials_invoke_jwt_is_idempotent(
         "active_provider": "nous",
         "providers": {
             "nous": {
-                "portal_base_url": "https://portal.nousresearch.com",
-                "inference_base_url": "https://inference-api.nousresearch.com/v1",
+                "portal_base_url": "https://portal.example.com",
+                "inference_base_url": "https://inference.example.com/v1",
                 "client_id": "hermes-cli",
                 "token_type": "Bearer",
                 "scope": auth_mod.DEFAULT_NOUS_SCOPE,
@@ -1041,7 +1049,7 @@ class TestStalePortalBaseUrlMigration:
         )
 
         auth_mod.resolve_nous_runtime_credentials()
-        assert refresh_calls == [auth_mod.DEFAULT_NOUS_PORTAL_URL]
+        assert refresh_calls == ["https://portal.example.com"]
 
 
 # =============================================================================

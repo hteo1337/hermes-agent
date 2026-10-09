@@ -295,6 +295,8 @@ def test_inspect_reuses_one_ssrf_safe_client_for_metadata_and_bundle(monkeypatch
 
     clients = []
     client_kwargs = []
+    monkeypatch.setattr(search, "endpoint", lambda name: (
+        "https://example.com/index.json" if name == "skillsIndexUrl" else ""))
 
     class Response:
         status_code = 200

@@ -30,10 +30,17 @@ from __future__ import annotations
 
 import json
 import logging
+import pytest
 
 from hermes_cli.auth import (
     DEFAULT_NOUS_PORTAL_URL,
 )
+
+
+@pytest.fixture(autouse=True)
+def _configured_portal(monkeypatch):
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: (
+        "https://portal.nousresearch.com" if name == "portal" else ""))
 
 
 class TestResolveAccessTokenEnvOverrideWins:
@@ -130,5 +137,5 @@ class TestResolveAccessTokenEnvOverrideWins:
 
         seen_portal_urls, records = self._run_and_capture(monkeypatch, auth)
 
-        assert seen_portal_urls == [DEFAULT_NOUS_PORTAL_URL]
+        assert seen_portal_urls == ["https://portal.nousresearch.com"]
         assert not any("ignoring invalid portal_base_url" in msg for msg in records)

@@ -16,6 +16,8 @@ from hermes_cli import auth
 
 @pytest.fixture(autouse=True)
 def _fresh_memo(monkeypatch, tmp_path):
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: (
+        "https://portal.example.com" if name == "portal" else ""))
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     monkeypatch.delenv("HERMES_PORTAL_BASE_URL", raising=False)
     monkeypatch.delenv("NOUS_PORTAL_BASE_URL", raising=False)
