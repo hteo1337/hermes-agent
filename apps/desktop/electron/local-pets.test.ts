@@ -2,45 +2,41 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { test } from 'vitest'
 
 import { PET_STATES, scanLocalPets } from './local-pets'
 
-test('local pets load from user data while a symlinked atlas is rejected', () => {
+const realAtlas = fileURLToPath(new URL('../src/components/pet/pet-egg-sheet.png', import.meta.url))
+
+function manifest(id: string, frameH = 32) {
+  return {
+    id,
+    frameW: 32,
+    frameH,
+    columns: 1,
+    stateRows: Object.fromEntries(PET_STATES.map((state, index) => [state, index]))
+  }
+}
+
+test('local pet scan keeps a real skin when neighboring atlases are invalid', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'envoy-local-pets-'))
   const petsDir = path.join(root, 'pets')
-  const validDir = path.join(petsDir, 'valid')
-  const linkedDir = path.join(petsDir, 'linked')
-  const atlas = Buffer.alloc(24)
-
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(atlas)
-  atlas.write('IHDR', 12, 'ascii')
-  atlas.writeUInt32BE(128, 16)
-  atlas.writeUInt32BE(128, 20)
 
   try {
-    fs.mkdirSync(validDir, { recursive: true })
-    fs.mkdirSync(linkedDir)
-
-    for (const [id, dir] of [
-      ['valid', validDir],
-      ['linked', linkedDir]
-    ]) {
-      fs.writeFileSync(
-        path.join(dir, 'pet.json'),
-        JSON.stringify({
-          id,
-          frameW: 32,
-          frameH: 32,
-          columns: 4,
-          stateRows: Object.fromEntries(PET_STATES.map((state, index) => [state, index]))
-        })
-      )
+    for (const id of ['valid', 'linked', 'directory-atlas', 'truncated', 'bad-layout']) {
+      const dir = path.join(petsDir, id)
+      fs.mkdirSync(dir, { recursive: true })
+      fs.writeFileSync(path.join(dir, 'pet.json'), JSON.stringify(manifest(id, id === 'bad-layout' ? 64 : 32)))
     }
 
-    fs.writeFileSync(path.join(validDir, 'atlas.png'), atlas)
-    fs.symlinkSync(path.join(validDir, 'atlas.png'), path.join(linkedDir, 'atlas.png'))
+    const atlasFor = (id: string) => path.join(petsDir, id, 'atlas.png')
+    fs.copyFileSync(realAtlas, atlasFor('valid'))
+    fs.copyFileSync(realAtlas, atlasFor('bad-layout'))
+    fs.symlinkSync(atlasFor('valid'), atlasFor('linked'))
+    fs.mkdirSync(atlasFor('directory-atlas'))
+    fs.writeFileSync(atlasFor('truncated'), fs.readFileSync(realAtlas).subarray(0, 24))
 
     const result = scanLocalPets(petsDir)
 
@@ -48,7 +44,15 @@ test('local pets load from user data while a symlinked atlas is rejected', () =>
       result.pets.map(pet => pet.id),
       ['valid']
     )
-    assert.deepEqual(result.rejected, [{ id: 'linked', reason: 'symlinks are not allowed' }])
+    assert.deepEqual(
+      new Map(result.rejected.map(({ id, reason }) => [id, reason])),
+      new Map([
+        ['linked', 'symlinks are not allowed'],
+        ['directory-atlas', 'pet.json and atlas.png must be regular files'],
+        ['truncated', 'atlas.png is not a valid PNG'],
+        ['bad-layout', 'pet frames do not fit atlas.png']
+      ])
+    )
   } finally {
     fs.rmSync(root, { force: true, recursive: true })
   }
