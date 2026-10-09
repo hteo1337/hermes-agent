@@ -14,4 +14,4 @@
 - [x] Unconfigured container backends cannot pull an upstream default image and report a clear configuration error. (Empty image guard verified for Docker, Singularity, Modal, Daytona in the passing sandbox suite.)
 - [x] First-time setup omits Nous quick setup when Portal is disabled. (Fresh-install setup test inspected the menu and passed.)
 - [x] Diagnostics uploads cannot redirect bundles to another host, and the notice describes the configured destination. (Cross-host test rejected the URL before PUT; complete diagnostics and debug files passed.)
-- [ ] Diagnostics requests use the Envoy brand User-Agent; one focused suite passes, STATUS records evidence, and the local commit is clean.
+- [x] Diagnostics requests use the Envoy brand User-Agent; all focused files are verified, STATUS records evidence, and the local code commit is clean. (Brand probe returned Envoy/debug-share twice; the broad run and passing three-file recheck are recorded in STATUS; code commit c9c5dcb8ec.)

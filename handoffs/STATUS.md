@@ -17,3 +17,28 @@ Output: **27 files, 747 passed, 0 failed, 2 skipped**, 212.2s, 6 workers. The sk
 `python scripts/check` under the same isolated environment ran 11 checks; only health failed, with 10 findings entirely in untouched `apps/desktop/` files. Ruff passed. Full output: `handoffs/check-final.log`. `git diff --check` passed. `rg -n 'nousresearch\.com|raw\.githubusercontent\.com' hermes_cli agent` found **65** remaining hits; `handoffs/URL-AUDIT.md` lists and explains each.
 
 Not run: full repository test suite, CI, Desktop build, Linux/Windows host-specific tests, independent provider review. Residual risk: user-facing legacy upstream documentation and support links remain outside D3b's named link set; they are catalogued in URL-AUDIT.md. Explicitly configured endpoints can still point at upstream hosts by operator choice. The unrelated Desktop health findings prevent a repository-wide green check.
+
+## Sol review fixes (2026-10-09)
+
+Code commit: `c9c5dcb8ec5a9ab5124d63314d497638d4ebb3b9` (`fix(envoy): close reviewed backend egress paths`). No push or merge.
+
+- Account lookups ignore saved `portal_base_url`; bearer requests use only `endpoint("portal")`. An isolated intercepted probe with a saved attacker URL observed `https://configured.example.test/api/oauth/account` when configured and zero requests when the endpoint was empty. The probe printed only request URLs and whether an Authorization header existed.
+- Docker, Singularity, Modal and Daytona default images are empty. Environment creation rejects an empty image with a `terminal.<backend>_image` configuration error before constructing a backend. First-time setup offers Full setup first and omits Nous quick setup when Portal is empty.
+- Diagnostics rejects a returned `uploadUrl` outside the configured diagnostics origin before PUT. The consent notice names the configured destination and no longer promises Nous-only access or 14-day retention. Both diagnostics and paste requests use `Envoy/debug-share`; an isolated import probe printed `same_brand True`.
+- One new regression test rejects a cross-host diagnostics upload. Existing setup and sandbox tests were updated to assert the disabled-default behavior. No test was excluded or weakened.
+
+Focused suite, once, with `HOME=/private/tmp/envoy-d3b-gate.twJfNj`, `HERMES_HOME=/private/tmp/envoy-d3b-gate.twJfNj/hermes`, `HERMES_RUNTIME_DIR=/private/tmp/envoy-d3b-gate.twJfNj/runtime`, and `HERMES_PYTHON=/private/tmp/envoy-d3b-gate.twJfNj/hermes/installs/df33685e3cec15a2/test-environment/gen-39ef43284a4341b9a1ad3e6cd42bb431/venv/bin/python`:
+
+```
+scripts/run_tests.sh -j 5 tests/hermes_cli/test_endpoints.py tests/hermes_cli/test_auth_nous_provider.py tests/hermes_cli/test_diagnostics_upload.py tests/hermes_cli/test_nous_account.py tests/hermes_cli/test_debug.py tests/hermes_cli/test_setup_reconfigure.py tests/hermes_cli/test_setup_openclaw_migration.py tests/hermes_cli/test_sandbox_image_switch.py tests/hermes_cli/test_config_migration_48_sandbox_image.py tests/tui_gateway/test_display_methods.py tests/tools/test_terminal_sandbox_builder_dispatch.py tests/tools/test_managed_tool_gateway.py tests/tools/test_skills_hub.py tests/agent/test_provider_attribution_headers.py tests/hermes_cli/test_nous_inference_url_validation.py -q
+=== Summary: 15 files, 226 tests passed, 4 failed, 2 skipped (100% complete) in 484.9s (5 workers) ===
+```
+
+The three affected files were rerun in full after correcting outdated setup/sandbox assertions. `test_debug.py` had reached the runner's default 300-second file timeout under five workers; it completed in 293.7 seconds under two workers. The rerun used the same isolated variables:
+
+```
+scripts/run_tests.sh -j 2 --file-timeout 600 tests/hermes_cli/test_debug.py tests/hermes_cli/test_setup_reconfigure.py tests/hermes_cli/test_sandbox_image_switch.py -q
+=== Summary: 3 files, 68 tests passed, 0 failed (100% complete) in 298.5s (2 workers) ===
+```
+
+Ruff from the isolated test-environment venv: `All checks passed!`. The same Ruff lint ran in the commit hook and reported `All checks passed!`. `git diff --cached --check` produced no output. Not run for this review fix: the full repository suite, CI, Desktop build, live Portal request, or real container pull. A diagnostics service that returns a third-party presigned storage URL now needs a same-origin upload proxy. An explicitly configured legacy image remains an operator-selected image.
