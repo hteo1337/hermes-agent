@@ -1,0 +1,30 @@
+▶ not activated — using HERMES_PYTHON: /private/tmp/envoy-d3b-gate.twJfNj/hermes/installs/df33685e3cec15a2/test-environment/gen-39ef43284a4341b9a1ad3e6cd42bb431/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 6 test files (~56 tests) under ['tests/hermes_cli/test_endpoints.py', 'tests/hermes_cli/test_diagnostics_upload.py', 'tests/hermes_cli/test_nous_account.py', 'tests/hermes_cli/test_telegram_onboarding_endpoint.py', 'tests/hermes_cli/test_sandbox_image_switch.py', 'tests/hermes_cli/test_auth_nous_provider.py']; running with -j 2
+[ 17.9% |    10/~56 | ✓10 | ✗ 0] ✓ tests/hermes_cli/test_diagnostics_upload.py (10✓, 5.7s)
+[ 26.8% |    15/~56 | ✓15 | ✗ 0] ✓ tests/hermes_cli/test_endpoints.py (5✓, 2.4s)
+[ 35.7% |    20/~56 | ✓23 | ✗ 0] ✓ tests/hermes_cli/test_nous_account.py (8✓, 4.9s)
+[ 50.0% |    28/~56 | ✓31 | ✗ 0] ✓ tests/hermes_cli/test_sandbox_image_switch.py (8✓, 4.6s)
+[ 53.6% |    30/~56 | ✓33 | ✗ 0] ✓ tests/hermes_cli/test_telegram_onboarding_endpoint.py (2✓, 1.1s)
+[100.0% |    56/~56 | ✓72 | ✗ 0] ✓ tests/hermes_cli/test_auth_nous_provider.py (39✓ 1s, 18.9s)
+
+=== Summary: 6 files, 72 tests passed, 0 failed, 1 skipped (100% complete) in 19.3s (2 workers) ===
+
+  note: platforms('linux') tests (in 1 file) were SKIPPED on this host (darwin); they run on the main Linux CI lane.
+  Durations cached to test_durations.json (6 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   6
+  Total subprocess CPU-wall: 37.6s  (runner wall: 19.3s, parallelism: 2x)
+  P50: 4.86s  P90: 18.91s  P95: 18.91s  P99: 18.91s  Max: 18.91s
+  <1s: 0 files (0%)  <2s: 1 files (17%)
+  Top 10 slowest:
+     18.91s  tests/hermes_cli/test_auth_nous_provider.py
+      5.73s  tests/hermes_cli/test_diagnostics_upload.py
+      4.86s  tests/hermes_cli/test_nous_account.py
+      4.64s  tests/hermes_cli/test_sandbox_image_switch.py
+      2.36s  tests/hermes_cli/test_endpoints.py
+      1.08s  tests/hermes_cli/test_telegram_onboarding_endpoint.py

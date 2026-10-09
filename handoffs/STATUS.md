@@ -75,4 +75,46 @@ Typecheck, audits, and Vitest used fresh temporary `HERMES_HOME`, `HERMES_RUNTIM
 
 A 27-file D3b comparison run (`scripts/run_tests.sh -j 2 --file-timeout 600`) was stopped deliberately at exit 143 under host load above 250; its partial log reported 129 passed, 0 failed across completed files, and has no final gate count (`handoffs/integration-focused-python.log`). The narrower six-file backend endpoint/diagnostics/account/onboarding/sandbox/auth run used fresh temporary HOME and Hermes paths: exit 0, 71 passed, 0 failed, 1 Linux-only skip in 62.5s with 2 workers (`handoffs/integration-focused-python-core.log`).
 
-Not run: full desktop or repository suite (explicitly excluded for this overloaded host), packaged build or real-app checks, CI, independent review, Linux/Windows host checks. These are separate PLAN-FINISH stages and not established by the integration gates.
+Not run: full desktop or repository suite (explicitly excluded for this overloaded host), packaged build or real-app checks, CI, Linux/Windows host checks. These are separate PLAN-FINISH stages and not established by the integration gates.
+
+### Independent review and repair
+
+Read-only Astra review via Paseo agent `93097c9e` at `4653498b26` found three integration paths: a throw after hiding chat could discard its recovery bounds, the overlay's double-click/mail controls could reveal pet-sized chat, and a disconnected monitor could leave chat off-screen. A re-review found a fourth case: a connected external chat display was incorrectly sized to the pet overlay's laptop display. The narrow re-review reported nothing found for that mixed-display repair. The reviewer inspected source flow and tests; it did not boot the app. Subsequent direct backend and desktop review is recorded below.
+
+Fixes: `main.ts` restores chat bounds/visibility after failed pet creation; failed reverse morph retains the overlay and saved bounds for retry, or recovers chat if the overlay is already gone. Partial overlay construction is destroyed on throw. Intentional close suppresses a duplicate pop-in. `pet-overlay-ipc.ts` routes morphed double-click/mail controls through chat restoration; renderer active state and mail navigation wait for success. `window-state.ts` preserves chat geometry on a connected display and centers it on the current display only after disconnection. New tests cover successful/failed rollback, show failure, IPC reveal with and without morph, failed renderer restore/retry, and both display states.
+
+Final commands on the reviewed fix, all with fresh temporary `HERMES_HOME`, `HERMES_RUNTIME_DIR`, and `HERMES_DESKTOP_USER_DATA_DIR`:
+
+- `cd apps/desktop && vitest run --maxWorkers=2` on the 15 named desktop files (original 12 plus pet-overlay-ipc, window-state, renderer pet-overlay): exit 0, **15 files and 105 tests passed**, `handoffs/integration-focused-desktop-verified.log`. One preceding run failed the new connected-display control because its test rectangle extended beyond the display; the fixture was corrected and both the one-file rerun (27 passed) and final 15-file run passed.
+- `cd apps/desktop && npm run typecheck`: exit 0, four checks, no diagnostics, `handoffs/integration-typecheck-verified.log`.
+- `cd apps/desktop && node scripts/egress-audit.mjs --check`: exit 0, **10 hits in 5 files**, `handoffs/integration-egress-verified.log`.
+- `cd apps/desktop && node scripts/brand-audit.mjs --check`: exit 0, **2128 hits in 710 files**, `handoffs/integration-brand-verified.log`.
+- ESLint on changed desktop TypeScript files: exit 0; `git diff --check`: exit 0.
+
+No packaged app or real Electron window was exercised after these fixes. The review's source-flow conclusion and focused tests do not establish live throw injection, monitor hot-unplug behavior, or screenshot/accessibility behavior. These remain for the separate packaged-app gate in PLAN-FINISH.
+
+### Final integration repair and evidence
+
+The same read-only Astra reviewer then inspected the backend endpoint callers, retained tests, brand audit, local-pet loader, and morph paths directly. Its actionable findings and resolutions:
+
+- `hermes_cli/models.py`: saved Portal auth metadata could override a disabled or changed manifest Portal. Recommendations now use only the current endpoint; `tests/hermes_cli/test_endpoints.py` proves disabled and configured cases.
+- `apps/desktop/electron/local-pets.ts`: unreadable/non-file atlases previously aborted scanning, and a header-only PNG and out-of-bounds animation rows were accepted. Scan now rejects individual invalid pets; PNG CRC, decoded rows, dimensions, and manifest layout are checked. A real atlas remains loadable alongside invalid neighbors.
+- `apps/desktop/electron/local-pets.ts` and `main.ts`: the reviewer found a missing seventh Adam7 pass and an atlas IPC path reread after validation. The seventh pass is checked by complete/missing-pass controls. Atlas IPC now returns the same bounded buffer read through a checked no-follow file descriptor; a path-swap control proves the returned bytes differ from the replaced pathname. IPC also rejects non-string IDs.
+- `apps/desktop/electron/pet-morph-window.ts`, `pet-overlay.ts`, and `main.ts`: chat restore now requires the disposable overlay to be destroyed successfully before clearing saved bounds and active state. A refused teardown returns failure and retains retry state. The morph controller was extracted from `main.ts` to keep the file at its existing health cap.
+
+The reviewer rechecked the final three repairs and their positive/negative controls and reported **nothing found** in those paths. This was source review, not a live Electron run. Code commits after the three merges: `596664786c`, `6e7019de7b`, `243b54363f`, `c0cdce5a73`. No push, remote, or force action.
+
+Final commands on the repaired tree, with fresh temporary `HERMES_HOME`, `HERMES_RUNTIME_DIR`, and `HERMES_DESKTOP_USER_DATA_DIR` for tests:
+
+- `cd apps/desktop && npm run typecheck`: exit 0, all four TypeScript commands, no diagnostics (`handoffs/integration-typecheck-final-110.log`).
+- `cd apps/desktop && node scripts/egress-audit.mjs --check`: exit 0, **10 hits in 5 files** (`handoffs/integration-egress-final-head.log`).
+- `cd apps/desktop && node scripts/brand-audit.mjs --check`: exit 0, **2128 hits in 710 files** (`handoffs/integration-brand-final-head.log`).
+- `cd apps/desktop && vitest run --maxWorkers=2` on the 16 named bootstrap, pet/window, renderer, and decoupling files: exit 0, **16 files and 110 tests passed** (`handoffs/integration-focused-desktop-final-110.log`).
+- `scripts/run_tests.sh -j 2` on the six named backend endpoint/diagnostics/account/onboarding/sandbox/auth files: exit 0, **6 files, 72 passed, 0 failed, 1 Linux-only skip** (`handoffs/integration-focused-python-final-verified.log`). Fresh temporary `HOME` was also used.
+- Ruff on the changed backend files and the commit hook: exit 0, `All checks passed!`; desktop ESLint on changed files: exit 0, 0 errors and 6 formatting warnings; Prettier check: exit 0. `git diff --check envoy/main..HEAD`: exit 0.
+
+An extra `scripts/check --only health --base envoy/main` was run: exit 1, **5 blocking findings** in `gateway-settings.tsx`, `boot-failure-overlay.tsx`, `update-status.tsx`, `version-details.tsx`, and `src/sdk/index.ts`; none is in the final integration repair. This check was not among the requested gates. Full suite, CI, packaged/live Electron behavior, and Linux/Windows checks were not run, as the requested scope and host-load constraint require. The separate PLAN-FINISH runtime gates remain unverified.
+
+```dispatch-outcome
+{"accomplished":"complete","evidence":{"artifacts":["envoy/integration merge commits 39edf7e643,b2992e8ae1,202a8ab1fa","handoffs/STATUS.md","handoffs/integration-focused-desktop-final-110.log","handoffs/integration-focused-python-final-verified.log","handoffs/integration-typecheck-final-110.log","handoffs/integration-egress-final-head.log","handoffs/integration-brand-final-head.log"],"commands":["git show -s --format=%P on three merges: requested heads in order","npm run typecheck: exit 0","egress-audit --check: exit 0, 10 hits/5 files","brand-audit --check: exit 0, 2128 hits/710 files","vitest run --maxWorkers=2 on 16 focused files: 110 passed","scripts/run_tests.sh -j 2 on 6 focused files: 72 passed, 1 skipped","git diff --check envoy/main..HEAD: exit 0"]},"blocker_category":"none","remaining_work":[]}
+```

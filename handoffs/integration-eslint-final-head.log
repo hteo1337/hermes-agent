@@ -1,0 +1,14 @@
+
+/Users/hteo/.paseo/worktrees/1so5obpm/envoy-integration/apps/desktop/electron/local-pets.ts
+  121:7  warning  Expected blank line before this statement  padding-line-between-statements
+  163:5  warning  Expected blank line before this statement  padding-line-between-statements
+  202:7  warning  Expected blank line before this statement  padding-line-between-statements
+  326:5  warning  Expected blank line before this statement  padding-line-between-statements
+  364:3  warning  Expected blank line before this statement  padding-line-between-statements
+
+/Users/hteo/.paseo/worktrees/1so5obpm/envoy-integration/apps/desktop/electron/pet-morph-window.test.ts
+  44:5  warning  Expected blank line before this statement  padding-line-between-statements
+
+✖ 6 problems (0 errors, 6 warnings)
+  0 errors and 6 warnings potentially fixable with the `--fix` option.
+
