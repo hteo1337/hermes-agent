@@ -1,0 +1,19 @@
+
+ RUN  v4.1.10 /Users/hteo/.paseo/worktrees/1so5obpm/envoy-integration/apps/desktop
+
+(node:42053) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41802) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55482) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58990) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62758) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  12 passed (12)
+      Tests  71 passed (71)
+   Start at  02:08:16
+   Duration  75.25s (transform 50.08s, setup 6.62s, import 81.39s, tests 8.90s, environment 25.93s)
+

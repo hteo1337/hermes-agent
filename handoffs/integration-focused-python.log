@@ -1,0 +1,11 @@
+▶ not activated — using HERMES_PYTHON: /private/tmp/envoy-d3b-gate.twJfNj/hermes/installs/df33685e3cec15a2/test-environment/gen-39ef43284a4341b9a1ad3e6cd42bb431/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 27 test files (~645 tests) under ['tests/hermes_cli/test_anon_auth_core.py', 'tests/hermes_cli/test_auth_nous_provider.py', 'tests/hermes_cli/test_endpoints.py', 'tests/hermes_cli/test_model_catalog.py', 'tests/hermes_cli/test_nous_inference_url_validation.py', 'tests/hermes_cli/test_nous_portal_staging_allowlist.py', 'tests/hermes_cli/test_resolve_token_memo.py', 'tests/hermes_cli/test_skills_hub.py', 'tests/agent/test_auxiliary_client.py', 'tests/agent/test_auxiliary_nous_endpoint.py', 'tests/agent/test_provider_parity.py', 'tests/hermes_cli/test_catalog_json.py', 'tests/hermes_cli/test_plugin_catalog.py', 'tests/hermes_cli/test_plugins_hub_live_catalog.py', 'tests/hermes_cli/test_diagnostics_upload.py', 'tests/hermes_cli/test_nous_account.py', 'tests/agent/test_usage_pricing.py', 'tests/agent/test_billing_links.py', 'tests/agent/test_billing_view.py', 'tests/agent/test_prompt_builder.py', 'tests/hermes_cli/test_shared_metrics_send_config.py', 'tests/hermes_cli/test_dashboard_register.py', 'tests/hermes_cli/test_telegram_managed_bot.py', 'tests/hermes_cli/test_billing_portal_url.py', 'tests/hermes_cli/test_models.py', 'tests/hermes_cli/test_telegram_onboarding_endpoint.py', 'tests/hermes_cli/test_update_sqlite_remediation.py']; running with -j 2
+[  0.8% |     5/~645 | ✓5 | ✗0] ✓ tests/agent/test_auxiliary_nous_endpoint.py (5✓, 23.0s)
+[  1.1% |     7/~645 | ✓7 | ✗0] ✓ tests/agent/test_billing_links.py (2✓, 10.4s)
+[  2.9% |    19/~645 | ✓33 | ✗ 0] ✓ tests/agent/test_billing_view.py (26✓, 50.9s)
+[ 11.9% |    77/~645 | ✓90 | ✗ 0] ✓ tests/agent/test_prompt_builder.py (57✓ 1s, 170.5s)
+[ 17.8% |   115/~645 | ✓129 | ✗  0] ✓ tests/agent/test_provider_parity.py (39✓, 86.6s)

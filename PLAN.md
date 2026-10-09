@@ -1,15 +1,15 @@
-# D3 backend decoupling
+# Envoy local branch integration
 
-Scope: Python backend only, plus repository guidance required by the session. Do not change `apps/desktop`, LICENSE or NOTICE.md. Preserve the local branch and never push.
+Scope: combine the three named local branches on `envoy/integration` based on `envoy/main`. No remote operations or full suite.
 
-Assumption: desktop `brand.json` is the endpoint source, with empty values disabling services. A user may explicitly configure Nous inference; it is never selected by default.
+Assumptions: the existing integration branch at the same commit as main is the requested branch. Preserve both desktop endpoint gating and pet morph state guards during conflicts. Keep all tests from each branch.
 
-Architecture: `hermes_cli/endpoints.py` resolves the checked-in endpoint block and explicit overrides. Backend consumers avoid remote operations when an endpoint is empty. Git, ZIP, passive checks and release channels use the configured update source. Plugin catalog loads an empty shipped directory without changing its schema or loader.
+Architecture: merge each branch in the specified order; resolve shared Electron main/window code around existing interfaces. Avoid changes outside conflicts or proven integration defects.
 
-Work: establish scoped baseline; add endpoint resolution; migrate updater, skills, managed gateway, anonymous auth and pricing; rebrand outbound headers; empty catalog; add focused behavior tests; verify and commit.
+Work: (1) inspect heads and merge desktop, (2) merge backend D3b, (3) merge pet morph, (4) run focused gates, (5) inspect diff and commit/report.
 
-Acceptance: no implicit upstream network endpoint in D3 paths; explicit configured endpoints work; empty endpoints disable the feature; local skills still work; scoped tests pass; source backend starts with isolated `HERMES_HOME`. Record packaged Desktop runtime as unverified when no artifact exists.
+Acceptance: three branch heads represented in local merge history; no unresolved conflicts; the named tests, typecheck, brand and egress audits have recorded real output; handoff names decisions and unverified work.
 
-Verification: `scripts/run_tests.sh <touched test files>` with isolated `HERMES_HOME`; `python scripts/check`; packaged backend smoke command determined from available build artifacts. Record any unavailable gate rather than claiming it ran.
+Risk: host load can time out tests; classify any failure using the branch baseline before calling it a regression.
 
-Risk: preexisting tests may encode upstream defaults. Update behavior assertions without excluding files. Packaged Desktop may be outside this lane; do not edit it.
+Verification: `npm run typecheck`; `node scripts/egress-audit.mjs --check`; `node scripts/brand-audit.mjs --check`; focused `npx vitest run --maxWorkers=2 ...`; focused Python `scripts/run_tests.sh -j 2 ...` for backend decoupling.

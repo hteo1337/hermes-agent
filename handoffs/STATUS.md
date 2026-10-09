@@ -49,3 +49,30 @@ Final control check: the sandbox switch tests retain both paths. With the image 
 scripts/run_tests.sh -j 1 tests/hermes_cli/test_sandbox_image_switch.py -q
 === Summary: 1 files, 8 tests passed, 0 failed (100% complete) in 16.7s (1 workers) ===
 ```
+
+## Local integration on `envoy/integration` — 2026-10-10
+
+Base `envoy/main` at `f1a9444b40`. Merge commits, in requested order: `39edf7e643` (desktop `4f7ae33d6b`), `b2992e8ae1` (backend D3b `e670831ca4`), `202a8ab1fa` (pet morph `e452a95df3`). No push, remote action, or force operation.
+
+### Merge decisions
+
+- `apps/desktop/electron/main.ts`: Git auto-merged without conflict markers. Inspected result: `ENDPOINTS` gates update feed, hub, and portal; `persistWindowState()` refuses `isPetSized`; morph saves chat bounds before shrinking, serializes calls, restores minimum size and closes overlay on the return path. The branch-specific bootstrap and pet tests were retained unchanged by content comparison.
+- `apps/desktop/electron/pet-overlay-ipc.ts`, `window-growth.ts`, and `src/store/pet-chips.test.ts`: no textual conflicts. Content matches the pet branch; strict rectangle validation, pet-size mark through maximize, and approval-chip tests remain. `hermes_cli/endpoints.py` and its selected backend tests match D3b.
+- `CLAUDE.md` and `PLAN.md`: D3b tracked these, colliding with newly written untracked integration copies. Saved the copies, merged D3b, then set the root documents to the integration scope. D3b's plan remains in history and `handoffs/PLAN-D3B.md`.
+- Added `apps/desktop/electron/local-pets.test.ts` because the pet branch had no test by that name. Positive valid-atlas and negative symlink-atlas cases passed in the focused run.
+- `apps/desktop/scripts/brand-audit.mjs`: the pet branch's new `hermes:` IPC protocol strings increased the brand count. Added a quoted IPC-channel exemption. Direct control: `ipc: 0`, visible `Hermes:welcome: 1`, visible `Hermes assistant: 1`.
+
+### Verification on this integration tree
+
+Typecheck, audits, and Vitest used fresh temporary `HERMES_HOME`, `HERMES_RUNTIME_DIR`, and `HERMES_DESKTOP_USER_DATA_DIR`; tests capped workers at 2. The Python core gate also used a fresh temporary `HOME`.
+
+- `cd apps/desktop && npm run typecheck`: exit 0, all four TypeScript checks, no diagnostics (`handoffs/integration-typecheck-final.log`). Two earlier attempts failed due to incomplete borrowed dependency links (`electron` and `blobatar` unresolved); after linking both root and workspace `node_modules`, module resolution and typecheck passed.
+- `cd apps/desktop && node scripts/egress-audit.mjs --check`: exit 0, `10 hits in 5 files` (`handoffs/integration-egress-final.log`).
+- `cd apps/desktop && node scripts/brand-audit.mjs --check`: exit 0, `2128 hits in 710 files` after the IPC exemption (`handoffs/integration-brand-final.log`). The pre-fix run exited 1 with new counts in `main.ts`, `pet-overlay-ipc.ts`, and `preload.ts`; all added hits were new `hermes:` channel names.
+- `cd apps/desktop && vitest run --maxWorkers=2` on bootstrap-quit, bootstrap-runner, pet-overlay, window-growth, local-pets, pet-chips, portal-session, feed-config, free-tier-offer, free-tier-sign-in, skills-hub-picker, and custom-endpoints-settings: exit 0, `12 files passed, 71 tests passed` (`handoffs/integration-focused-desktop.log`).
+- ESLint on the new local-pets test: exit 0. Prettier: corrected the initial warning, then `--check` exit 0.
+- Exact selected contract file content matches each source branch (`git diff --quiet` exit 0); `git diff --check` exit 0.
+
+A 27-file D3b comparison run (`scripts/run_tests.sh -j 2 --file-timeout 600`) was stopped deliberately at exit 143 under host load above 250; its partial log reported 129 passed, 0 failed across completed files, and has no final gate count (`handoffs/integration-focused-python.log`). The narrower six-file backend endpoint/diagnostics/account/onboarding/sandbox/auth run used fresh temporary HOME and Hermes paths: exit 0, 71 passed, 0 failed, 1 Linux-only skip in 62.5s with 2 workers (`handoffs/integration-focused-python-core.log`).
+
+Not run: full desktop or repository suite (explicitly excluded for this overloaded host), packaged build or real-app checks, CI, independent review, Linux/Windows host checks. These are separate PLAN-FINISH stages and not established by the integration gates.

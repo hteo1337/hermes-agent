@@ -1,27 +1,19 @@
 # Envoy fork development notes
 
-This private MIT fork adapts the Hermes Python agent and Electron desktop into Envoy.
+Envoy is a private Hermes Agent fork with a local Python agent backend and an Electron desktop client.
 
-Read [AGENTS.md](AGENTS.md) and each area-specific `AGENTS.md` before editing; they define the working rules and architecture.
+Read [AGENTS.md](AGENTS.md) and each area's AGENTS.md before changing code; they hold the behavioral and test contracts.
 
-## Stack and commands
+- Languages: Python and TypeScript. Desktop uses Electron, React, Vite, Vitest, nanostores, and a JSON-RPC backend; the repository is an npm workspace.
+- TypeScript target: ES2023 with strict checking in `apps/desktop/tsconfig.json`; Electron and E2E have separate configs.
+- Install: `npm ci` at the root; Python environment via `source ./activate` or the project PM instructions.
+- Desktop typecheck: `cd apps/desktop && npm run typecheck` (renderer, Electron, E2E, builder config).
+- Desktop build: `cd apps/desktop && npm run build`; package locally with `npm run builder -- --dir --publish never`.
+- Focused desktop tests: `cd apps/desktop && npx vitest run --maxWorkers=2 <files>`; full desktop checks are `npm run check`.
+- Python tests: `scripts/run_tests.sh <files>`; blocking lint checks: `python scripts/check`.
+- Desktop lint and format: `cd apps/desktop && npm run lint` and `npm run fmt` (ESLint and Prettier).
+- Envoy audits: `cd apps/desktop && node scripts/egress-audit.mjs --check` and `node scripts/brand-audit.mjs --check`.
 
-- Python backend and CLI: `pyproject.toml`, project-managed environments, pytest, and Ruff.
-- Desktop and web: Node workspaces, TypeScript, Electron, React, Ink, and Docusaurus. The root `package.json` declares workspaces; TypeScript settings live in workspace `tsconfig.json` files (there is no root `tsconfig.json`).
-- Python tests: `scripts/run_tests.sh <test-files> -q` with an isolated `HERMES_HOME` and `HERMES_RUNTIME_DIR`.
-- Python checks: `python scripts/check`; format and lint through the project-managed Ruff configuration.
-- JS checks: `npm run check` or `npm run check --workspace <name>`; workspace builds use `npm run build --workspace <name>` where defined.
+Layout: `agent/`, `hermes_cli/`, `gateway/`, `tui_gateway/`, `tools/`, `plugins/`, and `pm/` hold Python services and extensions; `apps/desktop/` is Electron and React; `apps/shared/` holds shared transport; `tests/` and desktop `*.test.ts(x)` hold tests; `scripts/` and `.github/workflows/` hold checks and CI.
 
-## Layout and conventions
-
-- `agent/`, `gateway/`, `hermes_cli/`, `tools/`, and `plugins/` hold the Python runtime and capabilities.
-- `apps/desktop/`, `ui-tui/`, `web/`, and `website/` hold the Electron, terminal, dashboard, and docs clients.
-- `tests/` and `tests-js/` mirror the Python and JS/TS surfaces; `scripts/` contains checks and test runners.
-- `plugin-catalog/` contains bundled plugin metadata; `pm/` and `hermes_platform/` own environments and host integration.
-- Keep facade modules thin and add topic-specific behavior to siblings. Preserve prompt caching and keep optional capabilities at the edges, as described in `AGENTS.md`.
-
-## CI
-
-- `.github/workflows/tests.yml` runs Python files through `scripts/run_tests.sh` in isolated processes.
-- `.github/workflows/js-tests.yml` runs workspace checks through `.github/scripts/run-workspace-checks.mjs`.
-- Other workflows cover docs, packaging, installation, and releases. Local checks do not establish a CI result.
+Keep profile scope explicit in backend code, preserve the desktop's `hermes serve` JSON-RPC contract, and extend capability at the edges. Isolate `HERMES_HOME`, `HERMES_RUNTIME_DIR`, and desktop user data in tests. CI installs locked npm dependencies and runs workspace JS checks, Python lint, and separate desktop build/E2E jobs; local output is not a CI result.
