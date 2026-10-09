@@ -1539,13 +1539,16 @@ class TestTryPaymentFallback:
         """Discovery only walks with no selected main provider (``auto``); a selected provider that
         fails never hops to another logged-in account (test_auxiliary_auto_never_guesses_provider)."""
         mock_client = MagicMock()
-        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(mock_client, "nous-model")), \
+        with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)) as or_try, \
+             patch("agent.auxiliary_client._try_nous") as nous_try, \
+             patch("agent.auxiliary_client._try_custom_endpoint", return_value=(mock_client, "custom-model")), \
              patch("agent.auxiliary_client._read_main_provider", return_value="auto"):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
         assert client is mock_client
-        assert model == "nous-model"
-        assert label == "nous"
+        assert model == "custom-model"
+        assert label == "local/custom"
+        or_try.assert_not_called()
+        nous_try.assert_not_called()
 
 
 
@@ -4433,20 +4436,17 @@ class TestAuxUnhealthyCache:
             _try_payment_fallback,
             _mark_provider_unhealthy,
         )
-        nous_client = MagicMock()
-        # Mark BOTH the failed provider (openrouter) and a sibling (custom)
-        # unhealthy. The chain should still find nous.
+        # OpenRouter failed and custom is unhealthy; automatic fallback must not use Nous.
         _mark_provider_unhealthy("local/custom")
         with patch("agent.auxiliary_client._read_main_provider", return_value="auto"), \
              patch("agent.auxiliary_client._try_openrouter") as or_try, \
-             patch("agent.auxiliary_client._try_nous", return_value=(nous_client, "n-model")), \
+             patch("agent.auxiliary_client._try_nous") as nous_try, \
              patch("agent.auxiliary_client._try_custom_endpoint") as custom_try, \
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
-        assert client is nous_client
-        assert label == "nous"
-        # OR is skipped via skip_chain_labels (failed provider), custom via unhealthy cache.
+        assert (client, model, label) == (None, None, "")
         or_try.assert_not_called()
+        nous_try.assert_not_called()
         custom_try.assert_not_called()
 
     def test_custom_health_url_identity_preserves_path_and_query_case(self):

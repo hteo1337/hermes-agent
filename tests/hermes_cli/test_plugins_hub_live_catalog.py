@@ -57,7 +57,8 @@ def test_failed_live_fetch_is_remembered_until_the_failure_ttl(monkeypatch, tmp_
 
     cache = pc._live_cache_path()
     cache.parent.mkdir(parents=True)
-    cache.write_text(json.dumps({"entries": [], "removed": [{"name": "pulled-live", "reason": "cve"}]}))
+    cache.write_text(json.dumps({"_source_url": pc.LIVE_CATALOG_URL,
+                                 "entries": [], "removed": [{"name": "pulled-live", "reason": "cve"}]}))
     stale = clock["now"] - pc.LIVE_CATALOG_TTL_SECONDS - 1  # older than the success TTL under the fake clock
     os.utime(cache, (stale, stale))
     assert pc.fetch_live_catalog()["removed"][0]["name"] == "pulled-live"
@@ -117,9 +118,10 @@ def test_dropped_cache_no_longer_outvotes_the_in_tree_catalog(monkeypatch):
     monkeypatch.setattr("httpx.get", _UnreachableCatalog())
     cache = pc._live_cache_path()
     cache.parent.mkdir(parents=True)
-    cache.write_text(json.dumps({"entries": [], "removed": []}))
+    cache.write_text(json.dumps({"_source_url": pc.LIVE_CATALOG_URL, "entries": [], "removed": []}))
 
-    assert pc.fetch_live_catalog() == {"entries": [], "removed": []}  # the stale snapshot wins
+    assert pc.fetch_live_catalog() == {"_source_url": pc.LIVE_CATALOG_URL,
+                                       "entries": [], "removed": []}  # the stale snapshot wins
 
     pc.invalidate_live_cache_for_home(cache.parent.parent)
 

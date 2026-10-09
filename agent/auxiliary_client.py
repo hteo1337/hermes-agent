@@ -1,8 +1,8 @@
 """Shared auxiliary client router for side tasks (compression, search, vision, ...).
 
-Text auto chain: main provider+model → OpenRouter → Nous Portal → custom endpoint →
+Text auto chain: main provider+model → OpenRouter → custom endpoint →
 native Anthropic → direct API-key providers → None. Vision auto chain: main
-provider (if a supported vision backend) → OpenRouter → Nous → Anthropic → custom.
+provider (if a supported vision backend) → OpenRouter → Anthropic → custom.
 ``auxiliary.free_only`` restricts the OpenRouter lane to ``:free`` SKUs. Codex OAuth is
 in neither chain (undocumented, shifting allow-list): main provider or explicit
 ``auxiliary.<task>.provider`` only. HTTP 402 in call_llm() falls through the chain.
@@ -866,7 +866,7 @@ def _resolve_provider_vision_default(provider: str) -> Optional[str]:
 _PROVIDERS_WITHOUT_VISION: frozenset = frozenset({"kimi-coding", "kimi-coding-cn"})
 
 # OpenRouter app attribution (always sent). `X-Title` is what the dashboard reads.
-from hermes_cli.endpoints import attribution_referer, brand_name
+from hermes_cli.endpoints import attribution_referer, brand_name, endpoint
 
 _OR_HEADERS_BASE = {"HTTP-Referer": attribution_referer(), "X-Title": brand_name(),
                     "X-OpenRouter-Categories": "productivity,cli-agent"}
@@ -957,7 +957,6 @@ auxiliary_is_nous: bool = False
 # are honored untouched (_warn_paid_lane_once fires).
 _OPENROUTER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 _NOUS_MODEL = "google/gemini-3.6-flash"
-_NOUS_DEFAULT_BASE_URL = "https://inference-api.nousresearch.com/v1"
 _ANTHROPIC_DEFAULT_BASE_URL = "https://api.anthropic.com"
 _AUTH_JSON_PATH = get_hermes_home() / "auth.json"
 _AUTH_JSON_PATH_AT_IMPORT = _AUTH_JSON_PATH
@@ -1959,7 +1958,8 @@ def _read_nous_auth() -> Optional[dict]:
             "access_token": getattr(entry, "access_token", ""),
             "refresh_token": getattr(entry, "refresh_token", None),
             "agent_key": getattr(entry, "agent_key", None),
-            "inference_base_url": _pool_runtime_base_url(entry, _NOUS_DEFAULT_BASE_URL),
+            "inference_base_url": (getattr(entry, "inference_base_url", None)
+                                   or _scoped_key_env("NOUS_INFERENCE_BASE_URL") or endpoint("nousInferenceUrl")),
             "portal_base_url": getattr(entry, "portal_base_url", None),
             "client_id": getattr(entry, "client_id", None),
             "scope": getattr(entry, "scope", None),
@@ -2027,7 +2027,7 @@ def _resolve_nous_pool_runtime_api(*, force_refresh: bool = False) -> Optional[t
             return None
         entry = refreshed
     api_key = _nous_api_key(_entry_state(entry))
-    base_url = _pool_runtime_base_url(entry, _NOUS_DEFAULT_BASE_URL)
+    base_url = _pool_runtime_base_url(entry, endpoint("nousInferenceUrl"))
     if not api_key or not base_url:
         return None
     return api_key, base_url
@@ -2356,6 +2356,11 @@ def _describe_openrouter_unavailable(model: str = None) -> str:
 
 def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
     nous = _read_nous_auth()
+    configured_base_url = str((nous or {}).get("inference_base_url")
+                              or _scoped_key_env("NOUS_INFERENCE_BASE_URL")
+                              or endpoint("nousInferenceUrl")).strip().rstrip("/")
+    if not configured_base_url:
+        return None, None
     runtime = _resolve_nous_runtime_api(force_refresh=False)
     if runtime is None and not nous:
         logger.warning("Auxiliary Nous client unavailable: no Nous authentication found (run: hermes auth).")
@@ -2364,7 +2369,7 @@ def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
     if runtime is None and nous:
         logger.debug("Auxiliary Nous: runtime JWT refresh failed; checking stored auth.json token.")
     if runtime is not None:
-        api_key, base_url = runtime
+        api_key, _ = runtime
     else:
         api_key = _nous_api_key(nous or {})
         if not api_key:
@@ -2374,9 +2379,7 @@ def _try_nous(vision: bool = False) -> tuple[Optional[OpenAI], Optional[str]]:
             )
             _mark_provider_unhealthy("nous", ttl=60, reason="no usable Nous inference JWT", level=logging.DEBUG)
             return None, None
-        base_url = str(
-            (nous or {}).get("inference_base_url") or _scoped_key_env("NOUS_INFERENCE_BASE_URL") or _NOUS_DEFAULT_BASE_URL
-        ).rstrip("/")
+    base_url = configured_base_url
     with contextlib.suppress(Exception):
         from agent.nous_rate_guard import nous_rate_limit_remaining
         from hermes_cli.anon_auth import is_anonymous_request
@@ -3134,10 +3137,8 @@ def _get_provider_chain() -> list[tuple]:
 
     ``openai-codex`` is deliberately absent (shifting allow-list breaks guessed-model fallback).
     """
-    return [
-        ("openrouter", _try_openrouter), ("nous", _try_nous),
-        ("local/custom", _try_custom_endpoint), ("api-key", _resolve_api_key_provider),
-    ]
+    return [("openrouter", _try_openrouter), ("local/custom", _try_custom_endpoint),
+            ("api-key", _resolve_api_key_provider)]
 
 
 # "Recently 402'd" unhealthy-provider cache: a depleted provider stays so for hours, so hiding it
@@ -4675,7 +4676,7 @@ def _resolve_auto_route(
     """Full auto-detection chain, including the selected provider identity. Priority: (1) main provider +
     main model, regardless of provider type ("auto" means "my main model for side tasks too"; explicit
     per-task overrides still win); (2) configured fallback policy — task chain, then the main agent's
-    top-level chain; (3) OpenRouter → Nous → custom → Codex → API-key providers, only with no policy
+    top-level chain; (3) OpenRouter → custom → Codex → API-key providers, only with no policy
     and no working main client."""
     global auxiliary_is_nous
     auxiliary_is_nous = False  # Reset — _try_nous() will set True if it wins

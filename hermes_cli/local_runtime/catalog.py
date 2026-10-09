@@ -16,6 +16,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 
+from hermes_cli.endpoints import endpoint
 from hermes_cli.local_runtime.context_policy import (
     FLOOR, RUNTIME_OVERHEAD_BYTES, TARGET_WINDOW, LaunchPlan, plan_launch)
 from hermes_cli.local_runtime.estimator import (
@@ -282,16 +283,13 @@ def recommended_entry(budget: HardwareBudget,
     return None
 
 
-# ── catalog data: packaged JSON, refreshed from GitHub in memory ─
+# ── catalog data: packaged JSON, optionally refreshed in memory ─
 #
 # catalog.json ships as package data and is loaded at import (no network on the import path). A
-# TTL-gated background refresh fetches the same file from the repo's main branch and swaps it in
+# TTL-gated background refresh fetches a configured catalog and swaps it in
 # MEMORY only: nothing on disk changes, so a git checkout never sees a dirty tracked file and the
-# packaged copy remains the offline truth. A reverted commit on main heals every install on its
-# next fetch, and day-0 entries reach users without an app release.
+# packaged copy remains the offline truth.
 
-_CATALOG_URL = ("https://raw.githubusercontent.com/NousResearch/hermes-agent"
-                "/main/hermes_cli/local_runtime/catalog.json")
 _SCHEMA_VERSION = 2  # bump when an older app would read a newer catalog but launch its entries wrongly
 _REFRESH_TTL_S = 6 * 3600
 _refresh_lock = threading.Lock()
@@ -350,18 +348,21 @@ CATALOG: "tuple[CatalogEntry, ...]" = _packaged_catalog()
 
 
 def refresh_catalog(force: bool = False) -> bool:
-    """Fetch the current catalog from the repo and swap it in memory. Best-effort: any failure
+    """Fetch the configured catalog and swap it in memory. Best-effort: any failure
     (offline, GitHub down, unreadable schema) leaves the running catalog untouched and retries
     after the TTL. Returns True when a fetched document replaced the catalog."""
     global CATALOG, _last_refresh_attempt
 
+    catalog_url = endpoint("localModelCatalogUrl")
+    if not catalog_url:
+        return False
     now = time.monotonic()
     with _refresh_lock:
         if not force and now - _last_refresh_attempt < _REFRESH_TTL_S:
             return False
         _last_refresh_attempt = now
     try:
-        req = urllib.request.Request(_CATALOG_URL, headers={"User-Agent": "envoy-local-runtime"})
+        req = urllib.request.Request(catalog_url, headers={"User-Agent": "envoy-local-runtime"})
         with urllib.request.urlopen(req, timeout=10) as r:
             fetched = _load_catalog(json.load(r))
     except Exception as exc:
@@ -376,7 +377,7 @@ def refresh_catalog(force: bool = False) -> bool:
 def refresh_catalog_soon() -> None:
     """TTL-gated background refresh; returns immediately. The current request serves the catalog
     it already has — the refresh lands for the next one."""
-    if time.monotonic() - _last_refresh_attempt < _REFRESH_TTL_S:
+    if not endpoint("localModelCatalogUrl") or time.monotonic() - _last_refresh_attempt < _REFRESH_TTL_S:
         return
     threading.Thread(target=refresh_catalog, daemon=True, name="catalog-refresh").start()
 

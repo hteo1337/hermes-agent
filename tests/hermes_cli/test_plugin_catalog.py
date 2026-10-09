@@ -118,7 +118,8 @@ def test_live_catalog_falls_back_to_in_tree_and_unions_removals(tmp_path, monkey
     assert [e.name for e in pc.load_catalog_live()] == [e.name for e in pc.load_catalog()]
 
     cache.parent.mkdir(parents=True)
-    cache.write_text(json.dumps({"entries": [_entry("live-only", description="café")],
+    cache.write_text(json.dumps({"_source_url": "http://127.0.0.1:9/nope",
+                                 "entries": [_entry("live-only", description="café")],
                                  "removed": [{"name": "pulled-live", "reason": "cve"}]},
                                 ensure_ascii=False), encoding="utf-8-sig")
     if stale:
@@ -142,10 +143,31 @@ def test_live_catalog_falls_back_to_in_tree_and_unions_removals(tmp_path, monkey
 def _fresh_cache(tmp_path, monkeypatch, doc: dict):
     cache = tmp_path / "cache" / "plugin-catalog.json"
     cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps(doc))
+    cache.write_text(json.dumps({**doc, "_source_url": "http://127.0.0.1:9/nope"}))
     monkeypatch.setattr(pc, "_live_cache_path", lambda: cache)
     monkeypatch.setattr(pc, "LIVE_CATALOG_URL", "http://127.0.0.1:9/nope")  # never reached / unreachable
     return cache
+
+
+def test_switching_live_source_ignores_previous_cache(tmp_path, monkeypatch):
+    cache = _fresh_cache(tmp_path, monkeypatch, {"entries": [_entry("previous-source")], "removed": []})
+    monkeypatch.setattr("hermes_cli.endpoints.endpoint", lambda name: "https://catalog-b.example.invalid/index.json")
+    seen = []
+
+    class Response:
+        content = b'{"entries": [], "removed": []}'
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"entries": [], "removed": []}
+
+    import httpx
+    monkeypatch.setattr(httpx, "get", lambda url, **kwargs: (seen.append(url), Response())[1])
+    assert pc.load_catalog_live() == pc.load_catalog()
+    assert seen == ["https://catalog-b.example.invalid/index.json"]
+    assert json.loads(cache.read_text())["_source_url"] == seen[0]
 
 
 def test_newer_in_tree_pin_outranks_a_fresh_live_cache(tmp_path, monkeypatch):

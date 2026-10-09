@@ -1,4 +1,4 @@
-"""The pulled catalog: packaged JSON is the offline truth, a GitHub fetch
+"""The pulled catalog: packaged JSON is the offline truth, a configured fetch
 swaps entries in memory only, and min_engine gates day-0 models.
 
 Nothing here touches disk beyond the packaged file — the design constraint
@@ -20,6 +20,7 @@ import hermes_cli.local_runtime.catalog as cat
 def _reset_refresh_state(monkeypatch):
     """Each test starts outside the TTL window with the packaged catalog."""
     monkeypatch.setattr(cat, "_last_refresh_attempt", 0.0)
+    monkeypatch.setattr(cat, "endpoint", lambda name: "https://catalog.example.invalid/models.json")
     packaged = cat._packaged_catalog()
     monkeypatch.setattr(cat, "CATALOG", packaged)
     yield
@@ -45,8 +46,20 @@ def _fetch_returns(monkeypatch, doc):
         def __exit__(self, *a):
             return False
 
-    monkeypatch.setattr(urllib.request, "urlopen",
-                        lambda *a, **k: R(body))
+    def fetch(req, *a, **k):
+        assert req.full_url == "https://catalog.example.invalid/models.json"
+        return R(body)
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+
+
+def test_empty_endpoint_disables_refresh_and_background_thread(monkeypatch):
+    monkeypatch.setattr(cat, "endpoint", lambda name: "")
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: pytest.fail("unexpected fetch"))
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: pytest.fail("unexpected thread"))
+    assert cat.refresh_catalog(force=True) is False
+    cat.refresh_catalog_soon()
+    assert cat._last_refresh_attempt == 0.0
 
 
 def test_packaged_json_round_trips_the_catalog():

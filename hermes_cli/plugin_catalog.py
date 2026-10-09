@@ -285,8 +285,10 @@ def resolved_removed_entries() -> list[RemovedEntry]:
 def cached_removed_entries() -> list[RemovedEntry]:
     """In-tree list UNION the last fetched live copy, with NO network round-trip — for the load-time and
     ``enable`` checks that run in every process and must never block on a dead catalog host."""
-    cached = _stale_live_cache(_live_cache_path()) or {}
-    return load_removed_list() + _removed_from_list(cached.get("removed"))
+    from hermes_cli.endpoints import endpoint
+    live_url = endpoint("pluginCatalogUrl") or LIVE_CATALOG_URL
+    cached = _stale_live_cache(_live_cache_path(), live_url) if live_url else None
+    return load_removed_list() + _removed_from_list((cached or {}).get("removed"))
 
 
 def match_removed(
@@ -332,9 +334,10 @@ def invalidate_live_cache_for_home(home: Path) -> None:
 # full request timeout PER CALL (the plugins hub and ``plugins list`` used to ask once per
 # installed plugin), so the dashboard event loop stalled for minutes.
 _live_fetch_failed_until = 0.0
+_live_failed_url = ""
 
 
-def _stale_live_cache(cache: Path) -> Optional[dict[str, Any]]:
+def _stale_live_cache(cache: Path, source_url: str) -> Optional[dict[str, Any]]:
     """A previously fetched copy still beats the in-tree one when the network is down — for
     :data:`LIVE_CATALOG_MAX_STALE_SECONDS`. Past that its pins may trail the checkout's own catalog
     (a 90-day-old cache outranked a freshly updated in-tree pin), so the entries are dropped and the
@@ -343,6 +346,8 @@ def _stale_live_cache(cache: Path) -> Optional[dict[str, Any]]:
         if not cache.is_file():
             return None
         data = json.loads(cache.read_text(encoding="utf-8-sig"))
+        if data.get("_source_url") != source_url:
+            return None
         if time.time() - cache.stat().st_mtime > LIVE_CATALOG_MAX_STALE_SECONDS:
             data = {**data, "entries": []}
         return data
@@ -356,7 +361,7 @@ def fetch_live_catalog(*, force: bool = False) -> Optional[dict[str, Any]]:
     back to the in-tree catalog. A failed network attempt is remembered for
     :data:`LIVE_CATALOG_FAILURE_TTL_SECONDS` so a dead host costs one timeout per TTL window, not one
     per call (``force`` bypasses both caches)."""
-    global _live_fetch_failed_until
+    global _live_fetch_failed_until, _live_failed_url
     from hermes_cli.endpoints import endpoint
     live_url = endpoint("pluginCatalogUrl") or LIVE_CATALOG_URL
     if not live_url:
@@ -364,11 +369,13 @@ def fetch_live_catalog(*, force: bool = False) -> Optional[dict[str, Any]]:
     cache = _live_cache_path()
     try:
         if not force and cache.is_file() and time.time() - cache.stat().st_mtime < LIVE_CATALOG_TTL_SECONDS:
-            return json.loads(cache.read_text(encoding="utf-8-sig"))
+            cached = json.loads(cache.read_text(encoding="utf-8-sig"))
+            if cached.get("_source_url") == live_url:
+                return cached
     except Exception as exc:
         logger.debug("Plugin catalog: unreadable live cache %s: %s", cache, exc)
-    if not force and time.time() < _live_fetch_failed_until:
-        return _stale_live_cache(cache)
+    if not force and live_url == _live_failed_url and time.time() < _live_fetch_failed_until:
+        return _stale_live_cache(cache, live_url)
     try:
         import httpx
         from hermes_constants import mkdir_under_hermes_home
@@ -381,15 +388,19 @@ def fetch_live_catalog(*, force: bool = False) -> Optional[dict[str, Any]]:
         data = resp.json()
         if not isinstance(data, dict) or not isinstance(data.get("entries"), list):
             raise ValueError("unexpected live catalog payload")
+        data["_source_url"] = live_url
         mkdir_under_hermes_home(cache.parent)
         # Atomic: a concurrent reader (gateway, TUI, a second CLI) must never see a half-written
         # document, which would read as a fetch failure and start its own 60 s failure window.
         atomic_write_text(cache, json.dumps(data), tmp_prefix=f"{cache.name}.tmp-")
+        _live_fetch_failed_until = 0.0
+        _live_failed_url = ""
         return data
     except Exception as exc:
         logger.debug("Plugin catalog: live fetch failed: %s", exc)
         _live_fetch_failed_until = time.time() + LIVE_CATALOG_FAILURE_TTL_SECONDS
-        return _stale_live_cache(cache)
+        _live_failed_url = live_url
+        return _stale_live_cache(cache, live_url)
 
 
 _in_tree_catalog_time: Optional[float] = -1.0  # -1 = not resolved yet; None = no usable in-tree time
