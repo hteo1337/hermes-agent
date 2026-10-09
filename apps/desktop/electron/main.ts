@@ -426,7 +426,13 @@ import { wireOauthSessionResponse } from './oauth-session-response'
 import { listWindowsProcesses, reapPackageRootedProcesses } from './package-process-reap'
 import { createParentStartMarkerResolver, parentWatchdogEnv } from './parent-process-identity'
 import { bundledPayload, installIdForRoot, type PayloadInfo, payloadPythonPath } from './payload-backend'
-import { MORPH_STEP_MS, morphSteps, petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
+import {
+  createSerialQueue,
+  MORPH_STEP_MS,
+  morphSteps,
+  petOverlayClickThrough,
+  shouldPopInOnOverlayClosed
+} from './pet-overlay'
 import { placePetOverlay, registerPetOverlayIpc } from './pet-overlay-ipc'
 import {
   buildRegistryProfileRoutes,
@@ -676,7 +682,7 @@ import {
 } from './window-connection-route'
 import { registerWindowControlIpc, windowControlState } from './window-controls'
 import { revealAction, shouldFocusToTakeKeyboard } from './window-focus-policy'
-import { isAppSized, registerWindowSizing } from './window-growth'
+import { isAppSized, markAppSized, registerWindowSizing } from './window-growth'
 import { windowMenuTemplate } from './window-menu'
 import { createWindowOpenHandler } from './window-open-policy'
 import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
@@ -14251,10 +14257,11 @@ function rehomePetOverlay() {
   }
 }
 
-// Morph: main window ⇄ pet overlay (PLAN-ENVOY-INTEGRATION A). savedChatBounds
-// is null unless the window is currently morphed into the pet.
+// Morph: main window ⇄ pet overlay (PLAN-ENVOY-INTEGRATION A). queueMorph
+// serializes toPet/toChat so an overlapping call queues instead of clobbering.
 let savedChatBounds = null
 let morphAnimTimer: ReturnType<typeof setInterval> | null = null
+const queueMorph = createSerialQueue()
 
 function cancelMorphAnimation() {
   if (morphAnimTimer) {
@@ -14263,15 +14270,24 @@ function cancelMorphAnimation() {
   }
 }
 
-// Steps `win`'s bounds from where it is now to `to`, or jumps straight there
-// when `animate` is false (prefers-reduced-motion, decided by the renderer).
-function animateWindowBounds(win, to, animate: boolean): Promise<void> {
+// Steps `win` from where it is to `to` (or jumps, if not animate). Resolves
+// false if `win` is destroyed mid-flight or a step's setBounds throws.
+function animateWindowBounds(win, to, animate: boolean): Promise<boolean> {
   cancelMorphAnimation()
 
-  if (!animate) {
-    win.setBounds(to)
+  const applyBounds = rect => {
+    try {
+      markAppSized(win, rect)
+      win.setBounds(rect)
 
-    return Promise.resolve()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  if (!animate) {
+    return Promise.resolve(applyBounds(to))
   }
 
   const steps = morphSteps(win.getBounds(), to)
@@ -14280,53 +14296,92 @@ function animateWindowBounds(win, to, animate: boolean): Promise<void> {
     let i = 0
 
     morphAnimTimer = setInterval(() => {
-      if (!win || win.isDestroyed() || i >= steps.length) {
+      if (!win || win.isDestroyed()) {
         cancelMorphAnimation()
-        resolve()
+        resolve(false)
 
         return
       }
 
-      win.setBounds(steps[i])
+      if (!applyBounds(steps[i])) {
+        cancelMorphAnimation()
+        resolve(false)
+
+        return
+      }
+
       i += 1
+
+      if (i >= steps.length) {
+        cancelMorphAnimation()
+        resolve(true)
+      }
     }, MORPH_STEP_MS)
   })
 }
 
 // toPet: shrink the main window into `bounds`, then hide it and open the
-// overlay there — the chat window visibly becomes the mascot.
-async function morphMainWindowToPet(bounds, animate: boolean) {
-  if (!mainWindow || mainWindow.isDestroyed()) {
-    return null
-  }
+// overlay there. minWidth/minHeight is relaxed first — it's bigger than any pet.
+function morphMainWindowToPet(bounds, animate: boolean) {
+  return queueMorph(async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return null
+    }
 
-  savedChatBounds = mainWindow.getBounds()
-  await animateWindowBounds(mainWindow, bounds, animate)
-  mainWindow.hide()
-  openPetOverlay(bounds)
+    // A toPet while already in pet mode (savedChatBounds set) must not
+    // overwrite it with the current pet-sized bounds.
+    const capturedChatBounds = savedChatBounds === null
 
-  return bounds
+    if (capturedChatBounds) {
+      savedChatBounds = mainWindow.getBounds()
+    }
+
+    mainWindow.setMinimumSize(1, 1)
+    const landed = await animateWindowBounds(mainWindow, bounds, animate)
+
+    if (!landed || !mainWindow || mainWindow.isDestroyed()) {
+      mainWindow?.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+
+      if (capturedChatBounds) {
+        savedChatBounds = null
+      }
+
+      return null
+    }
+
+    mainWindow.hide()
+    openPetOverlay(bounds)
+
+    return bounds
+  })
 }
 
 // toChat: show the main window at the overlay's spot, grow it back to the
-// saved chat bounds, then close the overlay.
-async function morphPetToMainWindow(animate: boolean) {
-  if (!mainWindow || mainWindow.isDestroyed()) {
-    return null
-  }
+// saved chat bounds, then close the overlay and restore its minimum size.
+function morphPetToMainWindow(animate: boolean) {
+  return queueMorph(async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return null
+    }
 
-  const from =
-    petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
+    const from =
+      petOverlayWindow && !petOverlayWindow.isDestroyed() ? petOverlayWindow.getBounds() : mainWindow.getBounds()
 
-  const to = savedChatBounds ?? from
+    const to = savedChatBounds ?? from
 
-  mainWindow.setBounds(from)
-  mainWindow.show()
-  await animateWindowBounds(mainWindow, to, animate)
-  closePetOverlay()
-  savedChatBounds = null
+    mainWindow.setBounds(from)
+    mainWindow.show()
+    const landed = await animateWindowBounds(mainWindow, to, animate)
 
-  return to
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+    }
+
+    closePetOverlay()
+    savedChatBounds = null
+
+    return landed ? to : null
+  })
 }
 
 // ── HUD mode ────────────────────────────────────────────────────────────────

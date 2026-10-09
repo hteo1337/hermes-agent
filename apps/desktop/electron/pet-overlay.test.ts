@@ -11,6 +11,7 @@ import { test } from 'vitest'
 
 import {
   clampRectToWorkArea,
+  createSerialQueue,
   morphSteps,
   petOverlayClickThrough,
   resolvePetOverlayBounds,
@@ -50,6 +51,36 @@ test('morphSteps lands exactly on the target rect and actually moves', () => {
   assert.deepEqual(steps.at(-1), to)
   assert.notDeepEqual(steps[0], from)
   assert.equal(steps.length, 95)
+})
+
+test('createSerialQueue holds an overlapping call until the first settles', async () => {
+  const queue = createSerialQueue()
+  const order: string[] = []
+
+  let releaseFirst: () => void = () => {}
+
+  const first = queue(
+    () =>
+      new Promise<void>(resolve => {
+        releaseFirst = () => {
+          order.push('first')
+          resolve()
+        }
+      })
+  )
+
+  const second = queue(async () => {
+    order.push('second')
+  })
+
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.deepEqual(order, [])
+
+  releaseFirst()
+  await first
+  await second
+  assert.deepEqual(order, ['first', 'second'])
 })
 
 test('no live main window means no echo, quit or not', () => {

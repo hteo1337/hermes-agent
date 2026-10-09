@@ -187,25 +187,11 @@ function stopStateMirror(): void {
   stateUnsubs = []
 }
 
-// Open the overlay window and start mirroring live state. Main echoes back the
-// actual screen bounds it used, persisted so the pet reopens where it was.
-function openOverlay(request: PetOverlayOpenRequest): void {
-  const api = window.hermesDesktop?.petOverlay
-
-  if (!api || stateUnsubs.length) {
-    return
-  }
-
-  $petOverlayActive.set(true)
-  void api.open(request).then(res => {
-    if (res?.bounds) {
-      saveBounds(res.bounds)
-    }
-
-    pushNow()
-  })
-
-  startStateMirror()
+// Undoes the optimistic active/mirror start when main rejects or fails the
+// request, so the UI doesn't believe an overlay is open that never opened.
+function abortOverlayAttempt(): void {
+  stopStateMirror()
+  $petOverlayActive.set(false)
 }
 
 // Morph the main window into the overlay at `request`'s spot: shrinks it there
@@ -218,15 +204,21 @@ function morphToPet(request: PetOverlayOpenRequest): void {
   }
 
   $petOverlayActive.set(true)
+  startStateMirror()
+
   void api.morphToPet({ ...request, animate: !prefersReducedMotion() }).then(res => {
-    if (res?.bounds) {
+    if (!res?.ok) {
+      abortOverlayAttempt()
+
+      return
+    }
+
+    if (res.bounds) {
       saveBounds(res.bounds)
     }
 
     pushNow()
-  })
-
-  startStateMirror()
+  }, abortOverlayAttempt)
 }
 
 /**
@@ -276,7 +268,7 @@ export function restorePetOverlay(): void {
     return
   }
 
-  openOverlay({ bounds: saved, screen: true })
+  morphToPet({ bounds: saved, screen: true })
 }
 
 // Pop the pet back into the window: morphs the main window back to chat size,

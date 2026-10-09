@@ -52,9 +52,8 @@ function resolveScreenBounds(request, mainWindow: BrowserWindow | null) {
     // Fall back to raw bounds if the window geometry is unavailable.
   }
 
-  // Lands wholly inside a display's work area; self-healing for a spot saved
-  // on a since-unplugged monitor. The caller echoes this back to persist it.
-  return placePetOverlay(screenBounds, mainWindow) ?? screenBounds
+  // Null (missing/non-finite bounds) propagates — never fall back to garbage input.
+  return placePetOverlay(screenBounds, mainWindow)
 }
 
 export function registerPetOverlayIpc({
@@ -67,6 +66,10 @@ export function registerPetOverlayIpc({
 }: PetOverlayIpcDeps) {
   ipcMain.handle('hermes:pet-overlay:open', async (_event, request) => {
     const screenBounds = resolveScreenBounds(request, getMainWindow())
+
+    if (!screenBounds) {
+      return { ok: false }
+    }
 
     openPetOverlay(screenBounds)
 
@@ -81,16 +84,29 @@ export function registerPetOverlayIpc({
   // there — the chat window visibly becomes the mascot (PLAN-ENVOY-INTEGRATION A).
   ipcMain.handle('hermes:pet-overlay:morph-to-pet', async (_event, request) => {
     const screenBounds = resolveScreenBounds(request, getMainWindow())
-    const resolved = await morphToPet(screenBounds, Boolean(request?.animate))
 
-    return resolved ? { bounds: resolved, ok: true } : { ok: false }
+    if (!screenBounds) {
+      return { ok: false }
+    }
+
+    try {
+      const resolved = await morphToPet(screenBounds, Boolean(request?.animate))
+
+      return resolved ? { bounds: resolved, ok: true } : { ok: false }
+    } catch {
+      return { ok: false }
+    }
   })
   // toChat: reverse — show the main window at the overlay's spot, grow it back
   // to the saved chat bounds, then close the overlay.
   ipcMain.handle('hermes:pet-overlay:morph-to-chat', async (_event, request) => {
-    const resolved = await morphToChat(Boolean(request?.animate))
+    try {
+      const resolved = await morphToChat(Boolean(request?.animate))
 
-    return resolved ? { bounds: resolved, ok: true } : { ok: false }
+      return resolved ? { bounds: resolved, ok: true } : { ok: false }
+    } catch {
+      return { ok: false }
+    }
   })
   // Drag/resize: the overlay reports new absolute screen bounds (it already knows
   // the pointer's screen coords). Drag keeps the size constant; the wheel-to-scale

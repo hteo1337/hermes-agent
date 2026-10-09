@@ -149,6 +149,23 @@ export function morphSteps(
   })
 }
 
+/** A serial queue: each run() waits for the previous one to settle before
+ *  starting, so an overlapping morph call queues instead of interleaving. */
+export function createSerialQueue(): <T>(run: () => Promise<T>) => Promise<T> {
+  let chain: Promise<unknown> = Promise.resolve()
+
+  return function queue<T>(run: () => Promise<T>): Promise<T> {
+    const result = chain.then(run, run)
+
+    chain = result.then(
+      () => undefined,
+      () => undefined
+    )
+
+    return result
+  }
+}
+
 // The work area of the display containing the anchor's center, or the first
 // display's when the anchor is missing. Null when no display has one.
 function workAreaForAnchor(displays, anchor) {
