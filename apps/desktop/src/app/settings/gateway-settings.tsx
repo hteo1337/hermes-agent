@@ -43,6 +43,8 @@ import {
 import { managedUpdatesSupported } from '@/store/managed-updates'
 import { notify, notifyError, readableError } from '@/store/notifications'
 
+import { ENDPOINTS, endpointUrl } from '../../../endpoints'
+
 import { cloudTeamChanged, reconnectMovedCloudAgent } from './cloud-team-change'
 import { ConnectionsRegistrySection } from './connections-registry'
 import { CONTROL_TEXT } from './constants'
@@ -1092,14 +1094,14 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
             onSelect={() => setState(current => ({ ...current, mode: 'local' }))}
             title={g.localTitle}
           />
-          <ModeCard
+          {ENDPOINTS.portal && <ModeCard
             active={state.mode === 'cloud'}
             description={g.cloudDesc}
             disabled={state.envOverride}
             icon={Cloud}
             onSelect={() => setState(current => ({ ...current, mode: 'cloud' }))}
             title={g.cloudTitle}
-          />
+          />}
           <ModeCard
             active={state.mode === 'remote'}
             description={g.remoteDesc}
@@ -1124,7 +1126,7 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
       {/* Hermes Cloud panel: one portal sign-in, then a discovered-agent picker
           whose selection drives the silent per-agent cascade + a cloud
           connection. Replaces the URL/token form while in cloud mode. */}
-      {state.mode === 'cloud' && !state.envOverride ? (
+      {state.mode === 'cloud' && !state.envOverride && ENDPOINTS.portal ? (
         <div className="mt-5 grid gap-1">
           {savedCloudConnections.length > 0 ? (
             <div className="mb-4 grid gap-1">
@@ -1248,7 +1250,7 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
                     <AlertCircle className="mt-0.5 size-4 shrink-0" />
                     <span>
                       {g.cloudNoAgents.before}
-                      <ExternalLink href="https://portal.nousresearch.com/agents" showExternalIcon={false}>
+                      <ExternalLink href={endpointUrl(ENDPOINTS.portal, '/agents')} showExternalIcon={false}>
                         {g.cloudNoAgents.linkText}
                       </ExternalLink>
                       {g.cloudNoAgents.after}

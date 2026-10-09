@@ -73,3 +73,19 @@ test('a real portal load failure still ends sign-in', async () => {
   await expect(portal.openPortalLoginWindow()).rejects.toThrow(error.message)
   expect(win.isDestroyed()).toBe(true)
 })
+
+test('an empty portal endpoint cannot open a login window', async () => {
+  const createWindow = vi.fn()
+
+  const portal = createPortalSession({
+    isReady: () => true,
+    getOauthSession: () => null,
+    resolvePortalBaseUrl: () => '',
+    warmOauthCookieStore: async () => {},
+    createWindow,
+    rememberLog: () => {}
+  })
+
+  await expect(portal.openPortalLoginWindow()).rejects.toThrow('Portal is not configured.')
+  expect(createWindow).not.toHaveBeenCalled()
+})

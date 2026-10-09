@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { useEffect, useId, useMemo, useState } from 'react'
 
-import { DocsLink } from '@/components/onboarding/flow'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,7 +24,6 @@ import {
   $sharedMetricsDetailsOpen,
   answerSharedMetricsOffer,
   readSharedMetricsConsent,
-  SHARED_METRICS_DOCS_URL,
   type SharedMetricsChoice,
   sharedMetricsOfferPending,
   sharedMetricsProfileRequester,
@@ -161,9 +159,6 @@ export function SharedMetricsConsentDialog({ enabled, profile, requestGateway }:
 
         <div className="grid gap-2 text-[0.8125rem] leading-5 text-(--ui-text-secondary)">
           <p>{copy.sending}</p>
-          <div>
-            <DocsLink href={SHARED_METRICS_DOCS_URL}>{copy.readDocs}</DocsLink>
-          </div>
         </div>
 
         <div className="grid gap-2">

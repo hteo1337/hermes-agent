@@ -596,7 +596,7 @@ describe('BillingSettings', () => {
     )
   })
 
-  it('renders logged-out as a connect card whose sign-in opens the shared dialog', async () => {
+  it('does not start portal sign-in from a logged-out billing card', async () => {
     apiMocks.fetchBillingState.mockResolvedValue(okBilling(loggedOutBillingState))
     apiMocks.fetchSubscriptionState.mockResolvedValue(okSubscription(loggedOutSubscriptionState))
     $freeTierSignIn.set({ status: 'closed' })
@@ -605,7 +605,7 @@ describe('BillingSettings', () => {
 
     expect(await screen.findByText('Connect your Nous account')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
-    expect($freeTierSignIn.get()).toEqual({ status: 'requested' })
+    expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
     expect(apiMocks.openExternal).not.toHaveBeenCalled()
     $freeTierSignIn.set({ status: 'closed' })
     expect(screen.queryByText('Payment method')).toBeNull()

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { ProfileScope } from '@/hermes'
 import { openFreeTierSignIn } from '@/store/free-tier-sign-in'
 
+import { ENDPOINTS } from '../../../../endpoints'
 import type { McpServersController } from '../mcp/use-mcp-servers'
 
 import { ConnectElement } from './connect-element'
@@ -83,7 +84,7 @@ export function HostedConnectorDialog({
       disabledTools={card.ways.hosted?.disabledTools}
       onDisconnect={onDisconnect}
       onRetryRules={hosted.retryRules}
-      onSignIn={() => openFreeTierSignIn()}
+      onSignIn={ENDPOINTS.portal ? () => openFreeTierSignIn() : undefined}
       policy={hosted.policy}
       readOnly={hosted.rulesFailed}
       rulesSignedOut={hosted.rulesSignedOut}
@@ -117,7 +118,7 @@ export function HostedConnectorDialog({
       onConnect={onConnect}
       onDisconnect={onDisconnect}
       onInstall={onInstall}
-      onOpenAdmin={() => void openConnectorsAdmin()}
+      onOpenAdmin={ENDPOINTS.portal ? () => void openConnectorsAdmin() : undefined}
       onOpenChange={next => {
         if (!next) {
           if (operation?.settled) {

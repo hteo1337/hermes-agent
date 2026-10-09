@@ -38,8 +38,8 @@ describe('SidebarStorageCorruptNotice', () => {
     // No blanket "run repair" advice: structural damage goes to inspect/restore first.
     expect(notice.textContent).not.toContain('sessions repair')
 
-    screen.getByRole('button', { name: /recovery guide/i }).click()
-    expect(openRecoveryGuide).toHaveBeenCalledWith(expect.stringContaining('/user-guide/session-storage-recovery'))
+    expect(screen.queryByRole('button', { name: /recovery guide/i })).toBeNull()
+    expect(openRecoveryGuide).not.toHaveBeenCalled()
   })
 
   it('keeps atom identity when a refresh reports the same stores', () => {

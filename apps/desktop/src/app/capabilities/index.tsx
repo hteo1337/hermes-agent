@@ -10,6 +10,7 @@ import { useStoreSelector } from '@/lib/use-session-slice'
 import { $gateway } from '@/store/gateway'
 import { OFFICIAL_SKILLS_KEY } from '@/store/hub-actions'
 
+import { ENDPOINTS } from '../../../endpoints'
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import { useRouteEnumParam } from '../hooks/use-route-enum-param'
 import { PanelEmpty } from '../overlays/panel'
@@ -193,7 +194,7 @@ export function CapabilitiesView({
           <div className={mode === 'skills' ? 'min-h-40 flex-1 overflow-hidden' : 'min-h-0 flex-1'}>
             {loadGate ?? tabContent[mode]()}
           </div>
-          {hubMounted && (
+          {hubMounted && ENDPOINTS.hubUrl && (
             <EmbeddedHubPicker
               hidden={mode !== 'skills'}
               installedNames={installedSkillNames}

@@ -8,6 +8,18 @@ import { $freeTierSignIn, noteFreeTierTurnComplete, openFreeTierSignIn } from '@
 import { $onboardingGate } from '@/store/onboarding-gate'
 import type { FreeTierStatus } from '@/types/hermes'
 
+const endpointConfig = vi.hoisted(() => ({
+  portal: 'https://portal.example',
+  hubUrl: '',
+  docsUrl: '',
+  updateFeedUrl: ''
+}))
+
+vi.mock('../../../endpoints', async importOriginal => ({
+  ...(await importOriginal<typeof import('../../../endpoints')>()),
+  ENDPOINTS: endpointConfig
+}))
+
 const pollOAuthSession = vi.fn()
 // The two answers the dialog reads: `free_tier.status` and `free_tier.claim_nudge`.
 type GatewayAnswer = { claimed: boolean } | Partial<FreeTierStatus>
@@ -121,7 +133,7 @@ describe('FreeTierSignInDialog', () => {
         $onboardingGate.set({ guideKickoff: 'started', guideQueued: false, phase: 'done' })
       })
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with Envoy')).toBeTruthy())
       expect(requestGateway).toHaveBeenCalledWith('free_tier.claim_nudge')
     })
 
@@ -137,7 +149,7 @@ describe('FreeTierSignInDialog', () => {
 
       await act(async () => noteFreeTierTurnComplete())
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with Envoy')).toBeTruthy())
     })
 
     it('Sign in continues into the normal sign-in flow', async () => {
@@ -156,7 +168,7 @@ describe('FreeTierSignInDialog', () => {
       await act(async () => screen.getByRole('button', { name: 'Not now' }).click())
 
       expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
-      expect(screen.queryByText('Keep going with Hermes')).toBeNull()
+      expect(screen.queryByText('Keep going with Envoy')).toBeNull()
     })
   })
 })

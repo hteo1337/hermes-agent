@@ -51,6 +51,7 @@ vi.mock('@hermes/plugin-sdk', async () => {
 
   return {
     atom,
+    ENDPOINTS: { portal: '', hubUrl: '', docsUrl: '', updateFeedUrl: '' },
     Button: () => null,
     Checkbox: () => null,
     GlyphSpinner: () => null,

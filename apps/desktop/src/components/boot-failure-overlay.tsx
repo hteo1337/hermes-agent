@@ -18,6 +18,8 @@ import { $desktopBoot } from '@/store/boot'
 import { notify, notifyError } from '@/store/notifications'
 import { $desktopOnboarding } from '@/store/onboarding'
 
+import { ENDPOINTS } from '../../endpoints'
+
 import { classifyLocalBootFailure, type LocalBootFailureCopy, localBootFailureCopy } from './boot-failure-cause'
 import type { RemoteReauth } from './boot-failure-reauth'
 import {
@@ -420,20 +422,14 @@ export function BootFailureOverlay() {
     // buttons (not URLs buried in the hint prose) so localized hints can't
     // drift the links.
     actions = [
-      {
+      ...(ENDPOINTS.portal ? [{
         key: 'portal',
         label: copy.cloudDownCheckPortal,
-        onClick: () => openExternalLink('https://portal.nousresearch.com'),
+        onClick: () => openExternalLink(ENDPOINTS.portal),
         icon: <ExternalLink />
-      },
+      }] : []),
       localAction,
       { ...retryAction, variant: 'secondary' },
-      {
-        key: 'discord',
-        label: copy.cloudDownDiscord,
-        onClick: () => openExternalLink('https://discord.gg/NousResearch'),
-        variant: 'ghost'
-      },
       { ...settingsAction, variant: 'ghost' }
     ]
     hint = copy.cloudDownHint

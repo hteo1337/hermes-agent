@@ -9,6 +9,8 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { resolve, join, relative, posix } from "path"
 import productIdentity from "../product-identity.cjs"
+import feedContract from "../update-feed.cjs"
+const brand = JSON.parse(readFileSync(new URL('../brand.json', import.meta.url), 'utf8'))
 import { channelBuildRequest } from "../../../scripts/msix-shared.mjs"
 import { validateBundleEnvironment } from "./bundle-env.mjs"
 import { execFileSync } from "child_process"
@@ -92,6 +94,9 @@ export function resolveStamp({
 } = {}) {
   const channelBuild = channelBuildRequest(env)
   if (channelBuild) {
+    if (channelBuild.repository !== brand.updateRepository || channelBuild.publicBase !== feedContract.feedBaseUrl(brand.endpoints.updateFeedUrl)) {
+      throw new Error('Channel build does not match brand update repository and feed')
+    }
     const local = fromLocalGit(repoRoot, execFn)
     if (!local || local.commit !== channelBuild.commit || local.dirty) throw new Error('Channel build identity does not match clean checkout HEAD')
     return { ...local, branch: null, source: 'channel-build', baseVersion: channelBuild.sourceVersion, channelBuild }

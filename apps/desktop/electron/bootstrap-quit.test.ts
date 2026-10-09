@@ -14,9 +14,11 @@ for (const boundary of ['resolution', 'manifest'] as const) {
     const marker = path.join(home, 'manifest-started')
     let manifestPid: number | undefined
 
-    fs.mkdirSync(path.join(home, 'scripts'))
+    fs.mkdirSync(path.join(home, 'agent-payload', 'scripts'), { recursive: true })
+    fs.mkdirSync(path.join(home, 'agent-payload', 'source.git'))
+    fs.writeFileSync(path.join(home, 'agent-payload', 'source.git', 'HEAD'), 'ref: refs/heads/main\n')
     fs.writeFileSync(
-      path.join(home, 'scripts/install.sh'),
+      path.join(home, 'agent-payload', 'scripts/install.sh'),
       `#!/usr/bin/env bash\nprintf started > "$HERMES_HOME/manifest-started"\nprintf 'manifest-pid=%s\\n' "$$"\nwhile :; do :; done\n`
     )
 
@@ -24,11 +26,11 @@ for (const boundary of ['resolution', 'manifest'] as const) {
       const result = await runBootstrap({
         installStamp: null,
         activeRoot: path.join(home, 'agent'),
-        sourceRepoRoot: home,
+        resourcesPath: home,
         hermesHome: home,
         abortSignal: controller.signal,
         onEvent: event => {
-          if (boundary === 'resolution' && event.line?.includes('using local')) {
+          if (boundary === 'resolution' && event.line?.includes('using bundled')) {
             controller.abort()
           }
 

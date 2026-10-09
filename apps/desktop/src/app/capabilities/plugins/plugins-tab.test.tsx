@@ -226,7 +226,7 @@ describe('PluginsTab', () => {
     )
   })
 
-  it('opens the dual-target install modal from a catalog pick message', async () => {
+  it('ignores catalog pick messages when the docs endpoint is empty', () => {
     render(<PluginsTab profile="workbot" />)
 
     window.dispatchEvent(
@@ -243,15 +243,8 @@ describe('PluginsTab', () => {
       })
     )
 
-    await waitFor(() => {
-      const request = $pluginInstallRequest.get()
-
-      expect(request).not.toBeNull()
-      expect(request?.catalogName).toBe('weather-plugin')
-      expect(request?.repo).toBe('https://github.com/example/weather-plugin')
-      expect(request?.profile).toBe('workbot')
-      expect(request?.sha).toBe('a'.repeat(40))
-    })
+    expect($pluginInstallRequest.get()).toBeNull()
+    expect(screen.queryByTestId('plugin-catalog-sash')).toBeNull()
   })
 
   it('ignores pick messages from foreign origins', () => {
@@ -375,7 +368,7 @@ describe('PluginsTab', () => {
     expect(requestGateway).not.toHaveBeenCalledWith('plugins.manage', expect.objectContaining({ action: 'toggle' }))
   })
 
-  it('appends the subdir fragment for multi-plugin repos', async () => {
+  it('ignores subdir catalog picks when the docs endpoint is empty', () => {
     render(<PluginsTab profile={null} />)
 
     window.dispatchEvent(
@@ -390,9 +383,7 @@ describe('PluginsTab', () => {
       })
     )
 
-    await waitFor(() => {
-      expect($pluginInstallRequest.get()?.repo).toBe('https://github.com/example/plugins-monorepo#nested-plugin')
-    })
+    expect($pluginInstallRequest.get()).toBeNull()
   })
 
   // #96969: the Desktop Kanban switch enabled only this app's UI panel; the
@@ -561,24 +552,11 @@ describe('PluginsTab catalog UX', () => {
 
   afterEach(cleanup)
 
-  it('grows the catalog when its top-edge sash is dragged up, and resets on double-click', () => {
-    // jsdom has no layout: give the Capabilities column a real height so the
-    // "never crush the lists above" clamp has something to clamp against.
-    const clientHeight = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(900)
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 1000 })
+  it('hides catalog controls when the docs endpoint is empty', () => {
     render(<PluginsTab profile={null} />)
-    const sash = screen.getByTestId('plugin-catalog-sash')
-
-    fireEvent.pointerDown(sash, { button: 0, clientY: 600 })
-    fireEvent.pointerMove(window, { clientY: 400 })
-    fireEvent.pointerUp(window)
-
-    // Default 380px + 200px of upward drag (clamped only by window/column size).
-    expect($paneHeightOverride('capabilities-plugin-catalog').get()).toBe(580)
-
-    fireEvent.doubleClick(sash)
+    expect(screen.queryByTestId('plugin-catalog-sash')).toBeNull()
+    expect(screen.queryByRole('button', { name: /browse catalog/i })).toBeNull()
     expect($paneHeightOverride('capabilities-plugin-catalog').get()).toBeUndefined()
-    clientHeight.mockRestore()
   })
 
   it('shows an Update chip when the catalog pin moved past the installed SHA', () => {
@@ -742,7 +720,7 @@ describe('PluginsTab catalog UX', () => {
     expect($pluginInstallRequest.get()).toBeNull()
   })
 
-  it('still opens the modal for an installed pick when an update is available', async () => {
+  it('ignores installed catalog picks when the docs endpoint is empty', () => {
     $agentPlugins.set([
       {
         catalog_name: 'demo-weather',
@@ -770,7 +748,7 @@ describe('PluginsTab catalog UX', () => {
       })
     )
 
-    await waitFor(() => expect($pluginInstallRequest.get()).not.toBeNull())
+    expect($pluginInstallRequest.get()).toBeNull()
   })
   // The gear no longer unfolds an inline form under the row: plugin settings
   // live in Settings ▸ Plugins (one entry per plugin, WoW-AddOns style) and the

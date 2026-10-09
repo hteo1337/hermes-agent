@@ -26,7 +26,7 @@ export interface HostedToolsPanelProps {
   disabledTools?: readonly string[]
   onDisconnect: () => void
   onRetryRules?: () => void
-  onSignIn: () => void
+  onSignIn?: () => void
   policy: ConnectorPolicyView
   readOnly?: boolean
   rulesSignedOut?: boolean

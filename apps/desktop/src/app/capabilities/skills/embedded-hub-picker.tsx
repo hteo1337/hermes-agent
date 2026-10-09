@@ -17,6 +17,8 @@ import {
 import { notify, notifyError } from '@/store/notifications'
 import { $paneHeightOverride, setPaneHeightOverride } from '@/store/panes'
 
+import { ENDPOINTS } from '../../../../endpoints'
+
 // The REAL Skills Hub page (docs site) embedded as a one-click picker — the
 // same trick the Bot Mode agent editor uses. `?embed=picker` hides the docs
 // chrome and adds a "+ Add to this Agent" button per card, which posts
@@ -24,8 +26,8 @@ import { $paneHeightOverride, setPaneHeightOverride } from '@/store/panes'
 // to the parent window. We validate the origin and route the install through
 // the standard hub action pipeline (background action + tailed log + Skills
 // list invalidation), scoped to the Capabilities profile selector.
-const HUB_ORIGIN = 'https://hermes-agent.nousresearch.com'
-const HUB_PICKER_URL = `${HUB_ORIGIN}/docs/skills?embed=picker`
+const HUB_ORIGIN = ENDPOINTS.hubUrl ? new URL(ENDPOINTS.hubUrl).origin : ''
+const HUB_PICKER_URL = ENDPOINTS.hubUrl
 
 // Hub viewport height: persisted through the shared pane store (same one the
 // terminal/editor panes use), dragged from the section's TOP edge — "pull the
@@ -166,6 +168,10 @@ export const EmbeddedHubPicker = memo(function EmbeddedHubPicker({
   const updateAll = () => {
     notify({ kind: 'success', title: h.updateStarted, message: h.actionLog })
     void updateHubSkills(profile).catch(err => notifyError(err, h.actionFailed))
+  }
+
+  if (!ENDPOINTS.hubUrl) {
+    return null
   }
 
   return (

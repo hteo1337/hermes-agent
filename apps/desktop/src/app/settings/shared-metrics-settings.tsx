@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { useEffect, useMemo, useState } from 'react'
 
-import { DocsLink } from '@/components/onboarding/flow'
 import { useI18n } from '@/i18n'
 import { $activeConnectionId } from '@/store/connections'
 import { setDesktopMetricsGate } from '@/store/desktop-metrics'
@@ -12,7 +11,6 @@ import { $settingsScopeProfile } from '@/store/settings-scope'
 import {
   readSharedMetricsConsent,
   saveSharedMetricsConsent,
-  SHARED_METRICS_DOCS_URL,
   type SharedMetricsConsent,
   sharedMetricsProfileRequester
 } from '@/store/shared-metrics'
@@ -103,7 +101,6 @@ export function SharedMetricsSettings() {
         onChange={on => void save({ enabled: on, send: on && send })}
       />
       <ToggleRow
-        below={<DocsLink href={SHARED_METRICS_DOCS_URL}>{copy.whatIsCollected}</DocsLink>}
         checked={send}
         description={copy.sendDesc}
         disabled={!consent || busy || !enabled}

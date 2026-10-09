@@ -11,6 +11,8 @@ import {
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 
+import { ENDPOINTS } from '../../../../endpoints'
+
 import { openConnectorsAdmin } from './data/portal'
 
 export interface ConnectorDialogMenuProps {
@@ -39,10 +41,14 @@ export function ConnectorDialogMenu({ onDisconnect, onReconnect, onRefreshTools 
         <DropdownMenuItem className={dropdownMenuRow} onSelect={onRefreshTools}>
           {copy.dialog.menuRefreshTools}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className={dropdownMenuRow} onSelect={() => void openConnectorsAdmin()}>
-          {copy.dialog.orgLink}
-        </DropdownMenuItem>
+        {ENDPOINTS.portal && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className={dropdownMenuRow} onSelect={() => void openConnectorsAdmin()}>
+              {copy.dialog.orgLink}
+            </DropdownMenuItem>
+          </>
+        )}
         {onDisconnect ? (
           <>
             <DropdownMenuSeparator />

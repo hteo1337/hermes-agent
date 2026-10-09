@@ -8,11 +8,10 @@ import { test } from 'vitest'
 import {
   buildPinArgs,
   buildPosixPinArgs,
-  cachedScriptPath,
   cleanInstallerLogLine,
   hasExistingGitCheckout,
-  installRefForStamp,
   isPinnedCommit,
+  resolveBootstrapRepository,
   resolveInstallScript,
   resolveMarkerPinnedCommit,
   runBootstrap
@@ -96,11 +95,6 @@ test('fallback install stamps use an unpinned branch ref', () => {
   const stamp = { commit: ZERO_COMMIT, branch: 'main' }
 
   assert.equal(isPinnedCommit(ZERO_COMMIT), false)
-  assert.deepEqual(installRefForStamp(stamp), {
-    ref: 'main',
-    cacheKey: 'branch-main',
-    pinned: false
-  })
   // Must NOT pass -Commit / --commit for the all-zero placeholder.
   assert.deepEqual(buildPinArgs(stamp), ['-Branch', 'main'])
   assert.deepEqual(
@@ -111,21 +105,6 @@ test('fallback install stamps use an unpinned branch ref', () => {
     }),
     ['--dir', '/tmp/hermes', '--hermes-home', '/tmp/home', '--branch', 'main']
   )
-})
-
-test('existing-checkout installer ref follows the branch instead of the packaged commit', () => {
-  const stamp = { commit: 'a'.repeat(40), branch: 'main' }
-
-  assert.deepEqual(installRefForStamp(stamp, { pinCommit: false }), {
-    ref: 'main',
-    cacheKey: 'branch-main',
-    pinned: false
-  })
-  assert.deepEqual(installRefForStamp(stamp), {
-    ref: stamp.commit,
-    cacheKey: stamp.commit,
-    pinned: true
-  })
 })
 
 test('resolveMarkerPinnedCommit prefers installed checkout HEAD over the packaged artifact', () => {
@@ -151,129 +130,49 @@ test('resolveMarkerPinnedCommit prefers installed checkout HEAD over the package
   )
 })
 
-test('resolveInstallScript downloads fallback stamps by branch instead of zero commit', async () => {
+test('resolveInstallScript uses only a bundled payload installer', async () => {
   const home = mkTmpHome()
 
   try {
-    const cached = cachedScriptPath(home, 'branch-main')
-    fs.mkdirSync(path.dirname(cached), { recursive: true })
-    fs.writeFileSync(cached, 'stale branch installer\n')
+    const bundled = path.join(home, 'agent-payload', 'scripts', SCRIPT_NAME)
+    const local = path.join(home, 'checkout', 'scripts', SCRIPT_NAME)
+    fs.mkdirSync(path.dirname(bundled), { recursive: true })
+    fs.mkdirSync(path.dirname(local), { recursive: true })
+    fs.writeFileSync(bundled, 'bundled installer\n')
+    fs.writeFileSync(local, 'local installer\n')
 
-    const refs = []
+    const request = {
+      installStamp: { commit: 'a'.repeat(40), branch: 'main' },
+      sourceRepoRoot: path.join(home, 'checkout'),
+      resourcesPath: home,
+      emit: () => {}
+    }
 
-    const result = await resolveInstallScript({
-      installStamp: { commit: ZERO_COMMIT, branch: 'main' },
-      sourceRepoRoot: null,
-      hermesHome: home,
-      emit: () => {},
-      _download: async (ref, destPath) => {
-        refs.push(ref)
-        fs.mkdirSync(path.dirname(destPath), { recursive: true })
-        fs.writeFileSync(destPath, '#!/bin/sh\necho fallback branch\n')
+    const result = await resolveInstallScript(request)
 
-        return destPath
-      }
-    })
-
-    assert.deepEqual(refs, ['main'])
-    assert.equal(result.source, 'download')
-    assert.equal(result.commit, null)
-    assert.equal(result.path, cached)
-    assert.match(fs.readFileSync(cached, 'utf8'), /fallback branch/)
+    assert.equal(result.source, 'bundled')
+    assert.equal(result.path, bundled)
+    assert.equal(fs.readFileSync(result.path, 'utf8'), 'bundled installer\n')
+    const source = path.join(home, 'agent-payload', 'source.git')
+    fs.mkdirSync(source, { recursive: true })
+    fs.writeFileSync(path.join(source, 'HEAD'), 'ref: refs/heads/main\n')
+    assert.equal(resolveBootstrapRepository(home, ''), source)
+    assert.equal(resolveBootstrapRepository(home, 'owner/fork'), 'https://github.com/owner/fork.git')
   } finally {
     fs.rmSync(home, { recursive: true, force: true })
   }
 })
 
-test('resolveInstallScript refreshes the live branch for an existing checkout', async () => {
+test('resolveInstallScript fails closed when the bundled installer is missing', async () => {
   const home = mkTmpHome()
 
   try {
-    const commit = 'a'.repeat(40)
-    const cached = cachedScriptPath(home, 'branch-main')
-    fs.mkdirSync(path.dirname(cached), { recursive: true })
-    fs.writeFileSync(cached, 'stale installer\n')
-
-    const refs = []
-
-    const result = await resolveInstallScript({
-      installStamp: { commit, branch: 'main' },
-      sourceRepoRoot: null,
-      hermesHome: home,
-      emit: () => {},
-      pinCommit: false,
-      _download: async (ref, destPath) => {
-        refs.push(ref)
-        fs.writeFileSync(destPath, 'fresh branch installer\n')
-
-        return destPath
-      }
-    })
-
-    assert.deepEqual(refs, ['main'])
-    assert.equal(result.source, 'download')
-    assert.equal(result.commit, null)
-    assert.equal(result.path, cached)
-    assert.equal(fs.readFileSync(cached, 'utf8'), 'fresh branch installer\n')
-  } finally {
-    fs.rmSync(home, { recursive: true, force: true })
-  }
-})
-
-test('resolveInstallScript refreshes an immutable-pin cache on a fresh install', async () => {
-  const home = mkTmpHome()
-
-  try {
-    const commit = 'a'.repeat(40)
-    const cached = cachedScriptPath(home, commit)
-    fs.mkdirSync(path.dirname(cached), { recursive: true })
-    fs.writeFileSync(cached, 'stale installer\n')
-
-    const refs = []
-
-    const result = await resolveInstallScript({
-      installStamp: { commit, branch: 'main' },
-      sourceRepoRoot: null,
-      hermesHome: home,
-      emit: () => {},
-      _download: async (ref, destPath) => {
-        refs.push(ref)
-        fs.writeFileSync(destPath, 'fresh pinned installer\n')
-
-        return destPath
-      }
-    })
-
-    assert.deepEqual(refs, [commit])
-    assert.equal(result.source, 'download')
-    assert.equal(result.commit, commit)
-    assert.equal(result.path, cached)
-    assert.equal(fs.readFileSync(cached, 'utf8'), 'fresh pinned installer\n')
-  } finally {
-    fs.rmSync(home, { recursive: true, force: true })
-  }
-})
-
-test('resolveInstallScript fails closed instead of executing an installed stale script', async () => {
-  const home = mkTmpHome()
-
-  try {
-    const commit = 'a'.repeat(40)
-    const scriptsDir = path.join(home, 'hermes-agent', 'scripts')
-    fs.mkdirSync(scriptsDir, { recursive: true })
-    fs.writeFileSync(path.join(scriptsDir, SCRIPT_NAME), 'stale installed script\n')
-
+    const stale = path.join(home, 'hermes-agent', 'scripts', SCRIPT_NAME)
+    fs.mkdirSync(path.dirname(stale), { recursive: true })
+    fs.writeFileSync(stale, 'stale installed script\n')
     await assert.rejects(
-      resolveInstallScript({
-        installStamp: { commit, branch: 'main' },
-        sourceRepoRoot: null,
-        hermesHome: home,
-        emit: () => {},
-        _download: async () => {
-          throw new Error('Failed to download install script: HTTP 404')
-        }
-      }),
-      /HTTP 404/
+      resolveInstallScript({ installStamp: null, resourcesPath: home, emit: () => {} }),
+      /bundled installer is missing/
     )
   } finally {
     fs.rmSync(home, { recursive: true, force: true })
@@ -301,10 +200,16 @@ test.skipIf(process.platform === 'win32')(
   async () => {
     const home = mkTmpHome()
     fs.mkdirSync(path.join(home, 'scripts'))
+    fs.mkdirSync(path.join(home, '.git'))
+    const bundled = path.join(home, 'agent-payload', 'scripts', 'install.sh')
+    fs.mkdirSync(path.dirname(bundled), { recursive: true })
+    fs.mkdirSync(path.join(home, 'agent-payload', 'source.git'))
+    fs.writeFileSync(path.join(home, 'agent-payload', 'source.git', 'HEAD'), 'ref: refs/heads/main\n')
     fs.writeFileSync(
-      path.join(home, 'scripts', 'install.sh'),
+      bundled,
       '#!/usr/bin/env bash\nprintf "\\033[0;31m\\xe2\\x9c\\x97\\033[0m manifest broke\\n" >&2\nexit 3\n'
     )
+    fs.writeFileSync(path.join(home, 'scripts', 'install.sh'), 'exit 0\n')
 
     const result = await runBootstrap({
       installStamp: null,
@@ -312,6 +217,7 @@ test.skipIf(process.platform === 'win32')(
       sourceRepoRoot: home,
       hermesHome: home,
       logRoot: home,
+      resourcesPath: home,
       onEvent: () => {}
     })
 

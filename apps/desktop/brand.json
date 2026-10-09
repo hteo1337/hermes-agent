@@ -9,7 +9,12 @@
   "cliName": "envoy",
   "telemetry": false,
   "updateRepository": "",
-  "docsUrl": "",
+  "endpoints": {
+    "portal": "",
+    "hubUrl": "",
+    "docsUrl": "",
+    "updateFeedUrl": ""
+  },
   "maintainer": "Envoy contributors <noreply@envoy.invalid>",
   "author": "Envoy contributors",
   "attribution": {
