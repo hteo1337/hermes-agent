@@ -9,3 +9,6 @@
 - [x] Requested focused desktop tests executed with two workers and isolated directories.
 - [x] Backend decoupling tests executed with two workers and isolated directories.
 - [x] Merge diff inspected, commits recorded, and STATUS.md updated with evidence and limits.
+- [x] Confirmed independent review findings fixed with focused positive and negative controls.
+- [x] Final typecheck, audits, and focused desktop tests passed on reviewed fixes.
+- [x] Review result and new verification recorded in STATUS.md, commits made, clean tree confirmed.
