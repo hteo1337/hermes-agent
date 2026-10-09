@@ -295,6 +295,7 @@ _REFRESH_TTL_S = 6 * 3600
 _refresh_lock = threading.Lock()
 _last_refresh_attempt = 0.0
 _last_refresh_url = ""
+_refresh_generation = 0
 
 
 def _asset_from(d: "dict | None") -> "AssetFile | None":
@@ -352,7 +353,7 @@ def refresh_catalog(force: bool = False) -> bool:
     """Fetch the configured catalog and swap it in memory. Best-effort: any failure
     (offline, GitHub down, unreadable schema) leaves the running catalog untouched and retries
     after the TTL. Returns True when a fetched document replaced the catalog."""
-    global CATALOG, _last_refresh_attempt, _last_refresh_url
+    global CATALOG, _last_refresh_attempt, _last_refresh_url, _refresh_generation
 
     catalog_url = endpoint("localModelCatalogUrl")
     if not catalog_url:
@@ -363,6 +364,8 @@ def refresh_catalog(force: bool = False) -> bool:
             return False
         _last_refresh_attempt = now
         _last_refresh_url = catalog_url
+        _refresh_generation += 1
+        generation = _refresh_generation
     try:
         req = urllib.request.Request(catalog_url, headers={"User-Agent": "envoy-local-runtime"})
         with urllib.request.urlopen(req, timeout=10) as r:
@@ -370,9 +373,12 @@ def refresh_catalog(force: bool = False) -> bool:
     except Exception as exc:
         logger.debug("catalog refresh skipped: %s", exc)
         return False
-    if fetched != CATALOG:
-        logger.info("catalog refreshed from repo (%d models)", len(fetched))
-    CATALOG = fetched
+    with _refresh_lock:
+        if generation != _refresh_generation or endpoint("localModelCatalogUrl") != catalog_url:
+            return False
+        if fetched != CATALOG:
+            logger.info("catalog refreshed from configured source (%d models)", len(fetched))
+        CATALOG = fetched
     return True
 
 
