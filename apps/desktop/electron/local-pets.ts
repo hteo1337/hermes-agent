@@ -81,13 +81,17 @@ function completePng(
   chunkEnd: number,
   totalLength: number
 ): { header: PngHeader; idat: Buffer[] } | null {
-  if (length !== 0 || chunkEnd !== totalLength || !header || !idat.length || (header.colorType === 3 && !palette))
+  if (length !== 0 || chunkEnd !== totalLength || !header || !idat.length || (header.colorType === 3 && !palette)) {
     return null
+  }
+
   return { header, idat }
 }
 
 function parsePngChunks(buf: Buffer): { header: PngHeader; idat: Buffer[] } | null {
-  if (buf.length < 57 || !buf.subarray(0, 8).equals(PNG_SIGNATURE)) return null
+  if (buf.length < 57 || !buf.subarray(0, 8).equals(PNG_SIGNATURE)) {
+    return null
+  }
 
   let offset = 8
   let header: PngHeader | null = null
@@ -98,16 +102,27 @@ function parsePngChunks(buf: Buffer): { header: PngHeader; idat: Buffer[] } | nu
     const length = buf.readUInt32BE(offset)
     const dataEnd = offset + 8 + length
     const chunkEnd = dataEnd + 4
-    if (!validPngChunk(buf, offset, dataEnd, chunkEnd)) return null
+
+    if (!validPngChunk(buf, offset, dataEnd, chunkEnd)) {
+      return null
+    }
 
     const type = buf.toString('ascii', offset + 4, offset + 8)
     const data = buf.subarray(offset + 8, dataEnd)
-    if (offset === 8 && (type !== 'IHDR' || length !== 13)) return null
+
+    if (offset === 8 && (type !== 'IHDR' || length !== 13)) {
+      return null
+    }
 
     if (type === 'IHDR') {
-      if (offset !== 8) return null
+      if (offset !== 8) {
+        return null
+      }
       header = parsePngHeader(data)
-      if (!header) return null
+
+      if (!header) {
+        return null
+      }
     } else if (type === 'PLTE') {
       palette = length > 0 && length % 3 === 0 && length <= 768
     } else if (type === 'IDAT') {
@@ -115,6 +130,7 @@ function parsePngChunks(buf: Buffer): { header: PngHeader; idat: Buffer[] } | nu
     } else if (type === 'IEND') {
       return completePng(header, idat, palette, length, chunkEnd, buf.length)
     }
+
     offset = chunkEnd
   }
 
@@ -131,42 +147,62 @@ function pngRows(header: PngHeader): Array<{ bytes: number; count: number }> {
           [0, 4, 4, 8],
           [2, 0, 4, 4],
           [0, 2, 2, 4],
-          [1, 0, 2, 2]
+          [1, 0, 2, 2],
+          [0, 1, 1, 2]
         ]
+
   const rows: Array<{ bytes: number; count: number }> = []
 
   for (const [x, y, stepX, stepY] of passes) {
     const passWidth = Math.max(0, Math.ceil((header.width - x) / stepX))
     const passHeight = Math.max(0, Math.ceil((header.height - y) / stepY))
-    if (!passWidth || !passHeight) continue
+
+    if (!passWidth || !passHeight) {
+      continue
+    }
     rows.push({ bytes: Math.ceil((passWidth * header.channels * header.bitDepth) / 8), count: passHeight })
   }
+
   return rows
 }
 
 function readPngSize(buf: Buffer): { width: number; height: number } | null {
   const chunks = parsePngChunks(buf)
-  if (!chunks) return null
+
+  if (!chunks) {
+    return null
+  }
 
   const rows = pngRows(chunks.header)
   const expected = rows.reduce((total, { bytes, count }) => total + (bytes + 1) * count, 0)
-  if (expected > MAX_DECODED_PNG_BYTES) return null
+
+  if (expected > MAX_DECODED_PNG_BYTES) {
+    return null
+  }
 
   let decoded: Buffer
+
   try {
     decoded = inflateSync(Buffer.concat(chunks.idat), { maxOutputLength: MAX_DECODED_PNG_BYTES })
   } catch {
     return null
   }
-  if (decoded.length !== expected) return null
+
+  if (decoded.length !== expected) {
+    return null
+  }
 
   let cursor = 0
+
   for (const { bytes, count } of rows) {
     for (let row = 0; row < count; row += 1) {
-      if (decoded[cursor] > 4) return null
+      if (decoded[cursor] > 4) {
+        return null
+      }
       cursor += bytes + 1
     }
   }
+
   return { width: chunks.header.width, height: chunks.header.height }
 }
 
@@ -221,7 +257,7 @@ function validateManifest(raw: unknown): LocalPetManifest | string {
 
 // No symlinks anywhere in the folder — a symlinked atlas could read a PNG
 // from outside <userData>/pets.
-export function validateLocalPet(dir: string, folderName: string): LocalPet | LocalPetRejected {
+function inspectLocalPet(dir: string, folderName: string): { pet: LocalPet; atlas: Buffer } | LocalPetRejected {
   const reject = (reason: string): LocalPetRejected => ({ id: folderName, reason })
 
   let dirStat
@@ -273,16 +309,27 @@ export function validateLocalPet(dir: string, folderName: string): LocalPet | Lo
     return reject('pet.json id must match the folder name')
   }
 
-  if (atlasStat.size > MAX_PNG_BYTES) {
-    return reject(`atlas.png exceeds ${MAX_PNG_BYTES} bytes`)
-  }
-
   let atlas: Buffer
+  let descriptor: number | null = null
 
   try {
-    atlas = fs.readFileSync(atlasPath)
+    descriptor = fs.openSync(atlasPath, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0))
+    const opened = fs.fstatSync(descriptor)
+
+    if (!opened.isFile()) {
+      return reject('pet.json and atlas.png must be regular files')
+    }
+
+    if (opened.size > MAX_PNG_BYTES) {
+      return reject(`atlas.png exceeds ${MAX_PNG_BYTES} bytes`)
+    }
+    atlas = fs.readFileSync(descriptor)
   } catch {
     return reject('atlas.png is unreadable')
+  } finally {
+    if (descriptor !== null) {
+      fs.closeSync(descriptor)
+    }
   }
 
   const size = readPngSize(atlas)
@@ -298,7 +345,25 @@ export function validateLocalPet(dir: string, folderName: string): LocalPet | Lo
     return reject('pet frames do not fit atlas.png')
   }
 
-  return { ...manifest, atlasPath }
+  return { pet: { ...manifest, atlasPath }, atlas }
+}
+
+export function validateLocalPet(dir: string, folderName: string): LocalPet | LocalPetRejected {
+  const result = inspectLocalPet(dir, folderName)
+
+  return 'reason' in result ? result : result.pet
+}
+
+// The IPC response uses the exact bytes that passed validation. Opening with
+// O_NOFOLLOW and reading through the descriptor prevents a path replacement
+// after validation from changing the returned atlas.
+export function readLocalPetAtlas(petsDir: string, id: string): Buffer | null {
+  if (typeof id !== 'string' || !ID_PATTERN.test(id)) {
+    return null
+  }
+  const result = inspectLocalPet(path.join(petsDir, id), id)
+
+  return 'reason' in result ? null : result.atlas
 }
 
 // Invalid folders are skipped and reported, never thrown. A missing

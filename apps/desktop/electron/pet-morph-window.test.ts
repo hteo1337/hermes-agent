@@ -8,7 +8,7 @@ const chat = { x: 100, y: 80, width: 1200, height: 800 }
 const pet = { x: 250, y: 180, width: 240, height: 300 }
 const area = { x: 0, y: 0, width: 1920, height: 1040 }
 
-function setup(openThrows = false) {
+function setup(openThrows = false, destroyFails = false) {
   let bounds = { ...chat }
   let visible = true
   let petSized = false
@@ -37,6 +37,15 @@ function setup(openThrows = false) {
     overlay = null
   })
 
+  const destroyOverlay = vi.fn(() => {
+    if (destroyFails) {
+      return false
+    }
+    overlay = null
+
+    return true
+  })
+
   const controller = createPetMorphController({
     getMainWindow: () => win as never,
     getOverlayWindow: () => overlay as never,
@@ -44,9 +53,11 @@ function setup(openThrows = false) {
       if (openThrows) {
         throw new Error('overlay creation failed')
       }
+
       overlay = { isDestroyed: () => false, getBounds: () => pet }
     },
     closeOverlay,
+    destroyOverlay,
     persistChatBounds,
     screen: {
       getAllDisplays: () => [{ workArea: area }],
@@ -70,6 +81,7 @@ function setup(openThrows = false) {
     win,
     persistChatBounds,
     closeOverlay,
+    destroyOverlay,
     bounds: () => bounds,
     visible: () => visible,
     overlay: () => overlay
@@ -85,6 +97,15 @@ test('overlay creation throw restores chat geometry and visibility', async () =>
   assert.equal(state.controller.isActive(), false)
   assert.equal(state.persistChatBounds.mock.calls.length, 1)
   assert.equal(state.closeOverlay.mock.calls.length, 1)
+})
+
+test('chat restore reports failure while overlay teardown is incomplete', async () => {
+  const state = setup(false, true)
+  assert.deepEqual(await state.controller.morphToPet(pet, false), pet)
+  assert.equal(await state.controller.morphToChat(false), null)
+  assert.ok(state.overlay())
+  assert.equal(state.controller.isActive(), true)
+  assert.equal(state.destroyOverlay.mock.calls.length, 1)
 })
 
 test('failed reverse morph keeps overlay and saved chat bounds for retry', async () => {
@@ -104,5 +125,5 @@ test('failed reverse morph keeps overlay and saved chat bounds for retry', async
   assert.deepEqual(state.bounds(), chat)
   assert.equal(state.visible(), true)
   assert.equal(state.controller.isActive(), false)
-  assert.equal(state.closeOverlay.mock.calls.length, 1)
+  assert.equal(state.destroyOverlay.mock.calls.length, 1)
 })

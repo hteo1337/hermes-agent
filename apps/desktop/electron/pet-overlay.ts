@@ -16,6 +16,8 @@
  * rather than trusting a sliver of overlap (#85092).
  */
 
+import type { BrowserWindow } from 'electron'
+
 import { matchingWorkArea } from './window-state'
 
 // Below this, a pet window is too small to be useful — mirrors the floor
@@ -30,6 +32,32 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi))
  * cursor re-enter the sprite, so it stays a solid window (the X11 HUD makes the same call).
  */
 export const petOverlayClickThrough = (platform = process.platform) => platform !== 'linux'
+
+export function destroyPetOverlayWindow(
+  win: BrowserWindow | null,
+  setIntentionalClose: (closing: boolean) => void,
+  log: (error: unknown) => void
+): boolean {
+  if (!win || win.isDestroyed()) {
+    return true
+  }
+
+  setIntentionalClose(true)
+
+  try {
+    win.destroy()
+
+    if (win.isDestroyed()) {
+      return true
+    }
+  } catch (error) {
+    log(error)
+  }
+
+  setIntentionalClose(false)
+
+  return false
+}
 
 // A failed overlay creation may happen after the chat window was hidden. Each
 // native recovery step is independent so one failed setBounds cannot also

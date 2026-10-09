@@ -8,6 +8,7 @@ interface PetMorphDeps {
   getOverlayWindow: () => BrowserWindow | null
   openOverlay: (bounds: Rectangle) => void
   closeOverlay: () => void
+  destroyOverlay: () => boolean
   persistChatBounds: () => void
   screen: Screen
   minimum: { width: number; height: number }
@@ -119,21 +120,25 @@ export function createPetMorphController(deps: PetMorphDeps) {
     return recovered ? to : null
   }
 
-  function finishChatRestore(win: BrowserWindow, to: Rectangle): Rectangle {
+  function finishChatRestore(win: BrowserWindow, to: Rectangle): Rectangle | null {
     try {
       win.setMinimumSize(deps.minimum.width, deps.minimum.height)
     } catch (error) {
       deps.log(`[pet-morph] could not restore chat minimum size: ${error}`)
     }
 
+    try {
+      if (!deps.destroyOverlay()) {
+        return null
+      }
+    } catch (error) {
+      deps.log(`[pet-morph] could not destroy overlay after chat restore: ${error}`)
+
+      return null
+    }
+
     deps.clearPetSized(win)
     savedChatBounds = null
-
-    try {
-      deps.closeOverlay()
-    } catch (error) {
-      deps.log(`[pet-morph] could not close overlay after chat restore: ${error}`)
-    }
 
     try {
       win.focus()

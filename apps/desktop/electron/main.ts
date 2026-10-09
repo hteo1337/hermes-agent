@@ -364,7 +364,7 @@ import {
   writeNvidiaEglMarker
 } from './linux-nvidia-egl-fallback'
 import { createLocalBackendLifecycle, waitForTeardown } from './local-backend-lifecycle'
-import { scanLocalPets } from './local-pets'
+import { readLocalPetAtlas, scanLocalPets } from './local-pets'
 import { resolveIpcFileReadPath, resolveMediaStreamFile, resolvePreviewTargetPath } from './local-read-path'
 import { localSkinProfileKey, readLocalSkinPayload } from './local-skin'
 import { ACTIVE_LOG_POLL_MS, planLogRotation, reclaimActiveLogIfOversized } from './log-rotation'
@@ -429,7 +429,7 @@ import { listWindowsProcesses, reapPackageRootedProcesses } from './package-proc
 import { createParentStartMarkerResolver, parentWatchdogEnv } from './parent-process-identity'
 import { bundledPayload, installIdForRoot, type PayloadInfo, payloadPythonPath } from './payload-backend'
 import { createPetMorphController } from './pet-morph-window'
-import { petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
+import { destroyPetOverlayWindow, petOverlayClickThrough, shouldPopInOnOverlayClosed } from './pet-overlay'
 import { placePetOverlay, registerPetOverlayIpc } from './pet-overlay-ipc'
 import {
   buildRegistryProfileRoutes,
@@ -14211,6 +14211,14 @@ const petMorph = createPetMorphController({
   getOverlayWindow: () => petOverlayWindow,
   openOverlay: openPetOverlay,
   closeOverlay: closePetOverlay,
+  destroyOverlay: () =>
+    destroyPetOverlayWindow(
+      petOverlayWindow,
+      closing => {
+        petOverlayClosing = closing
+      },
+      error => rememberLog(`[pet-morph] could not destroy restored overlay: ${error}`)
+    ),
   persistChatBounds: persistWindowState,
   screen,
   minimum: { width: WINDOW_MIN_WIDTH, height: WINDOW_MIN_HEIGHT },
@@ -15838,14 +15846,7 @@ ipcMain.handle('hermes:local-pets:list', async () => {
 })
 
 ipcMain.handle('hermes:local-pets:atlas', async (_event, id: string) => {
-  const { pets } = scanLocalPets(localPetsDir())
-  const pet = pets.find(p => p.id === id)
-
-  if (!pet) {
-    return null
-  }
-
-  return fs.readFileSync(pet.atlasPath).toString('base64')
+  return readLocalPetAtlas(localPetsDir(), id)?.toString('base64') ?? null
 })
 
 // --- HUD mode (chrome-free floating chat) — see hud-ipc.ts. ---------------
