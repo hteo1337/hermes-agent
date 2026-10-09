@@ -59,10 +59,10 @@ const channelRequest = channelBuildRequest()
 /** @typedef {import("app-builder-lib").Configuration} Configuration */
 
 // No default repository: an empty brand.updateRepository ships without a GitHub update feed.
-const updateRepository = process.env.GITHUB_REPOSITORY || brand.updateRepository
+const updateRepository = brand.updateRepository
 const [owner, repo] = updateRepository ? updateRepository.split('/') : []
 if (updateRepository && (!owner || !repo)) {
-  throw new Error(`invalid GITHUB_REPOSITORY ${updateRepository}`)
+  throw new Error(`invalid updateRepository ${updateRepository}`)
 }
 const electronVersion = require('./package.json').devDependencies.electron
 if (!/^\d+\.\d+\.\d+$/.test(electronVersion)) {
@@ -70,7 +70,10 @@ if (!/^\d+\.\d+\.\d+$/.test(electronVersion)) {
 }
 
 const macFeed = channelRequest ? null : feedContract.darwinFeed(channel === 'canary' || channel === 'light-canary' ? 'canary' : 'stable', light)
-const publicUrl = feedContract.feedBaseUrl(process.env.CLOUDFLARE_R2_PUBLIC_URL)
+const publicUrl = feedContract.feedBaseUrl(brand.endpoints.updateFeedUrl)
+if (channelRequest && (channelRequest.repository !== updateRepository || channelRequest.publicBase !== publicUrl)) {
+  throw new Error('Channel request does not match brand update repository and feed')
+}
 
 /** @satisfies {Configuration} */
 module.exports = {
@@ -89,20 +92,11 @@ module.exports = {
   // the release pipeline can keep the two apart.
   artifactName: `${store ? 'Store-' : ''}${artifactNamePascal}-\${version}-\${os}-\${arch}.\${ext}`,
   icon: 'assets/icon',
-  // The electron-updater feed. CI builds set CLOUDFLARE_R2_PUBLIC_URL (the R2
-  // public bucket / custom domain) and publish there — the feed yml, blockmaps
-  // and installers all live in the same flat R2 bucket, and electron-updater
-  // resolves the yml's relative artifact paths against it. Builds without the
-  // var (local, or a fork without the R2 vars) keep the github provider, which
-  // is exactly today's behavior. The store build has no feed at all (the Store
-  // owns its distribution and updates).
-  publish: channelRequest || !channel || (!publicUrl && !repo)
+  // A branded generic feed publishes update metadata and artifacts together.
+  // Empty configuration leaves update distribution outside the app.
+  publish: channelRequest || !channel || !publicUrl
     ? null
-    : [
-        publicUrl
-          ? { provider: 'generic', url: publicUrl, channel }
-          : { provider: 'github', owner, repo, channel }
-      ],
+    : [{ provider: 'generic', url: publicUrl, channel }],
   extraMetadata: {
     name: appNamePascal,
     // Electron bootstrap reads package.productName before main.ts. Keep the
@@ -128,6 +122,8 @@ module.exports = {
   afterPack: 'scripts/after-pack.mjs',
   ...(process.platform === 'darwin' ? { afterSign: 'scripts/notarize.mjs' } : {}),
   extraResources: [
+    { from: '../../scripts/install.sh', to: 'agent-payload/scripts/install.sh' },
+    { from: '../../scripts/install.ps1', to: 'agent-payload/scripts/install.ps1' },
     {
       from: 'build/install-stamp.json',
       to: 'install-stamp.json'

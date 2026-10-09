@@ -12,9 +12,11 @@
  * Plugin dialog, which still requires the user's explicit confirmation.
  */
 
-export const CATALOG_ORIGIN = 'https://hermes-agent.nousresearch.com'
-export const CATALOG_PICKER_URL = `${CATALOG_ORIGIN}/docs/plugins?embed=picker`
-export const PLUGIN_CATALOG_URL = `${CATALOG_ORIGIN}/docs/api/plugins.json`
+import { ENDPOINTS, endpointUrl } from '../../endpoints'
+
+export const CATALOG_ORIGIN = ENDPOINTS.docsUrl ? new URL(ENDPOINTS.docsUrl).origin : ''
+export const CATALOG_PICKER_URL = endpointUrl(ENDPOINTS.docsUrl, '/plugins?embed=picker')
+export const PLUGIN_CATALOG_URL = endpointUrl(ENDPOINTS.docsUrl, '/api/plugins.json')
 
 /** Catalog names are directory names under `plugin-catalog/`; anything else is not a lookup key. */
 export const PLUGIN_CATALOG_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/
@@ -68,6 +70,10 @@ export async function lookupPluginCatalogEntry(
 
   if (!PLUGIN_CATALOG_NAME_RE.test(trimmed)) {
     return { ok: false, error: 'invalid_name' }
+  }
+
+  if (!PLUGIN_CATALOG_URL) {
+    return { ok: false, error: 'unavailable' }
   }
 
   let rows: unknown

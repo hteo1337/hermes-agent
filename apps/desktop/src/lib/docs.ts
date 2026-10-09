@@ -1,4 +1,4 @@
-import { BRAND } from '@/brand'
+import { ENDPOINTS } from '../../endpoints'
 
 /**
  * docs.ts — canonical docs-site links used by the renderer's recovery and
@@ -6,4 +6,4 @@ import { BRAND } from '@/brand'
  * (bundled installs with a damaged payload) and any future doc links point
  * at the same place.
  */
-export const DESKTOP_DOCS_URL: string = BRAND.docsUrl
+export const DESKTOP_DOCS_URL: string = ENDPOINTS.docsUrl

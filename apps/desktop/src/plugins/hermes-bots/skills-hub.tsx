@@ -6,30 +6,21 @@
  * it reaches back into neither.
  */
 
-import { Button, Codicon, host, Input, useI18n } from '@hermes/plugin-sdk'
+import { Button, Codicon, ENDPOINTS, host, Input, useI18n } from '@hermes/plugin-sdk'
 import { useEffect, useRef, useState } from 'react'
 
 import { useBots } from './i18n'
 import { requestForBot } from './routing'
 import type { RosterRow } from './types'
 
-// ── skills hub section: the REAL hub page (docs) embedded as a picker ──────
-// https://hermes-agent.nousresearch.com/docs/skills?embed=picker hides the
-// docs chrome and adds "+ Add to this Agent" per card, posting
-// {type: 'hermes-skill-pick', ...} to us (hermes-agent#86243). We validate
-// the origin, install via skills.manage, and bubble onInstalled so the
-// checklist above gains the row. Search-box fallback kept for offline use.
+// The configured picker posts skill selections to this frame; verify its origin.
+// Search remains available when browsing is closed.
 
-const HUB_ORIGIN = 'https://hermes-agent.nousresearch.com'
-const FALLBACK_HUB_ORIGIN = 'https://nousresearch.github.io'
-const HUB_PICKER_URL = HUB_ORIGIN + '/docs/skills?embed=picker'
-const FALLBACK_HUB_PICKER_URL = FALLBACK_HUB_ORIGIN + '/hermes-agent/docs/skills?embed=picker'
-// A WAF-blocked or unreachable docs host must not delay the fallback longer
-// than this — the probe only decides which origin to embed, never blocks it.
-const HUB_PROBE_TIMEOUT_MS = 8_000
+const HUB_ORIGIN = ENDPOINTS.hubUrl ? new URL(ENDPOINTS.hubUrl).origin : ''
+const HUB_PICKER_URL = ENDPOINTS.hubUrl
 
 function isHubOrigin(origin: string) {
-  return origin === HUB_ORIGIN || origin === FALLBACK_HUB_ORIGIN
+  return Boolean(HUB_ORIGIN) && origin === HUB_ORIGIN
 }
 
 /** One `skills.manage action=search` hit. */
@@ -53,42 +44,8 @@ export function HubSkillsSection({ bot, onInstalled }: HubSkillsSectionProps) {
   const [installing, setInstalling] = useState<null | string>(null)
   const [installed, setInstalled] = useState<Record<string, boolean>>({})
   const [browseHub, setBrowseHub] = useState(false)
-  const [hubPickerUrl, setHubPickerUrl] = useState(HUB_PICKER_URL)
   const installRef = useRef<((name: string, displayName?: string) => Promise<void>) | null>(null)
   const frameRef = useRef<HTMLIFrameElement | null>(null)
-
-  // Vercel's WAF denies some residential IP ranges for the whole docs domain,
-  // leaving the pane on a block page (#118203). The equivalent GitHub Pages
-  // deployment serves the same picker, so probe the primary before each
-  // browse session and fall back when it is unreachable or refuses us. The
-  // probe carries its own deadline — a hanging connection must not stall the
-  // fallback.
-  useEffect(() => {
-    if (!browseHub) {
-      return undefined
-    }
-
-    let mounted = true
-
-    void fetch(HUB_PICKER_URL, {
-      method: 'HEAD',
-      signal: AbortSignal.timeout(HUB_PROBE_TIMEOUT_MS)
-    })
-      .then(response => {
-        if (mounted && !response.ok) {
-          setHubPickerUrl(FALLBACK_HUB_PICKER_URL)
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setHubPickerUrl(FALLBACK_HUB_PICKER_URL)
-        }
-      })
-
-    return () => {
-      mounted = false
-    }
-  }, [browseHub])
 
   // Picker messages from the embedded hub page. Origin- AND source-checked —
   // only OUR frame may ask for an install (the hub origin alone would let any
@@ -197,6 +154,10 @@ export function HubSkillsSection({ bot, onInstalled }: HubSkillsSectionProps) {
 
   installRef.current = install
 
+  if (!ENDPOINTS.hubUrl) {
+    return null
+  }
+
   return (
     <div className="grid gap-1.5 border-t border-(--ui-stroke-secondary) pt-2">
       <div className="flex items-baseline justify-between gap-2">
@@ -239,7 +200,7 @@ export function HubSkillsSection({ bot, onInstalled }: HubSkillsSectionProps) {
               allow="clipboard-write"
               ref={frameRef}
               sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-              src={hubPickerUrl}
+              src={HUB_PICKER_URL}
               style={{
                 width: '133.34%',
                 height: '133.34%',

@@ -23,13 +23,11 @@ interface CookieWindowOptions {
 
 type CookieWindowOutcome = 'landed' | 'closed' | 'timeout' | Error
 
-// Canonical Nous portal base URL, overridable for staging/dev. Mirrors the CLI
-// convention (hermes_cli/auth.py DEFAULT_NOUS_PORTAL_URL + the same env names)
-// so a single override flips every Hermes surface to the same portal.
-const DEFAULT_NOUS_PORTAL_URL = 'https://portal.nousresearch.com'
+// The brand owns the optional portal; an empty value disables portal access.
+import { ENDPOINTS } from '../endpoints'
 
 export function resolvePortalBaseUrl() {
-  const raw = process.env.HERMES_PORTAL_BASE_URL || process.env.NOUS_PORTAL_BASE_URL || DEFAULT_NOUS_PORTAL_URL
+  const raw = ENDPOINTS.portal
 
   return String(raw).trim().replace(/\/+$/, '')
 }
@@ -50,7 +48,7 @@ export function createPortalSession({
   async function readPortalCookies() {
     const sess = getOauthSession()
 
-    if (!sess) {
+    if (!sess || !resolvePortalBaseUrl()) {
       return []
     }
 
@@ -258,6 +256,10 @@ export function createPortalSession({
   // cascade. Resolves once a new access cookie appears; refresh material alone
   // must not close the window before the portal can replace it.
   async function openPortalLoginWindow(): Promise<void> {
+    if (!resolvePortalBaseUrl()) {
+      throw new Error('Portal is not configured.')
+    }
+
     if (!isReady()) {
       throw new Error('Desktop is not ready to start a Hermes Cloud sign-in.')
     }

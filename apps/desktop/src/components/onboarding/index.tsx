@@ -39,6 +39,8 @@ import {
 import { $onboardingSurfaces, onboardingSurfaceActive } from '@/store/onboarding-presence'
 import type { OAuthProvider } from '@/types/hermes'
 
+import { ENDPOINTS } from '../../../endpoints'
+
 import { DocsLink, FlowPanel, Status } from './flow'
 import { FreeTierSetupNotice } from './free-tier-setup-notice'
 import { DecodedLabel } from './glyph'
@@ -119,7 +121,7 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
     id: 'local',
     name: 'Local / custom endpoint',
     envKey: 'OPENAI_BASE_URL',
-    docsUrl: 'https://github.com/NousResearch/hermes-agent#bring-your-own-endpoint',
+    docsUrl: ENDPOINTS.docsUrl,
     placeholder: 'http://127.0.0.1:8000/v1'
   }
 ]

@@ -4,6 +4,8 @@ import { distributionLabelKey } from '@/lib/distribution-label'
 import { ExternalLink } from '@/lib/external-link'
 import { shortVersion } from '@/lib/version-label'
 
+import { UPDATE_REPOSITORY } from '../../endpoints'
+
 /**
  * Human label for an external build's runtime source: the resolution rung
  * plus the location it resolved from, when there is one.
@@ -64,13 +66,13 @@ export function VersionDetails({ version }: { version: DesktopVersionInfo }) {
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">{u.versionDetailsCommit}</dt>
           <dd className="break-all text-right">
-            <ExternalLink
-              className="break-all font-mono text-xs"
-              href={`https://github.com/NousResearch/hermes-agent/commit/${version.commit}`}
-              native
-            >
-              {version.commit.slice(0, 14)}
-            </ExternalLink>
+            {UPDATE_REPOSITORY ? (
+              <ExternalLink className="break-all font-mono text-xs" href={`https://github.com/${UPDATE_REPOSITORY}/commit/${version.commit}`} native>
+                {version.commit.slice(0, 14)}
+              </ExternalLink>
+            ) : (
+              <span className="font-mono text-xs">{version.commit.slice(0, 14)}</span>
+            )}
             {version.dirty && <span className="text-warning"> {u.versionDetailsUncommittedChanges}</span>}
           </dd>
         </div>

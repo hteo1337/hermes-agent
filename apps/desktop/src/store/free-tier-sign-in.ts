@@ -5,6 +5,8 @@ import { cancelOAuthSession, listOAuthProviders, pollOAuthSession, startOAuthLog
 import { gatewayActivationEpoch } from '@/store/gateway'
 import type { FreeTierStatus } from '@/types/hermes'
 
+import { ENDPOINTS } from '../../endpoints'
+
 import { $freeTierStatus, type FreeTierRequester, NOUS_PROVIDER_ID, refreshFreeTierStatus } from './free-tier'
 import { guidedOnboardingActive } from './onboarding-gate'
 import { onboardingSurfaceActive } from './onboarding-presence'
@@ -117,6 +119,10 @@ const fail = (kind: FreeTierSignInFailure, message: null | string = null, retryA
  *  gateway requester and drives the flow. Re-entrant by design: a second click
  *  while a sign-in is already on screen must not restart it. */
 export function openFreeTierSignIn() {
+  if (!ENDPOINTS.portal) {
+    return
+  }
+
   if ($freeTierSignIn.get().status === 'closed') {
     set({ status: 'requested' })
   }
@@ -191,6 +197,10 @@ const offerBlocked = () =>
   offerClaiming || guidedOnboardingActive() || onboardingSurfaceActive() || $freeTierSignIn.get().status !== 'closed'
 
 async function claimFreeTierOffer(requestGateway: FreeTierRequester) {
+  if (!ENDPOINTS.portal) {
+    return
+  }
+
   if (offerBlocked()) {
     return
   }
@@ -285,6 +295,10 @@ async function openSignInUrl(url: string) {
  * first.
  */
 export async function beginFreeTierSignIn(requestGateway: FreeTierRequester) {
+  if (!ENDPOINTS.portal) {
+    return
+  }
+
   clearTimers()
   const mine = ++attempt
   const stale = () => mine !== attempt

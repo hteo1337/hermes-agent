@@ -24,8 +24,10 @@ import {
   type UpdateTarget
 } from '@/store/updates'
 
-const RELEASE_NOTES_URL = 'https://github.com/NousResearch/hermes-agent/releases'
-const INSTALLER_URL = 'https://hermes-agent.nousresearch.com/'
+import { ENDPOINTS, UPDATE_REPOSITORY } from '../../endpoints'
+
+const RELEASE_NOTES_URL = UPDATE_REPOSITORY ? `https://github.com/${UPDATE_REPOSITORY}/releases` : ''
+const INSTALLER_URL = ENDPOINTS.docsUrl
 
 export type UpdateStatusTone = 'idle' | 'available' | 'error' | 'unsupported'
 
@@ -205,7 +207,7 @@ export function VersionHero({
                   <RefreshCw className="size-3" />
                   {u.bundleSwapPendingAction}
                 </Button>
-              ) : (
+              ) : INSTALLER_URL ? (
                 <Button asChild className="mt-2" size="sm" variant="textStrong">
                   <a
                     href={INSTALLER_URL}
@@ -220,7 +222,7 @@ export function VersionHero({
                     {u.bundleOutOfSyncAction}
                   </a>
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -327,7 +329,7 @@ export function UpdateStatusCard({
 
           <UpdateActions target={target} u={u} view={view} />
 
-          {showReleaseNotes && (
+          {showReleaseNotes && RELEASE_NOTES_URL && (
             <Button asChild className="ml-auto" size="sm" variant="text">
               <a
                 href={RELEASE_NOTES_URL}

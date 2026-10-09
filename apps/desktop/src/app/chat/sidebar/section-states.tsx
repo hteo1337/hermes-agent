@@ -10,6 +10,8 @@ import { AlertTriangle, ExternalLink } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { $corruptSessionStores } from '@/store/session'
 
+import { ENDPOINTS, endpointUrl } from '../../../../endpoints'
+
 import { SidebarRowCluster, SidebarRowShell, SidebarRowStack } from './chrome'
 
 // Stands in for session rows, so it borrows their chrome instead of copying
@@ -80,8 +82,7 @@ export function SidebarLoadErrorState({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-const SESSION_STORAGE_RECOVERY_URL =
-  'https://hermes-agent.nousresearch.com/docs/user-guide/session-storage-recovery#when-the-three-steps-do-not-work'
+const SESSION_STORAGE_RECOVERY_URL = endpointUrl(ENDPOINTS.docsUrl, '/user-guide/session-storage-recovery#when-the-three-steps-do-not-work')
 
 interface SidebarStorageCorruptNoticeProps {
   openRecoveryGuide?: (url: string) => void
@@ -112,7 +113,7 @@ export function SidebarStorageCorruptNotice({
           <code className="break-all text-[0.7rem]">
             hermes sessions recover --source &lt;state.db&gt; --inspect-only
           </code>
-          <Button
+          {SESSION_STORAGE_RECOVERY_URL && <Button
             className="-ml-1 mt-0.5 text-(--ui-text-secondary)"
             onClick={() => openRecoveryGuide(SESSION_STORAGE_RECOVERY_URL)}
             size="sm"
@@ -120,7 +121,7 @@ export function SidebarStorageCorruptNotice({
           >
             <ExternalLink />
             {copy.guide}
-          </Button>
+          </Button>}
         </AlertDescription>
       </Alert>
     </div>

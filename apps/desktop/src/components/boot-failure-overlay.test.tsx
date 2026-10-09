@@ -313,10 +313,8 @@ describe('BootFailureOverlay', () => {
       // Cloud-specific title + actionable recovery instead of the generic
       // remote-failure copy.
       expect(await screen.findByText(/Nous Cloud agent is down/i)).toBeTruthy()
-      // Portal and Discord are dedicated action buttons (localized labels
-      // can't drift the URLs, which live in code).
-      expect(screen.getByRole('button', { name: /check portal status/i })).toBeTruthy()
-      expect(screen.getByRole('button', { name: /get help on discord/i })).toBeTruthy()
+      expect(screen.queryByRole('button', { name: /check portal status/i })).toBeNull()
+      expect(screen.queryByRole('button', { name: /get help on discord/i })).toBeNull()
       // Cloud-down is a remote failure: local-only Repair is dropped; the
       // actionable paths are Gateway settings + Use local gateway.
       expect(screen.queryByRole('button', { name: /repair/i })).toBeNull()

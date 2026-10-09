@@ -249,7 +249,7 @@ describe('deriveBillingView', () => {
     expect(view.usageRows).toEqual([])
   })
 
-  it('signs in from the logged-out notice through the shared sign-in dialog, not a portal link', () => {
+  it('does not start portal sign-in when the portal is unconfigured', () => {
     // A plain portal link never writes a credential, so the page would stay logged out forever
     // (#87792). The action must open the one Nous sign-in dialog (device-code + poll).
     $freeTierSignIn.set({ status: 'closed' })
@@ -257,7 +257,7 @@ describe('deriveBillingView', () => {
 
     expect(view.notice?.action?.url).toBeUndefined()
     view.notice?.action?.onSelect?.()
-    expect($freeTierSignIn.get()).toEqual({ status: 'requested' })
+    expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
     $freeTierSignIn.set({ status: 'closed' })
   })
 
@@ -812,12 +812,8 @@ describe('buildManageSubscriptionUrl', () => {
     ).toBe('https://portal.nousresearch.com/manage-subscription?org_id=org_123&plan=tier_abc')
   })
 
-  it('applies org_id + plan to the hard-coded portal fallback when no portal_url resolves', () => {
-    // Regression: the fallback must be the last-resort ORIGIN, not a bare return that
-    // silently drops org_id/plan.
-    expect(buildManageSubscriptionUrl({ org_id: 'org_z', portal_url: null }, null, 'tier_q')).toBe(
-      'https://portal.nousresearch.com/manage-subscription?org_id=org_z&plan=tier_q'
-    )
+  it('has no portal fallback when no portal URL resolves', () => {
+    expect(buildManageSubscriptionUrl({ org_id: 'org_z', portal_url: null }, null, 'tier_q')).toBe('')
   })
 })
 

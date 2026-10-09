@@ -38,6 +38,7 @@ export interface WindowOpenDecision {
 /** How the handler learns the requesting frame's origin (dependency-injected
  *  so the policy unit-tests without Electron). */
 export interface TrustedWindowOpenOptions {
+  hubUrl?: string
   /** Origin of the frame that called window.open (Electron 40: the focused
    *  frame at the time of the open request). */
   getOpenerOrigin: (details: WindowOpenRequestLike) => string | null | undefined
@@ -74,7 +75,7 @@ export function createWindowOpenHandler(
   return details => {
     const openerOrigin = trusted ? safeOpenerOrigin(trusted, details) : null
 
-    if (trusted && isHermesHubOrigin(openerOrigin) && isHermesHubExternalUrl(details.url)) {
+    if (trusted && isHermesHubOrigin(openerOrigin, trusted.hubUrl) && isHermesHubExternalUrl(details.url)) {
       try {
         trusted.openExternalUrl(details.url)
       } catch {

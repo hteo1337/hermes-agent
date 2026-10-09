@@ -1,0 +1,7 @@
+{
+  "src/app/settings/billing/dev-fixtures.ts": 4,
+  "src/store/model-visibility.ts": 1,
+  "electron/backend-health.ts": 3,
+  "electron/remote-lifecycle.ts": 1,
+  "scripts/run-short-session-hang-repro.mjs": 1
+}

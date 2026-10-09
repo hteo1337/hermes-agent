@@ -825,7 +825,7 @@ export const PluginsTab = memo(function PluginsTab({
         )}
       </div>
 
-      <section
+      {CATALOG_PICKER_URL && <section
         className="relative flex min-h-9 flex-col overflow-hidden border-t border-(--ui-stroke-secondary)"
         ref={sectionRef}
       >
@@ -883,7 +883,7 @@ export const PluginsTab = memo(function PluginsTab({
             <p className="shrink-0 px-1 text-[0.65rem] leading-4 text-(--ui-text-quaternary)">{p.catalogHint}</p>
           </div>
         )}
-      </section>
+      </section>}
     </div>
   )
 })

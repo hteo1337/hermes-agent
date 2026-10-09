@@ -34,6 +34,8 @@ import {
 } from 'electron'
 import type { Session } from 'electron'
 
+import { ENDPOINTS, UPDATE_REPOSITORY } from '../endpoints'
+
 import { type ActiveRuntimeState, classifyActiveRuntime } from './active-runtime-state'
 import { HERMES_API_EXPECTED_404 } from './api-expected-404'
 import {
@@ -322,7 +324,7 @@ import {
 import { assertNoSecondLocalBackend, assertNotPassiveSpawn } from './host-backend-singleton'
 import { lookupPublishedSessionToken } from './host-published-token'
 import { claimHostSpawnGate } from './host-spawn-gate'
-import { HERMES_HUB_FALLBACK_ORIGIN, HERMES_HUB_ORIGIN, isHermesHubClipboardWrite } from './hub-iframe-policy'
+import { isHermesHubClipboardWrite, isHermesHubOrigin } from './hub-iframe-policy'
 import { requestHudClose } from './hud-close'
 import { cursorPointInWindow } from './hud-cursor'
 import { startHudGameOverlayWatch } from './hud-game-overlay'
@@ -458,7 +460,6 @@ import {
   parseKeepAwakeMode,
   readKeepAwakeMode
 } from './power-save'
-import { readPreUpdateBackupEnabled } from './pre-update-backup-config'
 import { capturePreviewContents } from './preview-capture'
 import { onPreviewWatchOwnerDestroyed, sendPreviewFileChangedToOwner } from './preview-file-watch'
 import { hasClosePreviewFlag, previewGuestInputAction } from './preview-guest-escape'
@@ -631,8 +632,6 @@ import {
 } from './updater'
 import {
   observeUpdaterHandoff,
-  repairMacUpdaterHelper,
-  resolveInstallationLauncher,
   resolveStagedUpdaterBinary,
   resolveVenvDir,
   spawnUpdaterProcess,
@@ -645,10 +644,8 @@ import { ChannelResolver, type ChannelTarget } from './updater/channel'
 import { inspectRunningChannelApp } from './updater/channel-native'
 import { ChannelStrategy } from './updater/channel-strategy'
 import { verifyPreparedChannelInstaller } from './updater/channel-windows-host'
-import { createCheckoutStrategy } from './updater/checkout'
-import { readSourceUpdate, type SourceUpdate } from './updater/checkout-source'
 import { ExternalStrategy } from './updater/external'
-import { readUpdatesFeedBaseFromConfig, resolveFeedBaseUrl } from './updater/feed-config'
+import { noFeedStatus, resolveFeedBaseUrl } from './updater/feed-config'
 import { createChannelMacStrategy, createMacStrategy } from './updater/mac-client'
 import { UpdateOperation } from './updater/operation'
 import {
@@ -658,7 +655,6 @@ import {
   type RelaunchRegistration
 } from './updater/relaunch'
 import { startUpdateRelaunchWaiter } from './updater/relaunch-waiter'
-import { preflightStateDb } from './updater/state-db-preflight'
 import { createStoreStrategy } from './updater/store-client'
 import { isExternalVenvHolder, isHermesOwnedVenvDaemon } from './venv-holder-select'
 import { fetchMarketplaceThemes, searchMarketplaceThemes } from './vscode-marketplace'
@@ -3706,6 +3702,12 @@ function emitUpdateProgress(payload) {
 }
 
 async function checkUpdates(opts: { force?: boolean } = {}): Promise<UpdaterStatusWire> {
+  const disabled = noFeedStatus(ENDPOINTS.updateFeedUrl)
+
+  if (disabled) {
+    return { ...disabled, fetchedAt: Date.now() }
+  }
+
   // A packaged install delegates to the update owner named by its stamp.
   let strategy: UpdaterStrategy | null = null
 
@@ -3725,10 +3727,13 @@ async function checkUpdates(opts: { force?: boolean } = {}): Promise<UpdaterStat
     }
   }
 
-  // Checkout install: dispatch through the strategy layer — one mechanism,
-  // one stamp, no direct body path. The flow lives in updater/checkout.ts;
-  // this is the only production door to the checkout arms.
-  return resolveCheckoutUpdateStrategy().check(opts)
+  // Checkout updates belong to the runtime's separate source-update policy.
+  return {
+    supported: false,
+    reason: 'source-updates-external',
+    message: 'Source checkout updates are managed outside the app',
+    fetchedAt: Date.now()
+  }
 }
 
 let updateInFlight = false
@@ -3760,6 +3765,11 @@ async function createPackagedUpdateStrategy(): Promise<UpdaterStrategy | null> {
 
   if (INSTALL_STAMP?.channelBuild && (mechanism === 'electron-updater' || mechanism === 'app-installer')) {
     const build = INSTALL_STAMP.channelBuild
+
+    if (build.publicBase !== resolveDesktopFeedBaseUrl() || build.repository !== UPDATE_REPOSITORY) {
+      throw new Error('Packaged update channel does not match the configured feed and repository')
+    }
+
     const installed = await inspectRunningChannelApp(build)
 
     // Platform/arch/signing are the channel's own preconditions. The Python
@@ -3898,93 +3908,10 @@ function requireBundledPayload(mechanism: UpdaterStrategy['mechanism']): Payload
 }
 
 /**
- * The checkout updater strategy (windows-handoff / posix-handoff). The flow
- * lives in updater/checkout.ts; this is the composition root that hands it
- * the app shell's impure edges. The public checkUpdates/applyUpdates
- * entrypoints dispatch only through this strategy — there is no other
- * production path to the checkout arms.
- */
-function resolveCheckoutUpdateStrategy(): UpdaterStrategy {
-  return createCheckoutStrategy({
-    hermesHome: HERMES_HOME,
-    isWindows: IS_WINDOWS,
-    isMac: IS_MAC,
-    defaultUpdateBranch: DEFAULT_UPDATE_BRANCH,
-    updateHandoffDwellMs: UPDATE_HANDOFF_DWELL_MS,
-    readSourceUpdate: async (updateRoot: string, opts: { force?: boolean }): Promise<SourceUpdate | null> =>
-      readSourceUpdate({
-        python: await findPythonForRoot(updateRoot),
-        git: resolveGitBinary(),
-        updateRoot,
-        hermesHome: HERMES_HOME,
-        branchConfigPath: DESKTOP_UPDATE_CONFIG_PATH,
-        force: opts.force
-      }),
-    resolveUpdateRoot,
-    resolveUpdaterBinary,
-    remoteGatewayActive: globalRemoteActive,
-
-    emitUpdateProgress,
-    rememberLog,
-    startHermes,
-    stopBackendsForUpdate,
-    repairMacUpdaterHelper: updater => repairMacUpdaterHelper(updater, { isMac: IS_MAC, log: rememberLog }),
-    preflightStateDb: async (home: string, log: (message: string) => void): Promise<void> => {
-      const root: string = resolveUpdateRoot()
-
-      // `updates.pre_update_backup: off` is the CLI's opt-out for the whole
-      // pre-update backup family; the Desktop's emergency snapshot honours it
-      // too (4de06d1dbf7b). An unreadable answer keeps the snapshot.
-      if (
-        !(await readPreUpdateBackupEnabled(
-          resolveHermesBackend(['config', 'get', 'updates.pre_update_backup', '--json']),
-          home
-        ))
-      ) {
-        log('[updates] emergency state.db backup disabled by updates.pre_update_backup')
-
-        return
-      }
-
-      // PM-managed checkouts carry no venv of their own: the installation
-      // launcher owns interpreter and generation selection there — same
-      // contract as readSourceUpdate and the hand-off script.
-      const managed: boolean = directoryExists(path.join(root, 'pm'))
-
-      const launcher: string | null = managed ? resolveInstallationLauncher(root, IS_WINDOWS, HERMES_HOME) : null
-
-      if (managed && !launcher) {
-        const message =
-          `state.db pre-flight failed: the installation launcher under ${root} is missing. ` +
-          'Update cancelled before backend shutdown. Repair this installation before retrying.'
-
-        log(`[updates] ${message}`)
-        throw new Error(message)
-      }
-
-      preflightStateDb({
-        python: managed ? null : await findPythonForRoot(root),
-        launcher,
-        script: path.join(root, 'hermes_cli', 'backup_sqlite.py'),
-        home,
-        log
-      })
-    },
-    runningAppBundle,
-    markQuittingForHandoff: () => {
-      isQuittingForHandoff = true
-    },
-    quit: () => app.quit()
-  })
-}
-
-/**
- * The App Installer feed base URL for a bundled MSIX install: config.yaml's
- * `updates.desktop_feed_base_url`, else Windows' registered App Installer
- * source.
+ * The desktop feed is the branded generic source, or empty.
  */
 function resolveDesktopFeedBaseUrl(): string {
-  return resolveFeedBaseUrl(readUpdatesFeedBaseFromConfig(path.join(HERMES_HOME, 'config.yaml')))
+  return resolveFeedBaseUrl(ENDPOINTS.updateFeedUrl)
 }
 
 /** The updater channel from the baked install stamp ('canary' vs 'stable'). */
@@ -4743,6 +4670,10 @@ async function releaseBackendLock(updateRoot: string, tag: string): Promise<{ un
 // Detection (checkUpdates / commit changelog / "N behind") stays in the UI;
 // only this apply action changed.
 async function applyUpdates(): Promise<UpdaterApplyResultWire> {
+  if (noFeedStatus(ENDPOINTS.updateFeedUrl)) {
+    return { ok: false, error: 'no-update-feed', message: 'Updates are managed outside the app' }
+  }
+
   return updateOperation.apply(async (): Promise<UpdaterApplyResultWire> => {
     updateInFlight = true
     let handedOff: boolean = false
@@ -4763,7 +4694,12 @@ async function applyUpdates(): Promise<UpdaterApplyResultWire> {
       }
 
       const packaged: UpdaterStrategy | null = await resolvePackagedUpdateStrategy()
-      const strategy: UpdaterStrategy = packaged ?? resolveCheckoutUpdateStrategy()
+
+      if (!packaged) {
+        return { ok: false, error: 'source-updates-external', message: 'Source checkout updates are managed outside the app' }
+      }
+
+      const strategy: UpdaterStrategy = packaged
       const result: UpdaterApplyResultWire = await desktopMetrics.trackUpdateApply(packaged, strategy)
       handedOff = result.handedOff === true
 
@@ -4886,21 +4822,7 @@ async function handOffWindowsBootstrapRecovery(reason) {
   return true
 }
 
-// The running app's .app bundle (packaged macOS): execPath is
-// <App>.app/Contents/MacOS/<exe>; climb three levels to the bundle root.
-function runningAppBundle() {
-  if (!IS_MAC) {
-    return null
-  }
 
-  let dir = path.dirname(app.getPath('exe')) // .../Contents/MacOS
-
-  for (let i = 0; i < 2; i++) {
-    dir = path.dirname(dir)
-  } // -> .../X.app
-
-  return dir.endsWith('.app') ? dir : null
-}
 
 // macOS/Linux update hand-off: spawn the repo-owned posix orchestrator
 // (scripts/desktop-update/posix.sh) detached and QUIT. The script waits us
@@ -7216,10 +7138,9 @@ function focusedFrameOrigin(
 function isHermesHubPickerUrl(url: string): boolean {
   try {
     const parsed = new URL(url)
-    const isHubOrigin = parsed.origin === HERMES_HUB_ORIGIN || parsed.origin === HERMES_HUB_FALLBACK_ORIGIN
-    const isPickerPath = parsed.pathname === '/hermes-agent/docs/skills' || parsed.pathname === '/docs/skills'
+    const configured = new URL(ENDPOINTS.hubUrl)
 
-    return isHubOrigin && isPickerPath
+    return isHermesHubOrigin(parsed.origin) && parsed.pathname === configured.pathname
   } catch {
     return false
   }
@@ -8153,6 +8074,10 @@ const { hasLivePortalSession, hasPortalAccessToken, renewPortalAccessSilently, o
 // portal session is present.
 async function discoverCloudAgents(org?: string) {
   const portalBaseUrl = resolvePortalBaseUrl()
+
+  if (!portalBaseUrl) {
+    throw new Error('Portal is not configured.')
+  }
 
   if (!(await hasLivePortalSession())) {
     const err = new Error(
@@ -13561,7 +13486,7 @@ function wireCommonWindowHandlers(win, { zoom = true }: { zoom?: boolean } = {})
     const frame = findFrameByIdentifier(win.webContents, frameProcessId, frameRoutingId)
     const frameOrigin = safeFrameOrigin(frame)
 
-    if (frameOrigin !== HERMES_HUB_ORIGIN && frameOrigin !== HERMES_HUB_FALLBACK_ORIGIN) {
+    if (!isHermesHubOrigin(frameOrigin)) {
       return
     }
 
@@ -16932,7 +16857,7 @@ ipcMain.handle('hermes:connection-config:oauth-logout', async (_event, rawUrl) =
 // per-agent cascade. See the discovery/cascade helpers above.
 ipcMain.handle('hermes:cloud:status', async () => ({
   portalBaseUrl: resolvePortalBaseUrl(),
-  signedIn: await hasLivePortalSession()
+  signedIn: Boolean(ENDPOINTS.portal) && await hasLivePortalSession()
 }))
 ipcMain.handle('hermes:cloud:login', async () => {
   await openPortalLoginWindow()
@@ -16940,7 +16865,9 @@ ipcMain.handle('hermes:cloud:login', async () => {
   return { ok: true, signedIn: await hasLivePortalSession() }
 })
 ipcMain.handle('hermes:cloud:logout', async () => {
-  await clearOauthSession(resolvePortalBaseUrl())
+  if (ENDPOINTS.portal) {
+    await clearOauthSession(resolvePortalBaseUrl())
+  }
 
   return { ok: true, signedIn: await hasLivePortalSession() }
 })

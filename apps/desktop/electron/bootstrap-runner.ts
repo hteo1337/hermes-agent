@@ -34,12 +34,12 @@
 
 import { execFileSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
-import https from 'node:https'
 import path from 'node:path'
 
 // Relative, not `@hermes/shared/ansi`: the electron bundle is built by esbuild
 // with no tsconfig path resolution (see scripts/bundle-electron-main.mjs).
 import { stripAnsi } from '../../shared/src/ansi'
+import { UPDATE_REPOSITORY } from '../endpoints'
 
 import { pathEnvKey, storeFirstPath } from './backend-env'
 import { hiddenWindowsChildOptions } from './windows-child-options'
@@ -48,7 +48,6 @@ const IS_WINDOWS = process.platform === 'win32'
 
 const STAMP_COMMIT_RE = /^[0-9a-f]{7,40}$/i
 const FALLBACK_COMMIT_RE = /^0{7,40}$/
-const FALLBACK_BRANCH = 'main'
 
 function isPinnedCommit(commit) {
   return typeof commit === 'string' && STAMP_COMMIT_RE.test(commit) && !FALLBACK_COMMIT_RE.test(commit)
@@ -135,40 +134,6 @@ function resolveMarkerPinnedCommit(
   return readExistingPinnedCommit(activeRoot)
 }
 
-/**
- * Map an install stamp to the same source identity the installer stages use.
- * Fresh installs use the packaged immutable SHA. Existing checkouts
- * intentionally ignore that old app pin and follow the branch, so the script
- * must follow the branch too or old installer code can drive a newer tree.
- * Non-git fallback stamps also follow the branch (#50823).
- */
-function installRefForStamp(installStamp, { pinCommit = true } = {}) {
-  if (pinCommit && installStamp && isPinnedCommit(installStamp.commit)) {
-    return {
-      ref: installStamp.commit,
-      cacheKey: installStamp.commit,
-      pinned: true
-    }
-  }
-
-  const validStamp =
-    installStamp &&
-    typeof installStamp.commit === 'string' &&
-    (isPinnedCommit(installStamp.commit) || FALLBACK_COMMIT_RE.test(installStamp.commit))
-
-  if (validStamp) {
-    const ref = installStamp.branch || FALLBACK_BRANCH
-
-    return {
-      ref,
-      cacheKey: `branch-${String(ref).replace(/[^0-9A-Za-z._-]/g, '_')}`,
-      pinned: false
-    }
-  }
-
-  return null
-}
-
 // Stages flagged needs_user_input=true in the manifest are skipped by the
 // runner (passed -NonInteractive to install.ps1, which the install script
 // itself handles by emitting skipped=true frames). The renderer / 1E onboarding
@@ -204,10 +169,6 @@ function resolveLocalInstallScript(sourceRepoRoot) {
   }
 }
 
-function bootstrapCacheDir(hermesHome) {
-  return path.join(hermesHome, 'bootstrap-cache')
-}
-
 function hasExistingGitCheckout(activeRoot) {
   if (!activeRoot) {
     return false
@@ -220,103 +181,11 @@ function hasExistingGitCheckout(activeRoot) {
   }
 }
 
-function cachedScriptPath(hermesHome, cacheKey) {
-  return path.join(bootstrapCacheDir(hermesHome), `install-${cacheKey}.${process.platform === 'win32' ? 'ps1' : 'sh'}`)
-}
-
-function downloadInstallScript(ref, destPath) {
-  // Fetch from GitHub raw at the install ref: the packaged SHA for a fresh
-  // install, the branch for an existing checkout or a non-git fallback stamp
-  // (never the all-zero placeholder, which is not a real GitHub commit).
-  const scriptName = installScriptName()
-  const url = `https://raw.githubusercontent.com/NousResearch/hermes-agent/${ref}/scripts/${scriptName}`
-
-  return new Promise((resolve, reject) => {
-    fs.mkdirSync(path.dirname(destPath), { recursive: true })
-    const tmpPath = destPath + '.tmp'
-    const out = fs.createWriteStream(tmpPath)
-    https
-      .get(url, res => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-          // GitHub raw shouldn't redirect for a SHA URL, but follow once
-          // defensively.
-          out.close()
-          fs.unlinkSync(tmpPath)
-          https
-            .get(res.headers.location, res2 => {
-              if (res2.statusCode !== 200) {
-                reject(
-                  new Error(
-                    `Failed to download ${scriptName}: HTTP ${res2.statusCode} from redirect ${res.headers.location}`
-                  )
-                )
-
-                return
-              }
-
-              const out2 = fs.createWriteStream(tmpPath)
-              res2.pipe(out2)
-              out2.on('finish', () => {
-                out2.close()
-                fs.renameSync(tmpPath, destPath)
-                resolve(destPath)
-              })
-              out2.on('error', reject)
-            })
-            .on('error', reject)
-
-          return
-        }
-
-        if (res.statusCode !== 200) {
-          out.close()
-
-          try {
-            fs.unlinkSync(tmpPath)
-          } catch {
-            void 0
-          }
-
-          reject(new Error(`Failed to download ${scriptName}: HTTP ${res.statusCode} from ${url}`))
-
-          return
-        }
-
-        res.pipe(out)
-        out.on('finish', () => {
-          out.close()
-          fs.renameSync(tmpPath, destPath)
-          resolve(destPath)
-        })
-        out.on('error', err => {
-          try {
-            fs.unlinkSync(tmpPath)
-          } catch {
-            void 0
-          }
-
-          reject(err)
-        })
-      })
-      .on('error', err => {
-        try {
-          fs.unlinkSync(tmpPath)
-        } catch {
-          void 0
-        }
-
-        reject(err)
-      })
-  })
-}
-
 async function resolveInstallScript({
   installStamp,
   sourceRepoRoot,
-  hermesHome,
   emit,
-  pinCommit = true,
-  _download = downloadInstallScript
+  resourcesPath = process.resourcesPath
 }) {
   // 1. Dev shortcut: prefer a local checkout's installer so we can iterate
   //    without pushing. SOURCE_REPO_ROOT comes from main.ts (path.resolve
@@ -329,35 +198,15 @@ async function resolveInstallScript({
     return { path: localScript, source: 'local', kind: installScriptKind() }
   }
 
-  // 2. Packaged path: download using the same identity policy as the stages.
-  // Fresh installs use the packaged commit; existing checkouts and non-git
-  // fallback builds follow the branch.
-  const installRef = installRefForStamp(installStamp, { pinCommit })
+  const bundled = path.join(resourcesPath, 'agent-payload', 'scripts', installScriptName())
 
-  if (!installRef) {
-    throw new Error(
-      `Cannot resolve ${installScriptName()}: no SOURCE_REPO_ROOT and no install stamp. ` +
-        'This packaged build was produced without a valid build-time stamp.'
-    )
+  if (!fs.existsSync(bundled)) {
+    throw new Error(`Cannot resolve ${installScriptName()}: bundled installer is missing.`)
   }
 
-  const cached = cachedScriptPath(hermesHome, installRef.cacheKey)
-  const resolvedCommit = installRef.pinned ? installRef.ref : null
+  emit({ type: 'log', line: `[bootstrap] using bundled ${installScriptName()} at ${bundled}` })
 
-  // The cache is only this run's -File target, never a source of truth.
-  // Refreshing also makes old Desktop builds pick up installer fixes instead
-  // of repeatedly executing bytes cached before those fixes existed.
-  emit({
-    type: 'log',
-    line:
-      `[bootstrap] fetching ${installScriptName()} for ${installRef.ref.slice(0, 12)} from GitHub` +
-      (installRef.pinned ? '' : ' (unpinned branch)')
-  })
-
-  await _download(installRef.ref, cached)
-  emit({ type: 'log', line: `[bootstrap] saved to ${cached}` })
-
-  return { path: cached, source: 'download', commit: resolvedCommit, kind: installScriptKind() }
+  return { path: bundled, source: 'bundled', commit: installStamp?.commit ?? null, kind: installScriptKind() }
 }
 
 // ---------------------------------------------------------------------------
@@ -429,8 +278,9 @@ function cleanInstallerLogLine(raw: string): string {
 // The installer drives Hermes's own toolchain (install.sh takes a uv from PATH
 // when it is new enough), so store dirs already on PATH stay ahead of the
 // login-shell entries shell-path.ts merged in front of them.
-function installerEnv(hermesHome) {
-  const env = { ...process.env, HERMES_HOME: hermesHome || process.env.HERMES_HOME || '' }
+function installerEnv(hermesHome, repoUrl: string) {
+  const env: NodeJS.ProcessEnv = { ...process.env, HERMES_HOME: hermesHome || process.env.HERMES_HOME || '' }
+  env.HERMES_REPO_URL = repoUrl
   const key = pathEnvKey(env)
 
   env[key] = storeFirstPath(env[key] || '', { currentEnv: env })
@@ -438,7 +288,7 @@ function installerEnv(hermesHome) {
   return env
 }
 
-function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, hermesHome }: any = {}) {
+function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, hermesHome, repoUrl }: any = {}) {
   return new Promise<any>((resolve, reject) => {
     const ps = process.platform === 'win32' ? resolveWindowsPowerShell() : 'pwsh'
     const fullArgs = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args]
@@ -450,7 +300,7 @@ function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, herme
         stdio: ['ignore', 'pipe', 'pipe'],
         // Pass HERMES_HOME through so install.ps1 respects the caller's
         // choice rather than re-computing the default.
-        env: installerEnv(hermesHome)
+        env: installerEnv(hermesHome, repoUrl)
       })
     )
 
@@ -542,11 +392,11 @@ function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, herme
   })
 }
 
-function spawnBash(scriptPath, args, { emit, stageName, abortSignal, hermesHome }: any = {}) {
+function spawnBash(scriptPath, args, { emit, stageName, abortSignal, hermesHome, repoUrl }: any = {}) {
   return new Promise<any>((resolve, reject) => {
     const child = spawn('bash', [scriptPath, ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: installerEnv(hermesHome)
+      env: installerEnv(hermesHome, repoUrl)
     })
 
     let stdout = ''
@@ -680,7 +530,8 @@ async function fetchManifest({
   activeRoot,
   installStamp,
   pinCommit,
-  abortSignal
+  abortSignal,
+  repoUrl
 }) {
   abortSignal?.throwIfAborted()
   const isPosix = installerKind === 'posix'
@@ -693,7 +544,8 @@ async function fetchManifest({
     emit,
     stageName: '__manifest__',
     abortSignal,
-    hermesHome
+    hermesHome,
+    repoUrl
   })
 
   if (result.code !== 0) {
@@ -758,7 +610,8 @@ async function runStage({
   activeRoot,
   abortSignal,
   installStamp,
-  pinCommit
+  pinCommit,
+  repoUrl
 }) {
   const startedAt = Date.now()
   emit({ type: 'stage', name: stage.name, state: 'running' })
@@ -779,7 +632,8 @@ async function runStage({
     emit,
     stageName: stage.name,
     abortSignal,
-    hermesHome
+    hermesHome,
+    repoUrl
   })
 
   const durationMs = Date.now() - startedAt
@@ -925,7 +779,14 @@ async function runBootstrap(opts) {
     }
 
     // 1. Resolve the platform installer.
-    const scriptInfo = await resolveInstallScript({ installStamp, sourceRepoRoot, hermesHome, emit, pinCommit })
+    const localScript = resolveLocalInstallScript(sourceRepoRoot)
+    const repoUrl = UPDATE_REPOSITORY ? `https://github.com/${UPDATE_REPOSITORY}.git` : localScript ? sourceRepoRoot : ''
+
+    if (!repoUrl) {
+      throw new Error('No source repository is configured for bootstrap.')
+    }
+
+    const scriptInfo = await resolveInstallScript({ installStamp, sourceRepoRoot, emit })
     abortSignal?.throwIfAborted()
 
     const installerKind = scriptInfo.kind || 'powershell'
@@ -939,7 +800,8 @@ async function runBootstrap(opts) {
       activeRoot,
       installStamp,
       pinCommit,
-      abortSignal
+      abortSignal,
+      repoUrl
     })
 
     abortSignal?.throwIfAborted()
@@ -970,7 +832,8 @@ async function runBootstrap(opts) {
         activeRoot,
         abortSignal,
         installStamp,
-        pinCommit
+        pinCommit,
+        repoUrl
       })
 
       if (ev.state === 'failed') {
@@ -1033,10 +896,8 @@ async function runBootstrap(opts) {
 export {
   buildPinArgs,
   buildPosixPinArgs,
-  cachedScriptPath,
   cleanInstallerLogLine,
   hasExistingGitCheckout,
-  installRefForStamp,
   isPinnedCommit,
   // Exposed for testability
   parseStageResult,

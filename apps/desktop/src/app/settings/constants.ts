@@ -16,6 +16,8 @@ import {
 } from '@/lib/icons'
 import type { ThemeMode } from '@/themes/context'
 
+import { ENDPOINTS } from '../../../endpoints'
+
 // Single source of truth for built-in personality names lives in
 // lib/personalities (mirrors hermes_cli/personality.py BUILTIN_PERSONALITIES).
 export { BUILTIN_PERSONALITIES } from '@/lib/personalities'
@@ -45,13 +47,13 @@ export const EMPTY_SELECT_VALUE = '__hermes_empty__'
 export const CONTROL_TEXT = 'text-xs'
 
 export const PROVIDER_GROUPS: ProviderPrefix[] = [
-  {
+  ...(ENDPOINTS.portal ? [{
     prefix: 'NOUS_',
     name: 'Nous Portal',
     description: 'Hosted Hermes & Nous-trained models',
-    docsUrl: 'https://portal.nousresearch.com',
+    docsUrl: ENDPOINTS.portal,
     priority: 0
-  },
+  }] : []),
   {
     prefix: 'FIREWORKS_',
     name: 'Fireworks AI',

@@ -2,6 +2,11 @@ import { GatewayReauthRequiredError } from '@hermes/shared'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('../../../endpoints', async importOriginal => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  ENDPOINTS: { portal: 'https://portal.nousresearch.com', hubUrl: '', docsUrl: '', updateFeedUrl: '' }
+}))
+
 import { $notifications } from '@/store/notifications'
 import { deferred } from '@/test/deferred'
 

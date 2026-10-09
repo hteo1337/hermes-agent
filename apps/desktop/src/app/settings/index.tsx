@@ -38,6 +38,7 @@ import { $localModelsEnabled } from '@/store/local-models-flag'
 import { notifyError } from '@/store/notifications'
 import { $settingsScopeProfile } from '@/store/settings-scope'
 
+import { ENDPOINTS } from '../../../endpoints'
 import { useRouteEnumParam } from '../hooks/use-route-enum-param'
 import { OverlayIconButton } from '../overlays/overlay-chrome'
 import { OverlayMain, OverlayNav, type OverlayNavGroup, OverlaySplitLayout } from '../overlays/overlay-split-layout'
@@ -164,8 +165,8 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   const [providerView, setProviderView] = useRouteEnumParam<ProviderView>('pview', PROVIDER_VIEWS, 'accounts')
   const [keysView] = useRouteEnumParam<KeysView>('kview', KEYS_VIEWS, 'tools')
   const [billingView] = useRouteEnumParam<BillingSubView>('bview', BILLING_VIEWS, 'overview')
-  const billingState = useBillingState()
-  const subscriptionState = useSubscriptionState()
+  const billingState = useBillingState(Boolean(ENDPOINTS.portal))
+  const subscriptionState = useSubscriptionState(Boolean(ENDPOINTS.portal))
   const billingPresentation = deriveBillingView(billingState.data, subscriptionState.data)
   const canViewPlans = billingPresentation.status === 'normal' && Boolean(billingPresentation.plan?.action)
 
@@ -280,7 +281,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
             label: t.settings.nav.notifications,
             onSelect: () => setActiveView('notifications')
           },
-          {
+          ...(ENDPOINTS.portal ? [{
             active: activeView === 'billing',
             children: [
               {
@@ -306,7 +307,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
             id: 'billing',
             label: t.settings.nav.billing,
             onSelect: () => setActiveView('billing')
-          },
+          }] : []),
           {
             active: activeView === 'providers',
             children: [
@@ -559,7 +560,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   ) : activeView === 'keys' ? (
     <KeysSettings view={keysView} />
   ) : activeView === 'billing' ? (
-    <BillingSettings />
+    ENDPOINTS.portal ? <BillingSettings /> : <p>Portal is not configured.</p>
   ) : activeView === 'plugins' ? (
     <PluginSettingsPane
       entries={plugins.entries}
