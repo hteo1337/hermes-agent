@@ -3,6 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as HermesApi from '@/hermes'
 import type { FreeTierRequester } from '@/store/free-tier'
 
+const endpointConfig = vi.hoisted(() => ({
+  portal: 'https://portal.example',
+  hubUrl: '',
+  docsUrl: '',
+  updateFeedUrl: ''
+}))
+
+vi.mock('../../endpoints', async importOriginal => ({
+  ...(await importOriginal<typeof import('../../endpoints')>()),
+  ENDPOINTS: endpointConfig
+}))
+
 const startOAuthLogin = vi.fn()
 const pollOAuthSession = vi.fn()
 const cancelOAuthSession = vi.fn(async (_id: string) => ({ ok: true }))

@@ -52,7 +52,11 @@ vi.mock('@hermes/plugin-sdk', async () => {
     }
   }
 
-  const known: Record<string, unknown> = { atom, host: hostMock }
+  const known: Record<string, unknown> = {
+    atom,
+    ENDPOINTS: { portal: '', hubUrl: '', docsUrl: '', updateFeedUrl: '' },
+    host: hostMock
+  }
 
   return new Proxy(known, {
     get: (target, key) =>

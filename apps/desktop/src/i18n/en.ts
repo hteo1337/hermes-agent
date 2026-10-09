@@ -4108,7 +4108,7 @@ export const en: Translations = {
     alreadySignedInHeading: 'Already signed in.',
     alreadySignedInBody: 'This Hermes is already signed in to a Nous account.',
     offer: {
-      heading: 'Keep going with Hermes',
+      heading: 'Keep going with Envoy',
       body: "You're on the free allowance. If you keep using Hermes, you'll start running into limits. Sign in with a free Nous account for a bigger allowance.",
       signIn: 'Sign in',
       notNow: 'Not now'

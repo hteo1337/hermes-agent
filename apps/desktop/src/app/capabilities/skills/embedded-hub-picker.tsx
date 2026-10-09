@@ -170,6 +170,10 @@ export const EmbeddedHubPicker = memo(function EmbeddedHubPicker({
     void updateHubSkills(profile).catch(err => notifyError(err, h.actionFailed))
   }
 
+  if (!ENDPOINTS.hubUrl) {
+    return null
+  }
+
   return (
     <section
       className={cn(

@@ -117,6 +117,7 @@ vi.mock('@hermes/plugin-sdk', async () => {
 
   const known: Record<string, unknown> = {
     atom,
+    ENDPOINTS: { portal: '', hubUrl: '', docsUrl: '', updateFeedUrl: '' },
     COMPOSER_AREAS: { atCompletions: 'composer.atCompletions', middleware: 'composer.middleware' },
     host: hostMock,
     PALETTE_AREA: 'palette',

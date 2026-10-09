@@ -6,6 +6,18 @@ import { activeGatewayProfileKey, ensureGatewayForProfile } from '@/store/gatewa
 import { $onboardingGate } from '@/store/onboarding-gate'
 import type { FreeTierStatus } from '@/types/hermes'
 
+const endpointConfig = vi.hoisted(() => ({
+  portal: 'https://portal.example',
+  hubUrl: '',
+  docsUrl: '',
+  updateFeedUrl: ''
+}))
+
+vi.mock('../../endpoints', async importOriginal => ({
+  ...(await importOriginal<typeof import('../../endpoints')>()),
+  ENDPOINTS: endpointConfig
+}))
+
 const status = (nudge_due_in: null | number, available = true): FreeTierStatus => ({
   available,
   enabled: true,
@@ -119,6 +131,10 @@ describe('sign-in offer after a finished task', () => {
 
     syncFreeTierOffer(status(0, false), requestGateway)
     await vi.advanceTimersByTimeAsync(0)
+    endpointConfig.portal = ''
+    syncFreeTierOffer(status(0), requestGateway)
+    await vi.advanceTimersByTimeAsync(0)
+    endpointConfig.portal = 'https://portal.example'
 
     expect(claims(requestGateway)).toBe(0)
     expect($freeTierSignIn.get()).toEqual({ status: 'closed' })

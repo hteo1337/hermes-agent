@@ -15,8 +15,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { translateBots } from './i18n-test-helper'
 
-const HUB_ORIGIN = 'https://hermes-agent.nousresearch.com'
-const FALLBACK_HUB_ORIGIN = 'https://nousresearch.github.io'
+const HUB_ORIGIN = 'https://hub.example'
+const PICKER_URL = `${HUB_ORIGIN}/skills?embed=picker`
+const OTHER_ORIGIN = 'https://other.example'
 
 const mocks = vi.hoisted(() => ({
   notify: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock('@hermes/plugin-sdk', async importOriginal => {
 
   return {
     ...original,
+    ENDPOINTS: { ...original.ENDPOINTS, hubUrl: 'https://hub.example/skills?embed=picker' },
     usePluginI18n: () => translateBots,
     host: {
       ...original.host,
@@ -93,77 +95,42 @@ afterEach(() => {
 })
 
 describe('hub pick messages', () => {
-  it('uses GitHub Pages when the Vercel hub probe is unavailable', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
-
+  it('keeps the configured picker when a network request returns unavailable', () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false })
+    vi.stubGlobal('fetch', fetchMock)
     const frame = openHubBrowser()
-
-    await waitFor(() =>
-      expect(frame.getAttribute('src')).toBe(`${FALLBACK_HUB_ORIGIN}/hermes-agent/docs/skills?embed=picker`)
-    )
+    expect(frame.getAttribute('src')).toBe(PICKER_URL)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('uses GitHub Pages when the probe request fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network error')))
-
+  it('keeps the configured picker when a network request fails', () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('network error'))
+    vi.stubGlobal('fetch', fetchMock)
     const frame = openHubBrowser()
-
-    await waitFor(() =>
-      expect(frame.getAttribute('src')).toBe(`${FALLBACK_HUB_ORIGIN}/hermes-agent/docs/skills?embed=picker`)
-    )
+    expect(frame.getAttribute('src')).toBe(PICKER_URL)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('uses GitHub Pages when the probe hangs past its deadline', async () => {
-    vi.useFakeTimers()
-    // AbortSignal.timeout's internal timer bypasses vi's fake clock — route it
-    // through setTimeout so the deadline is deterministic here.
-    vi.spyOn(AbortSignal, 'timeout').mockImplementation(ms => {
-      const controller = new AbortController()
-      setTimeout(() => controller.abort(new DOMException('Timed out', 'TimeoutError')), ms)
-
-      return controller.signal
-    })
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        (_url: string, options: RequestInit) =>
-          new Promise((_resolve, reject) => {
-            options.signal?.addEventListener('abort', () =>
-              reject(new DOMException('The user aborted a request.', 'AbortError'))
-            )
-          })
-      )
-    )
-
-    try {
-      const frame = openHubBrowser()
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(8_000)
-      })
-
-      expect(frame.getAttribute('src')).toBe(`${FALLBACK_HUB_ORIGIN}/hermes-agent/docs/skills?embed=picker`)
-    } finally {
-      vi.restoreAllMocks()
-      vi.useRealTimers()
-    }
+  it('keeps the configured picker when a network request hangs', () => {
+    const fetchMock = vi.fn(() => new Promise(() => undefined))
+    vi.stubGlobal('fetch', fetchMock)
+    const frame = openHubBrowser()
+    expect(frame.getAttribute('src')).toBe(PICKER_URL)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('keeps the Vercel picker when the probe succeeds', async () => {
+  it('uses the configured picker URL', () => {
     const frame = openHubBrowser()
-
-    await waitFor(() => expect(frame.getAttribute('src')).toBe(`${HUB_ORIGIN}/docs/skills?embed=picker`))
+    expect(frame.getAttribute('src')).toBe(PICKER_URL)
   })
 
-  it('accepts an install message from the fallback picker frame', () => {
+  it('rejects a pick message from another host even when it names a skill', () => {
     const frame = openHubBrowser()
-
     postPick(
       { identifier: 'nous/web-research', name: 'Web Research', type: 'hermes-skill-pick' },
-      { origin: FALLBACK_HUB_ORIGIN, source: frame.contentWindow }
+      { origin: OTHER_ORIGIN, source: frame.contentWindow }
     )
-
-    expect(installCalls()).toEqual([['skills.manage', { action: 'install', query: 'nous/web-research' }]])
+    expect(installCalls()).toEqual([])
   })
 
   it('pins the hub frame to the required sandbox and clipboard posture (#91612)', async () => {

@@ -11,66 +11,26 @@
 
 import { describe, expect, it, vi } from 'vitest'
 
-/** Names an older SDK is allowed not to export. */
-const OPTIONAL_CAPABILITY_EXPORTS = new Set(['ConnectorsTab', 'CapabilitiesView', 'ToolsetConfigPanel'])
+vi.mock('@hermes/plugin-sdk', async importOriginal => ({
+  ...(await importOriginal<typeof import('@hermes/plugin-sdk')>()),
+  ConnectorsTab: undefined,
+  CapabilitiesView: undefined,
+  ToolsetConfigPanel: undefined
+}))
 
-vi.mock('@hermes/plugin-sdk', async () => {
-  const { atom } = await import('nanostores')
-
-  // Everything an older SDK DOES export answers as a callable stand-in, so
-  // module-level `host.state.x.get()` / `foo()` evaluation succeeds without
-  // pinning the real surface.
-  const stub: unknown = new Proxy(function stubbed() {}, {
-    apply: () => stub,
-    get: (_target, key) => {
-      if (key === Symbol.iterator) {
-        return function* () {}
-      }
-
-      if (key === Symbol.toPrimitive) {
-        return () => 0
-      }
-
-      // Never look thenable: an awaited stub would hang the import.
-      if (key === 'then' || OPTIONAL_CAPABILITY_EXPORTS.has(String(key))) {
-        return undefined
-      }
-
-      return stub
-    }
-  })
-
-  return new Proxy({ atom } as Record<string, unknown>, {
-    get: (target, key) => {
-      if (typeof key === 'symbol' || key in target) {
-        return target[key as string]
-      }
-
-      // The namespace itself is awaited by the loader: a callable `then`
-      // would make it look thenable and never settle.
-      return key === 'then' || OPTIONAL_CAPABILITY_EXPORTS.has(key) ? undefined : stub
-    },
-    // The loader validates namespace access against the mock, so the
-    // capability names must READ as undefined rather than be absent —
-    // absent would throw where an older bundled SDK simply gives undefined.
-    has: () => true
-  })
-})
+const plugin = (await import('./plugin')).default
+const { CapabilitiesView, capabilitiesViewRoutesConnections } = await import('./profile-config')
 
 describe('an SDK without the optional capability exports', () => {
-  it('still links Bot Mode into a registrable plugin', async () => {
-    const plugin = (await import('./plugin')).default
-
+  it('still links Bot Mode into a registrable plugin', () => {
     expect(plugin.id).toBe('hermes-bots')
     expect(typeof plugin.register).toBe('function')
   })
 
-  it('leaves the CapabilitiesView connection-routing capability off', async () => {
+  it('leaves the CapabilitiesView connection-routing capability off', () => {
     // `capabilitiesViewRoutesConnections` gates whether a source-scoped bot may open
     // the Capabilities tab at all — with no CapabilitiesView it must read false, not
     // throw on the missing export.
-    const { CapabilitiesView, capabilitiesViewRoutesConnections } = await import('./profile-config')
-
     expect(CapabilitiesView).toBeUndefined()
     expect(capabilitiesViewRoutesConnections).toBe(false)
   })

@@ -24,13 +24,16 @@ vi.mock('@hermes/plugin-sdk', async () => {
     get: (_target, key) => (key === 'then' ? undefined : stub)
   })
 
-  return new Proxy({ atom } as Record<string, unknown>, {
-    // A callable `then` would make the namespace look thenable and hang the
-    // module loader.
-    get: (target, key) =>
-      typeof key === 'symbol' || key in target ? target[key as string] : key === 'then' ? undefined : stub,
-    has: () => true
-  })
+  return new Proxy(
+    { atom, ENDPOINTS: { portal: '', hubUrl: '', docsUrl: '', updateFeedUrl: '' } } as Record<string, unknown>,
+    {
+      // A callable `then` would make the namespace look thenable and hang the
+      // module loader.
+      get: (target, key) =>
+        typeof key === 'symbol' || key in target ? target[key as string] : key === 'then' ? undefined : stub,
+      has: () => true
+    }
+  )
 })
 
 describe('singleFlight', () => {

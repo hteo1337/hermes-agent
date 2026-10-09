@@ -123,13 +123,8 @@ describe('VersionDetails', () => {
       </I18nProvider>
     )
 
-    fireEvent.click(screen.getByText('d233b6d7a9c5b7'))
-
-    await waitFor(() => {
-      expect(openExternal).toHaveBeenCalledWith(
-        'https://github.com/NousResearch/hermes-agent/commit/d233b6d7a9c5b79288e48dfb3b29e2ead106ac73'
-      )
-    })
+    expect(screen.getByText('d233b6d7a9c5b7').tagName).toBe('SPAN')
+    expect(openExternal).not.toHaveBeenCalled()
     expect($previewTabs.get()).toHaveLength(0)
   })
 })
