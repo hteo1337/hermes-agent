@@ -12,7 +12,7 @@ function* files(dir) {
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     const name = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      if (!['node_modules', 'dist', 'build', 'i18n'].includes(entry.name)) yield* files(name)
+      if (!['node_modules', 'dist', 'build'].includes(entry.name)) yield* files(name)
     } else if (extensions.has(path.extname(name)) && !/\.(?:test|spec|e2e)\.[cm]?[jt]sx?$/.test(name)) {
       yield name
     }
@@ -20,7 +20,12 @@ function* files(dir) {
 }
 
 export function count(text) {
-  return [...text.matchAll(upstream)].length
+  let joined = text
+  for (;;) {
+    const next = joined.replace(/(['"`])\s*\+\s*(['"`])/g, '')
+    if (next === joined) return [...joined.matchAll(upstream)].length
+    joined = next
+  }
 }
 
 export function audit() {

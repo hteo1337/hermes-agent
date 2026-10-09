@@ -11,6 +11,7 @@ import {
   cleanInstallerLogLine,
   hasExistingGitCheckout,
   isPinnedCommit,
+  resolveBootstrapRepository,
   resolveInstallScript,
   resolveMarkerPinnedCommit,
   runBootstrap
@@ -134,19 +135,29 @@ test('resolveInstallScript uses only a bundled payload installer', async () => {
 
   try {
     const bundled = path.join(home, 'agent-payload', 'scripts', SCRIPT_NAME)
+    const local = path.join(home, 'checkout', 'scripts', SCRIPT_NAME)
     fs.mkdirSync(path.dirname(bundled), { recursive: true })
+    fs.mkdirSync(path.dirname(local), { recursive: true })
     fs.writeFileSync(bundled, 'bundled installer\n')
+    fs.writeFileSync(local, 'local installer\n')
 
-    const result = await resolveInstallScript({
+    const request = {
       installStamp: { commit: 'a'.repeat(40), branch: 'main' },
-      sourceRepoRoot: null,
+      sourceRepoRoot: path.join(home, 'checkout'),
       resourcesPath: home,
       emit: () => {}
-    })
+    }
+
+    const result = await resolveInstallScript(request)
 
     assert.equal(result.source, 'bundled')
     assert.equal(result.path, bundled)
     assert.equal(fs.readFileSync(result.path, 'utf8'), 'bundled installer\n')
+    const source = path.join(home, 'agent-payload', 'source.git')
+    fs.mkdirSync(source, { recursive: true })
+    fs.writeFileSync(path.join(source, 'HEAD'), 'ref: refs/heads/main\n')
+    assert.equal(resolveBootstrapRepository(home, ''), source)
+    assert.equal(resolveBootstrapRepository(home, 'owner/fork'), 'https://github.com/owner/fork.git')
   } finally {
     fs.rmSync(home, { recursive: true, force: true })
   }
@@ -160,7 +171,7 @@ test('resolveInstallScript fails closed when the bundled installer is missing', 
     fs.mkdirSync(path.dirname(stale), { recursive: true })
     fs.writeFileSync(stale, 'stale installed script\n')
     await assert.rejects(
-      resolveInstallScript({ installStamp: null, sourceRepoRoot: null, resourcesPath: home, emit: () => {} }),
+      resolveInstallScript({ installStamp: null, resourcesPath: home, emit: () => {} }),
       /bundled installer is missing/
     )
   } finally {
@@ -190,10 +201,15 @@ test.skipIf(process.platform === 'win32')(
     const home = mkTmpHome()
     fs.mkdirSync(path.join(home, 'scripts'))
     fs.mkdirSync(path.join(home, '.git'))
+    const bundled = path.join(home, 'agent-payload', 'scripts', 'install.sh')
+    fs.mkdirSync(path.dirname(bundled), { recursive: true })
+    fs.mkdirSync(path.join(home, 'agent-payload', 'source.git'))
+    fs.writeFileSync(path.join(home, 'agent-payload', 'source.git', 'HEAD'), 'ref: refs/heads/main\n')
     fs.writeFileSync(
-      path.join(home, 'scripts', 'install.sh'),
+      bundled,
       '#!/usr/bin/env bash\nprintf "\\033[0;31m\\xe2\\x9c\\x97\\033[0m manifest broke\\n" >&2\nexit 3\n'
     )
+    fs.writeFileSync(path.join(home, 'scripts', 'install.sh'), 'exit 0\n')
 
     const result = await runBootstrap({
       installStamp: null,
@@ -201,6 +217,7 @@ test.skipIf(process.platform === 'win32')(
       sourceRepoRoot: home,
       hermesHome: home,
       logRoot: home,
+      resourcesPath: home,
       onEvent: () => {}
     })
 

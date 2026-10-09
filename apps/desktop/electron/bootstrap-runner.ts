@@ -10,7 +10,6 @@
  *   const result = await runBootstrap({
  *     installStamp,        // INSTALL_STAMP from main.ts (may be null in dev)
  *     activeRoot,          // ACTIVE_HERMES_ROOT
- *     sourceRepoRoot,      // SOURCE_REPO_ROOT (for dev install.ps1 lookup)
  *     hermesHome,          // HERMES_HOME
  *     logRoot,             // HERMES_HOME/logs
  *     emit: ev => {...}    // event sink (sender.send or similar)
@@ -153,22 +152,6 @@ function installScriptKind() {
   return process.platform === 'win32' ? 'powershell' : 'posix'
 }
 
-function resolveLocalInstallScript(sourceRepoRoot) {
-  if (!sourceRepoRoot) {
-    return null
-  }
-
-  const candidate = path.join(sourceRepoRoot, 'scripts', installScriptName())
-
-  try {
-    fs.accessSync(candidate, fs.constants.R_OK)
-
-    return candidate
-  } catch {
-    return null
-  }
-}
-
 function hasExistingGitCheckout(activeRoot) {
   if (!activeRoot) {
     return false
@@ -183,21 +166,9 @@ function hasExistingGitCheckout(activeRoot) {
 
 async function resolveInstallScript({
   installStamp,
-  sourceRepoRoot,
   emit,
   resourcesPath = process.resourcesPath
 }) {
-  // 1. Dev shortcut: prefer a local checkout's installer so we can iterate
-  //    without pushing. SOURCE_REPO_ROOT comes from main.ts (path.resolve
-  //    of APP_ROOT/../..).
-  const localScript = resolveLocalInstallScript(sourceRepoRoot)
-
-  if (localScript) {
-    emit({ type: 'log', line: `[bootstrap] using local ${installScriptName()} at ${localScript}` })
-
-    return { path: localScript, source: 'local', kind: installScriptKind() }
-  }
-
   const bundled = path.join(resourcesPath, 'agent-payload', 'scripts', installScriptName())
 
   if (!fs.existsSync(bundled)) {
@@ -207,6 +178,20 @@ async function resolveInstallScript({
   emit({ type: 'log', line: `[bootstrap] using bundled ${installScriptName()} at ${bundled}` })
 
   return { path: bundled, source: 'bundled', commit: installStamp?.commit ?? null, kind: installScriptKind() }
+}
+
+function resolveBootstrapRepository(resourcesPath = process.resourcesPath, updateRepository = UPDATE_REPOSITORY) {
+  if (updateRepository) {
+    return `https://github.com/${updateRepository}.git`
+  }
+
+  const bundled = path.join(resourcesPath, 'agent-payload', 'source.git')
+
+  if (!fs.existsSync(path.join(bundled, 'HEAD'))) {
+    throw new Error('Bundled source repository is missing from the desktop payload.')
+  }
+
+  return bundled
 }
 
 // ---------------------------------------------------------------------------
@@ -711,9 +696,9 @@ async function runBootstrap(opts) {
   const {
     installStamp,
     activeRoot,
-    sourceRepoRoot,
     hermesHome,
     logRoot,
+    resourcesPath,
     onEvent,
     abortSignal,
     writeMarker, // callback to write the bootstrap-complete marker; main.ts provides
@@ -779,14 +764,8 @@ async function runBootstrap(opts) {
     }
 
     // 1. Resolve the platform installer.
-    const localScript = resolveLocalInstallScript(sourceRepoRoot)
-    const repoUrl = UPDATE_REPOSITORY ? `https://github.com/${UPDATE_REPOSITORY}.git` : localScript ? sourceRepoRoot : ''
-
-    if (!repoUrl) {
-      throw new Error('No source repository is configured for bootstrap.')
-    }
-
-    const scriptInfo = await resolveInstallScript({ installStamp, sourceRepoRoot, emit })
+    const scriptInfo = await resolveInstallScript({ installStamp, emit, resourcesPath })
+    const repoUrl = resolveBootstrapRepository(resourcesPath)
     abortSignal?.throwIfAborted()
 
     const installerKind = scriptInfo.kind || 'powershell'
@@ -901,9 +880,9 @@ export {
   isPinnedCommit,
   // Exposed for testability
   parseStageResult,
+  resolveBootstrapRepository,
   resolveCheckoutHead,
   resolveInstallScript,
-  resolveLocalInstallScript,
   resolveMarkerPinnedCommit,
   runBootstrap
 }

@@ -122,8 +122,9 @@ module.exports = {
   afterPack: 'scripts/after-pack.mjs',
   ...(process.platform === 'darwin' ? { afterSign: 'scripts/notarize.mjs' } : {}),
   extraResources: [
-    { from: '../../scripts/install.sh', to: 'agent-payload/scripts/install.sh' },
-    { from: '../../scripts/install.ps1', to: 'agent-payload/scripts/install.ps1' },
+    { from: updateRepository ? '../../scripts/install.sh' : 'build/bootstrap-install.sh', to: 'agent-payload/scripts/install.sh' },
+    { from: updateRepository ? '../../scripts/install.ps1' : 'build/bootstrap-install.ps1', to: 'agent-payload/scripts/install.ps1' },
+    ...(!updateRepository ? [{ from: 'build/bootstrap-source.git', to: 'agent-payload/source.git' }] : []),
     {
       from: 'build/install-stamp.json',
       to: 'install-stamp.json'

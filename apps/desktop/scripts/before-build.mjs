@@ -4,7 +4,8 @@
  * avoids workspace dependency graph explosions and keeps packaging
  * deterministic across environments.
  *
- * Payload assembly belongs to scripts/bundles. This hook never creates it.
+ * Runtime payload assembly belongs to scripts/bundles. This hook stages only
+ * the local Git source used by first-launch bootstrap.
  *
  * Also stages the MSIX build-time assets (the build/appx icon set and the
  * build/msix-extensions.xml fragment the config points customExtensionsPath
@@ -16,6 +17,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { appIdentity, nativeManifestTemplate, storeManifestTemplate } from '../../../scripts/msix-shared.mjs'
+import { stageBootstrapSource } from './stage-bootstrap-source.mjs'
+import brand from '../brand.json' with { type: 'json' }
 
 
 const require = createRequire(import.meta.url)
@@ -28,6 +31,7 @@ const {
 } = require('../product-identity.cjs')
 
 export default async function beforeBuild() {
+  if (!brand.updateRepository) stageBootstrapSource()
   stageMsixAssets()
   writeMsixExtensions()
   if (store) stageStoreManifest(path.join(import.meta.dirname, '..'), process.env.HERMES_PAYLOAD_TAG)
