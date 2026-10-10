@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+
+
+ Test Files  3 passed (3)
+      Tests  52 passed (52)
+   Start at  03:58:17
+   Duration  2.53s (transform 1.38s, setup 202ms, import 1.64s, tests 10ms, environment 552ms)
+

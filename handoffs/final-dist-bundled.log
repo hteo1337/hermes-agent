@@ -1,0 +1,1368 @@
+
+> hermes@0.0.0 dist:bundled
+> npm run payload && cross-env HERMES_DESKTOP_VARIANT=bundled npm run dist
+
+
+> hermes@0.0.0 payload
+> node ../../scripts/build/python.mjs ../../scripts/bundles/stage.py --out build/agent-payload
+
+Preparing the isolated Hermes runtime…
+  → Installing Python dependencies…
+  ✓ Installing Python dependencies
+  → Installing Python dependencies…
+  ✓ Installing Python dependencies
+node-deps: installing workspace dependencies with npm ci (ui-tui, web)...
+
+> hermes-agent@1.0.0 postinstall
+> echo '✅ Node dependencies installed. Run: python run_agent.py --help'
+
+✅ Node dependencies installed. Run: python run_agent.py --help
+
+> hermes-agent@1.0.0 prepare
+> node -e "const {existsSync}=require('fs');const {spawnSync}=require('child_process');if(existsSync('.git'))process.exit(spawnSync('lefthook',['install'],{stdio:'inherit',shell:true}).status??1)"
+
+
+added 555 packages in 6s
+[write] wrote 99/99 files
+
+[verify]
+  assets/icon-master.svg: 116350 bytes SVG
+  assets/icon-master-dark.svg: 137768 bytes SVG
+  apps/desktop/assets/icon.png: PNG (1024, 1024)
+  apps/desktop/assets/icon.ico: ICO [(256, 256)]
+  apps/desktop/assets/icon.icns: ICNS (1024, 1024) (container)
+  apps/desktop/assets/icon-dark.png: PNG (1024, 1024)
+  apps/desktop/assets/icon-dark.ico: ICO [(256, 256)]
+  apps/desktop/assets/icon-dark.icns: ICNS (1024, 1024) (container)
+  apps/desktop/packaging/dmg-volume.icns: ICNS (1024, 1024) (container)
+  apps/desktop/assets/icon.icon/icon.json: 1408 bytes JSON
+  apps/desktop/assets/icon.icon/Assets/art-light.png: PNG (1024, 1024)
+  apps/desktop/assets/icon.icon/Assets/art-dark.png: PNG (1024, 1024)
+  apps/desktop/assets/icon.icon/Assets/mono.png: PNG (1024, 1024)
+  apps/desktop/assets/appx/Square44x44Logo.png: PNG (44, 44)
+  apps/desktop/assets/appx/Square44x44Logo.scale-125.png: PNG (55, 55)
+  apps/desktop/assets/appx/Square44x44Logo.scale-150.png: PNG (66, 66)
+  apps/desktop/assets/appx/Square44x44Logo.scale-200.png: PNG (88, 88)
+  apps/desktop/assets/appx/Square44x44Logo.scale-400.png: PNG (176, 176)
+  apps/desktop/assets/appx/Square150x150Logo.png: PNG (150, 150)
+  apps/desktop/assets/appx/Square150x150Logo.scale-125.png: PNG (188, 188)
+  apps/desktop/assets/appx/Square150x150Logo.scale-150.png: PNG (225, 225)
+  apps/desktop/assets/appx/Square150x150Logo.scale-200.png: PNG (300, 300)
+  apps/desktop/assets/appx/Square150x150Logo.scale-400.png: PNG (600, 600)
+  apps/desktop/assets/appx/StoreLogo.png: PNG (50, 50)
+  apps/desktop/assets/appx/StoreLogo.scale-125.png: PNG (63, 63)
+  apps/desktop/assets/appx/StoreLogo.scale-150.png: PNG (75, 75)
+  apps/desktop/assets/appx/StoreLogo.scale-200.png: PNG (100, 100)
+  apps/desktop/assets/appx/StoreLogo.scale-400.png: PNG (200, 200)
+  apps/desktop/assets/appx/Wide310x150Logo.png: PNG (310, 150)
+  apps/desktop/assets/appx/Wide310x150Logo.scale-125.png: PNG (388, 188)
+  apps/desktop/assets/appx/Wide310x150Logo.scale-150.png: PNG (465, 225)
+  apps/desktop/assets/appx/Wide310x150Logo.scale-200.png: PNG (620, 300)
+  apps/desktop/assets/appx/Wide310x150Logo.scale-400.png: PNG (1240, 600)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-16.png: PNG (16, 16)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-16_altform-unplated.png: PNG (16, 16)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-16_altform-lightunplated.png: PNG (16, 16)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-20.png: PNG (20, 20)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-20_altform-unplated.png: PNG (20, 20)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-20_altform-lightunplated.png: PNG (20, 20)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-24.png: PNG (24, 24)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-24_altform-unplated.png: PNG (24, 24)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-24_altform-lightunplated.png: PNG (24, 24)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-30.png: PNG (30, 30)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-30_altform-unplated.png: PNG (30, 30)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-30_altform-lightunplated.png: PNG (30, 30)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-32.png: PNG (32, 32)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-32_altform-unplated.png: PNG (32, 32)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-32_altform-lightunplated.png: PNG (32, 32)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-36.png: PNG (36, 36)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-36_altform-unplated.png: PNG (36, 36)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-36_altform-lightunplated.png: PNG (36, 36)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-40.png: PNG (40, 40)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-40_altform-unplated.png: PNG (40, 40)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-40_altform-lightunplated.png: PNG (40, 40)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-48.png: PNG (48, 48)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-48_altform-unplated.png: PNG (48, 48)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-48_altform-lightunplated.png: PNG (48, 48)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-60.png: PNG (60, 60)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-60_altform-unplated.png: PNG (60, 60)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-60_altform-lightunplated.png: PNG (60, 60)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-64.png: PNG (64, 64)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-64_altform-unplated.png: PNG (64, 64)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-64_altform-lightunplated.png: PNG (64, 64)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-72.png: PNG (72, 72)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-72_altform-unplated.png: PNG (72, 72)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-72_altform-lightunplated.png: PNG (72, 72)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-80.png: PNG (80, 80)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-80_altform-unplated.png: PNG (80, 80)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-80_altform-lightunplated.png: PNG (80, 80)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-96.png: PNG (96, 96)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-96_altform-unplated.png: PNG (96, 96)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-96_altform-lightunplated.png: PNG (96, 96)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-256.png: PNG (256, 256)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-256_altform-unplated.png: PNG (256, 256)
+  apps/desktop/assets/appx/Square44x44Logo.targetsize-256_altform-lightunplated.png: PNG (256, 256)
+  apps/desktop/public/apple-touch-icon.png: PNG (1024, 1024)
+  apps/desktop/assets/icon-mac.png: PNG (1024, 1024)
+  apps/desktop/public/nous-girl.png: PNG (256, 256)
+  apps/desktop/public/nous-girl-dark.png: PNG (256, 256)
+  apps/bootstrap-installer/src-tauri/icons/32x32.png: PNG (32, 32)
+  apps/bootstrap-installer/src-tauri/icons/128x128.png: PNG (128, 128)
+  apps/bootstrap-installer/src-tauri/icons/128x128@2x.png: PNG (256, 256)
+  apps/bootstrap-installer/src-tauri/icons/icon.ico: ICO [(256, 256)]
+  apps/bootstrap-installer/src-tauri/icons/icon.icns: ICNS (1024, 1024) (container)
+  apps/bootstrap-installer/src-tauri/icons/icon.icon/icon.json: 1408 bytes JSON
+  apps/bootstrap-installer/src-tauri/icons/icon.icon/Assets/art-light.png: PNG (1024, 1024)
+  apps/bootstrap-installer/src-tauri/icons/icon.icon/Assets/art-dark.png: PNG (1024, 1024)
+  apps/bootstrap-installer/src-tauri/icons/icon.icon/Assets/mono.png: PNG (1024, 1024)
+  apps/bootstrap-installer/public/nous-girl.png: PNG (256, 256)
+  website/static/img/logo.png: PNG (1772, 1799)
+  website/static/img/logo-dark.png: PNG (1772, 1799)
+  website/static/img/nous-logo.png: PNG (150, 150)
+  website/static/img/nous-logo-dark.png: PNG (150, 150)
+  website/static/img/favicon-16x16.png: PNG (16, 16)
+  website/static/img/favicon-32x32.png: PNG (32, 32)
+  website/static/img/apple-touch-icon.png: PNG (180, 180)
+  website/static/img/favicon.ico: ICO [(48, 48)]
+  website/static/img/favicon.svg: 116350 bytes SVG
+  web/public/favicon.ico: ICO [(48, 48)]
+
+  ...hermes-products-mfh7lwr6/.tui-build-cdI9We/product/dist/entry.js  3.7mb ⚠️
+
+⚡ Done in 106ms
+built /private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/tui/dist/entry.js
+vite v8.2.0 building client environment for production...
+[2Ktransforming...✓ 2268 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/index.html                                       1.67 kB │ gzip:   0.58 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/Mondwest-Regular-CWscgue7.woff2          23.82 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/RulesExpanded-Regular-l8uVympt.woff2     33.82 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/RulesExpanded-Bold-DZA7s8Pa.woff2        35.01 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/RulesCompressed-Regular-BSXFyF4x.woff2   37.76 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/RulesCompressed-Medium-CA76_CrB.woff2    38.84 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/Collapse-Bold-mgICk9-_.woff2             59.14 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/Collapse-Regular-DysayoTY.woff2          62.81 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/xterm-BrP-ENHg.css                        3.93 kB │ gzip:   1.01 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/index-fzVtpbkg.css                      113.14 kB │ gzip:  17.65 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/chat-activation-BiaqYo9D.js               0.04 kB │ gzip:   0.06 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/page-header-context-Cv8A-rTa.js           0.15 kB │ gzip:   0.14 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/useProfileScope-CZ2qacRL.js               0.26 kB │ gzip:   0.21 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/usePageHeader-BtGwRGnc.js                 0.30 kB │ gzip:   0.23 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/dashboard-flags-D88n-iH1.js               0.31 kB │ gzip:   0.23 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/utils-DYyongUp.js                         0.53 kB │ gzip:   0.29 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/rolldown-runtime-CbXtAM7H.js              0.58 kB │ gzip:   0.36 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/DeleteConfirmDialog-Cku1vQS_.js           0.61 kB │ gzip:   0.37 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/useModalBehavior-oWox1GPh.js              0.62 kB │ gzip:   0.39 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/clipboard-owkvc3zk.js                     0.73 kB │ gzip:   0.44 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/terminal-font-refit-Dmois6_8.js           0.83 kB │ gzip:   0.44 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/mcp-server-create-B0VgoYzF.js             0.92 kB │ gzip:   0.46 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/shared-gateway-B4l1MvfE.js                1.43 kB │ gzip:   0.77 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/LoadErrorNotice-_Y5RbkGC.js               1.74 kB │ gzip:   0.90 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/DocsPage-zKCrhrVO.js                      1.96 kB │ gzip:   1.09 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/PairingPage-DgWGuU3n.js                   4.88 kB │ gzip:   1.67 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/plugins-BQBRq9P_.js                       5.55 kB │ gzip:   2.61 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/LogsPage-BSQKg7ys.js                      7.50 kB │ gzip:   3.29 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/FilesPage-ClXshskj.js                    10.18 kB │ gzip:   3.35 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/WebhooksPage-BjNthxPz.js                 12.59 kB │ gzip:   3.85 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/themes-CYgQ-J6v.js                       12.99 kB │ gzip:   4.39 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ModelReloadConfirm-DpXnlDat.js           14.73 kB │ gzip:   5.36 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ProfileBuilderPage-BB-XpqGV.js           14.87 kB │ gzip:   4.50 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/McpPage-BAPCvR_q.js                      17.82 kB │ gzip:   5.22 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ConfigPage--wS2qpeU.js                   18.01 kB │ gzip:   6.03 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/AnalyticsPage-DiPIfVy_.js                20.17 kB │ gzip:   6.01 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ProfilesPage-CRz28ebW.js                 25.27 kB │ gzip:   7.10 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/EnvPage-afv_JHaf.js                      29.76 kB │ gzip:   7.95 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ChannelsPage-CL06AtE8.js                 31.07 kB │ gzip:   8.71 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/PluginsPage-BKqoU8qC.js                  34.08 kB │ gzip:   9.90 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ModelsPage-DuAsbzIT.js                   35.03 kB │ gzip:  10.87 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/SystemPage-DFoUIhD5.js                   43.12 kB │ gzip:  11.63 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/SkillsPage-fvOV_PE6.js                   44.70 kB │ gzip:  12.69 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/CronPage-9uptyDhd.js                     45.51 kB │ gzip:  14.70 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/api-7Rat1mLA.js                          48.72 kB │ gzip:  12.54 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/SessionsPage-Dp4jBTPn.js                 49.68 kB │ gzip:  15.11 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/vendor-DSXqp7Ow.js                       50.84 kB │ gzip:  18.06 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ChatPage-RJV46vkP.js                     54.46 kB │ gzip:  19.04 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/index-C52QF1sv.js                        70.72 kB │ gzip:  24.19 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/react-vendor-BoVnYuL4.js                226.99 kB │ gzip:  72.78 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/ui-bBVPPEcD.js                          290.19 kB │ gzip:  94.89 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/xterm-CXxU4Y2B.js                       474.38 kB │ gzip: 122.64 kB
+../../../../../../private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/.web-build-g9oacV/product/assets/i18n-D0IlJQ_7.js                        493.01 kB │ gzip: 146.31 kB
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - @rolldown/plugin-babel (91%)
+  - @tailwindcss/vite:generate:build (4%)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+✓ built in 3.25s
+built /private/var/folders/9z/jtl3ybm970jbvhs_tkn0f1_w0000gn/T/hermes-products-mfh7lwr6/web/index.html
+staging repo snapshot (HEAD)…
+Preparing the isolated Hermes runtime…
+  → Installing Python dependencies…
+  ✓ Installing Python dependencies
+Failed to load bundled provider plugin solstice: No module named 'httpx'
+  → Installing Python dependencies…
+  ✓ Installing Python dependencies
+✓ pm-runtime (independent locked dependencies)
+  → Installing Python dependencies…
+  ✓ Installing Python dependencies
+✓ venv (all extras, on the staged interpreter)
+✓ enabled-features.json (48 extras recorded)
+  uv-cache: copying /private/tmp/envoy-final-package-9bio09at/home/cache/uv → payload...
+✓ uv-cache (lock-scoped: pruned 3 stale entries; offline rebuilds resolve from shipped wheels)
+✓ baked bytecode (26376 modules, unchecked-hash, read-only caches)
+payload verification [1/7]: hermes-agent — checking paths and links
+payload verification [1/7]: hermes-agent — hashing files
+payload verification [2/7]: tools — checking paths and links
+payload verification [2/7]: tools — hashing files
+payload verification [3/7]: venv — checking paths and links
+payload verification [3/7]: venv — hashing files
+payload verification [4/7]: pm-runtime — checking paths and links
+payload verification [4/7]: pm-runtime — hashing files
+payload verification [5/7]: tools/python-3.14.7+20260901-darwin-arm64/bin/python3 — checking paths and links
+payload verification [5/7]: tools/python-3.14.7+20260901-darwin-arm64/bin/python3 — hashing files
+payload verification [6/7]: enabled-features.json — checking paths and links
+payload verification [6/7]: enabled-features.json — hashing files
+payload verification [7/7]: uv-cache — checking paths and links
+payload verification [7/7]: uv-cache — hashing files
+payload verification complete
+assembling verified payload
+✓ manifest (/Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/build/agent-payload/manifest.json)
+
+> hermes@0.0.0 dist
+> npm run build && npm run builder
+
+
+> hermes@0.0.0 build
+> node scripts/build.mjs
+
+[write-build-stamp] WARNING: working tree is dirty.
+  Pinning to b7b9f61e51e7 but the packaged code may differ from that commit.
+  Commit your changes before publishing this build.
+[write-build-stamp] wrote apps/desktop/build/install-stamp.json -> b7b9f61e51e7 (envoy/final) [DIRTY]
+[stage-native-deps] staged node-pty (darwin-arm64) -> /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/build/.native-deps-build-m9uGhF/product/node-pty
+[stage-native-deps] staged get-windows (darwin) -> /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/build/.native-deps-build-m9uGhF/product/get-windows
+built /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/build/.native-deps-build-m9uGhF/product/native/command-screenshot-monitor (arm64 + x86_64)
+built /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/build/.native-deps-build-m9uGhF/product/native/darwin-universal/hud-modifier-monitor
+vite v8.2.0 building client environment for production...
+
+ WARN  advancedChunks option is deprecated, please use codeSplitting instead.
+
+[2Ktransforming...✓ 17575 modules transformed.
+rendering chunks...
+computing gzip size...
+.dist-build-C2gFOM/product/assets/KaTeX_Size3-Regular-CTq5MqoE.woff              4.42 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2             4.92 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size2-Regular-Dy4dx90m.woff2             5.20 kB
+.dist-build-C2gFOM/product/assets/feature-memory-CmUcl3ix.webp                   5.21 kB
+.dist-build-C2gFOM/product/assets/feature-automation-Cfh3yZ0u.webp               5.41 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size1-Regular-mCD8mA8B.woff2             5.46 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size4-Regular-BF-4gkZK.woff              5.98 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size2-Regular-oD1tc_U0.woff              6.18 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size1-Regular-C195tn64.woff              6.49 kB
+.dist-build-C2gFOM/product/emojibase/en/messages.json                            6.49 kB │ gzip:     1.59 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2       6.90 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2          6.91 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size3-Regular-DgpXs0kz.ttf               7.58 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff        7.65 kB
+.dist-build-C2gFOM/product/assets/feature-connect-CJaRKk-v.webp                  7.67 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff           7.71 kB
+.dist-build-C2gFOM/product/assets/feature-sandbox-DvwEVQkh.webp                  7.85 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Script-Regular-D3wIWfF6.woff2            9.64 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2        10.34 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size4-Regular-DWFBv043.ttf              10.36 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Script-Regular-D5yQViql.woff            10.58 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2          11.31 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2             11.34 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size2-Regular-B7gKUWhC.ttf              11.50 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2         12.02 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2           12.21 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Size1-Regular-Dbsnue_I.ttf              12.22 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff         12.31 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf        12.34 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf           12.36 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff           13.20 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Bold-BsDP51OF.woff              13.29 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2       13.56 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Italic-DN2j7dab.woff          14.11 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff            14.40 kB
+.dist-build-C2gFOM/product/index.html                                           14.65 kB │ gzip:     3.40 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff        16.02 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2          16.40 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-Italic-t53AETM-.woff2              16.44 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Script-Regular-C5JkGWo-.ttf             16.64 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2          16.78 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Italic-NWA7e6Wa.woff2              16.98 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff           18.66 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-Italic-DA0__PXp.woff               18.74 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-BoldItalic-SpSLRI95.woff           19.41 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf          19.43 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Regular-CB_wures.ttf            19.57 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf               19.58 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Italic-BMLOBm91.woff               19.67 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf           22.36 kB
+.dist-build-C2gFOM/product/assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf             24.50 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Bold-Cx986IdX.woff2                25.32 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Regular-B22Nviop.woff2             26.27 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf         27.55 kB
+.dist-build-C2gFOM/product/assets/KaTeX_AMS-Regular-BQhdFMY1.woff2              28.07 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Bold-Jm3AIy58.woff                 29.91 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Regular-Dr94JaBh.woff              30.77 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf            31.19 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Math-Italic-flOr_0UB.ttf                31.30 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf            32.96 kB
+.dist-build-C2gFOM/product/assets/KaTeX_AMS-Regular-DMm9YOAa.woff               33.51 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Italic-3WenGoN9.ttf                33.58 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Bold-waoOVXN0.ttf                  51.33 kB
+.dist-build-C2gFOM/product/assets/KaTeX_Main-Regular-ypZvNtVU.ttf               53.58 kB
+.dist-build-C2gFOM/product/assets/Collapse-Bold-mgICk9-_.woff2                  59.14 kB
+.dist-build-C2gFOM/product/assets/KaTeX_AMS-Regular-DRggAlZN.ttf                63.63 kB
+.dist-build-C2gFOM/product/assets/JetBrainsMono-Regular-CA-Os4ii.woff2          92.38 kB
+.dist-build-C2gFOM/product/assets/JetBrainsMono-Bold-CUogYd9I.woff2             94.62 kB
+.dist-build-C2gFOM/product/assets/JetBrainsMono-Italic-LIR7wr3B.woff2           96.42 kB
+.dist-build-C2gFOM/product/assets/codicon-DjkITdqj.ttf                         125.82 kB
+.dist-build-C2gFOM/product/emojibase/en/shortcodes/emojibase.json              157.82 kB │ gzip:    31.29 kB
+.dist-build-C2gFOM/product/renderer-manifest.json                              448.88 kB │ gzip:    37.31 kB
+.dist-build-C2gFOM/product/emojibase/en/data.json                              735.58 kB │ gzip:    93.09 kB
+.dist-build-C2gFOM/product/assets/wake-indicator-root-DH8JPTry.css               1.03 kB │ gzip:     0.46 kB
+.dist-build-C2gFOM/product/assets/glyph-spinner-DL5QKO4M.css                     1.05 kB │ gzip:     0.36 kB
+.dist-build-C2gFOM/product/assets/tooltip-BNbTfSqe.css                           1.13 kB │ gzip:     0.46 kB
+.dist-build-C2gFOM/product/assets/use-pet-zoom-gesture-BSUmG2fU.css              1.73 kB │ gzip:     0.59 kB
+.dist-build-C2gFOM/product/assets/tour-D1DXKwZ-.css                              6.92 kB │ gzip:     1.89 kB
+.dist-build-C2gFOM/product/assets/index-BwkJu-O-.css                           388.52 kB │ gzip:    64.88 kB
+.dist-build-C2gFOM/product/assets/embed-size-Cf7v_PF-.js                         0.02 kB │ gzip:     0.04 kB
+.dist-build-C2gFOM/product/assets/dist-Dntb1SJa.js                               0.05 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dist-RlZpsPav.js                               0.05 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dist-DFDC1a4O.js                               0.05 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/katex-BRhLeB3t.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solarized-light-BWsuMj_F.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/synthwave-84-DaH9oZfj.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tokyo-night-ojWBDROP.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vesper-Dx_z9MD3.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-black-9USm8kdI.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-dark-CWueKsIT.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-light-BxW1cIcY.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/abap-C-q1QBsR.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/abap-CNSfs0vs.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/actionscript-3-DXMedE4N.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/actionscript-3-DXpdHb_8.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ada-BwMVjQsA.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ada-ZYIMD54U.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/andromeeda-C0nBXKtX.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/andromeeda-COydMNIb.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/angular-html-Cw87-ymA.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/angular-html-CwLdkqgv.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/angular-ts-C-282ZmW.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/angular-ts-CwKDHJrw.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apache-BD2jwuKL.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apache-DdwIRbar.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apex-CDUPRemM.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apex-CgZDGyoh.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apl-CNyr5gTn.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/apl-DC9XvSDv.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/applescript-BkUOfZ6L.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/applescript-DZl1rMoH.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ara-BKanSmJk.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ara-CIVHFVHl.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/asciidoc-Bh4grosX.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/asciidoc-FZr1PgVN.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/asm-Dgooe9gD.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/asm-z7Ss2Vsq.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/astro-COtmwnR2.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/astro-Dit4iTX1.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/aurora-x-BZFE9FvT.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/aurora-x-MFDAuBdx.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/awk-CXBRq67W.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/awk-D0JFqf0Q.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-dark-CeHsEC7P.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-dark-K8T-TDB7.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-light-Dt489SHg.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-light-_Yi1rDFi.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-mirage-1t3D-whZ.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ayu-mirage-DxI45bXx.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ballerina-BFeY3TNj.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ballerina-BxIwRTKJ.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bat-DMKZHB3z.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bat-IEyjjNH8.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/beancount-Ca0axJMx.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/beancount-CljKUYIl.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/berry-BlDDCmBV.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/berry-zZRSkC9m.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bibtex--EBJJczz.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bibtex-1mg_ofrd.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bicep-BiBj0dm1.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bicep-CBBKP9na.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bird2-BoaI53F5.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bird2-Bu4b-iBG.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/blade-9fKjm0ig.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/blade-BsUWmctG.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bsl-BiFvhW_T.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/bsl-eMFQuDlw.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/c-BwjPRXI3.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/c-he2EO-zx.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/c3-DuBv4FcO.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/c3-o07fpJBQ.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cadence-3yzODbsM.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cadence-Bsz2CYt3.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cairo-CR3j4_tq.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cairo-ClJCSZFe.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-frappe-BfnLE16f.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-frappe-C5EE0o7l.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-latte-C-C4PJhv.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-latte-DmaxSeza.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-macchiato-CPCtzr0u.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-macchiato-CRNNKpu8.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-mocha-BezEoIIF.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/catppuccin-mocha-CADfRGtm.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/clarity-ChotAeCT.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/clarity-CqWe3KZR.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/clojure-BJieqpx2.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/clojure-mj3wNbOW.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cmake-HtwQ_aWk.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cmake-rnzYz0ok.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cobol-B8Ov78JN.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cobol-CUJa7jjf.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/codeowners-6b0bMT85.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/codeowners-DYYSiw70.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/codeql-CPtT42IW.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/codeql-CRYO8Nja.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/coffee-DRazu_3S.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/coffee-OZEHbrlX.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/common-lisp-CA5h72fa.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/common-lisp-DkQNsXq2.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/coq-BJ7pbSdF.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/coq-DWzvnk2O.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cose-bilkent-JH36ORCC-Bux0SglM.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cpp-5E0zuLNA.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cpp-BZKGsmVY.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/crystal-6p3DFioI.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/crystal-BaBbIQ46.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/csharp-CUoYFSyW.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/csharp-DNr2Bnle.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/css-B4m3IeuY.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/css-a_IV4u6u.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/csv-CEs-9lBK.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/csv-uUqJi_pn.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cue-20ibvZ1g.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cue-BXkAuKmi.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cypher-BdQU0aUs.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cypher-CKXywL3O.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/d-DVQMfflT.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/d-zCi0tijs.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dark-plus-C6O1ehv2.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dark-plus-VORmzBzq.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dart-C6zXC44e.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dart-akmMx86X.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dax-BHfsGYj1.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dax-DXuEdtkz.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/desktop-BAycNczn.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/desktop-CEH3dHY9.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diff-DJrMJnsx.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diff-DflFHpiq.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/docker-Baepd6zk.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/docker-Pbx0uT80.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dotenv-C403G82S.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dotenv-CCq88Myl.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dracula-DVzXS8S8.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dracula-DY0yP1fK.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dracula-soft-B1OJhfOA.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dracula-soft-NbPrANzU.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dream-maker-CAVQvQei.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dream-maker-Dbh6A5S4.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/edge-BVT7Hvs3.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/edge-CoKINFzi.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/elixir-CmddVver.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/elixir-xL_cxDAZ.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/elm-DeYvupdT.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/elm-DrYDhrtU.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/emacs-lisp-C0j3aB-F.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/emacs-lisp-C4S3BgaR.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/erb-DuRcSLny.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/erb-avNuQQKQ.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/erlang-BhwIpNpO.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/erlang-zVO_zcFP.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/everforest-dark-BfVb9ZOI.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/everforest-dark-DU3QYo16.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/everforest-light-BX1Ryhf4.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/everforest-light-Pa5f7zK2.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fennel-D4BzJ0a7.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fennel-m6Qd5Gut.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fish-CfKyjHDx.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fish-acUcJsbT.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fluent-B5vmy1YI.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fluent-CoRB5NOb.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fortran-fixed-form-CIkUHgYi.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fortran-fixed-form-DfRMj24R.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fortran-free-form-CXqF4llQ.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fortran-free-form-D23anmjn.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fsharp-Bid8K2At.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/fsharp-CJW-BqqE.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdresource-CBN9tpHc.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdresource-CMMuV33o.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdscript-BLhODZ37.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdscript-D6CQaThA.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdshader-C-QgP8wa.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gdshader-CtkG4tZz.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/genie-BmwiPap6.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/genie-DhH_HZYL.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gherkin-B-UtH7pl.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gherkin-U3TdcpAe.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/git-commit-CXVrwp5a.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/git-commit-DwqdIm1-.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/git-rebase-BaaNJGYD.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/git-rebase-D_3G9-5j.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-CKqH35GT.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-DX-zO7pA.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-default-CRrWog8u.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-default-DWaAqB-n.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-dimmed-BJ07haiM.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-dimmed-DuecHrLJ.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-high-contrast-C_G_gqrv.js          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-dark-high-contrast-DfxzapE0.js          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-BU4dADKl.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-Cb6hn09m.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-default-BXu0zVAE.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-default-DakfPviU.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-high-contrast-COr2KaSv.js         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/github-light-high-contrast-NN3asEop.js         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gleam-B0-Wz6bt.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gleam-DLMdG28Q.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glimmer-js-axLRFeQb.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glimmer-js-wzL1RTz3.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glimmer-ts-BOWMronS.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glimmer-ts-CCr70bWu.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glsl-DK9g1H9r.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/glsl-fkif1ML4.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gn-Bon_vhgj.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gn-XNx92lyB.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gnuplot-BoCbumW0.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gnuplot-hAuQEDJT.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/go-B6SjN6Or.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/go-CJtDHamK.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/graphql-Cz-AvgaD.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/graphql-DJERwXyh.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/groovy-BUMMkX3B.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/groovy-DSzDZiW8.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-hard-C2YlJg8n.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-hard-ohWh5BJz.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-medium-DKs74MLY.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-medium-KCkYJIIY.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-soft-BoB9gwuN.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-dark-soft-Ncy83RRw.js                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-hard-CT7u0uhM.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-hard-DYbFl8iy.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-medium-B46YQC0E.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-medium-MJhyNq-Y.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-soft-B9lwWUf-.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gruvbox-light-soft-bbUQKX9A.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hack-D6XnWozs.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hack-DxvZGZnW.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haml-Cz5M3b7G.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haml-JivrAciG.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/handlebars-Cnzsqg0Y.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/handlebars-D1c2JccE.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haskell-BDTI0dNw.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haskell-oDo5SUSm.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haxe-CzakzPDK.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/haxe-Dndj0SGu.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hcl-BzZrEAGA.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hcl-C-WxCnzT.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hjson-ZP_6RtFC.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hjson-rJNxiaEM.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hlsl-DE0rr9-e.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hlsl-DeiAPe_I.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/horizon-BC6-_ZE3.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/horizon-CmaRPGqF.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/horizon-bright-B1PnPhoa.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/horizon-bright-KJPmi4F3.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/houston-CkrnfGLT.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/houston-DIrQIjuN.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/html-BJ0K6Xsz.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/html-derivative-CbsCi1cL.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/html-derivative-D44fKzOU.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/html-wMCIpm1t.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/http-CtO9YlwT.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/http-CtVK6AJ8.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hurl-B6cHtMhx.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hurl-BlJG3VlW.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hxml-CuhLjBSt.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hxml-DCJvEcU7.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hy-CBbVrs0J.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/hy-DxBY0CrA.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/imba-Bv4IULQH.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/imba-C-rVtiiq.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ini-B4T57nqL.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ini-Btbm-8GT.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/java-CyVSjuo3.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/java-z1bW_AkP.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/javascript-6TNWZCkR.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/javascript-CsFp_jXq.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jinja-BVl-d5Vp.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jinja-CvNbWKXh.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jison-B8nug0_k.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jison-DvWegGtF.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/json-DRmuzeyZ.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/json-DynQ0iU9.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/json5-1BgXET8S.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/json5-BAFBPgdv.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonc-Ct_sbZFI.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonc-D35bNdt8.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonl-CEPH3w5M.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonl-DQRMftvn.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonnet-DLXXz2iU.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsonnet-DbFvyP4o.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jssm-MoLXfmEb.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jssm-fCp6Sjmt.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsx-BYpNccPS.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/jsx-s7qxc8QT.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/julia-CB0IIuR7.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/julia-VCaOm5Qz.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/just-BTVsLTLW.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/just-DRAzDj2i.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-dragon-CS-Hg5ED.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-dragon-nPguuY65.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-lotus-Bqr9EbXk.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-lotus-Ciz05I1x.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-wave-ByVLzL2v.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanagawa-wave-CgnZEkvN.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kdl-CA9jAqt-.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kdl-DbD2IQOe.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kotlin-BC3AD3Vl.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kotlin-vz4e8Yoa.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kusto-200zPhV9.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kusto-GfDpd7qR.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/laserwave-D5B4xauo.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/laserwave-DwclnxvA.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/latex-BPyP8xFh.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/latex-CXVa_ybE.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/lean-B63tfj6P.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/lean-BsyLQv1k.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/less-BeIvTmbV.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/less-DxeOA59r.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/light-plus-C4NTTvB_.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/light-plus-doo0-qYn.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/liquid-BnmwWeFA.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/liquid-C3nDoTnk.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/llvm-BFxZq_nq.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/llvm-D03HZodI.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/log-BPIq0id7.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/log-DMWg7FUY.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/logo-DTkp2UrI.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/logo-iBWUOTHL.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/lua-BAJnQnQx.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/lua-gVDCIB9d.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/luau-ByJ8unQI.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/luau-DDIJCczW.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/make-8eV91r9K.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/make-DXK9OAqR.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/markdown-CBJFxRKM.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/markdown-DaEqOwRo.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/marko-CiYDbrlq.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/marko-DI2bKd1K.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-BtgDaQhS.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-DJJgybbT.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-darker-DT222zj9.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-darker-DlI22ThN.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-lighter-BEDHLRgu.js             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-lighter-DDmdlRm4.js             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-ocean-BVM-j1js.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-ocean-DBTRNsJF.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-palenight-BH74rJKd.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/material-theme-palenight-DTsqvJox.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/matlab-0XWzZjKt.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/matlab-BoRHDPOx.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mdc-B7SWy_2l.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mdc-BMtyEcqU.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mdx-Lf-HbhhJ.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mdx-dhkMoaSW.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mermaid-7MP-P4xx.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mermaid-CgAFmWmB.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/min-dark-6_40WI04.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/min-dark-DRigpC-E.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/min-light-DzHeekLq.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/min-light-z7LF1Hz3.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mipsasm-BemKqsfQ.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mipsasm-QeEIED6n.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mojo-CQskOQCh.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mojo-CiCyGKpD.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/monokai-DaRGBLDS.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/monokai-opZc7S1g.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/moonbit-4Txf7FmR.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/moonbit-DbpjJ5Yt.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/move-CL8v1GOt.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/move-DPuvRsbG.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/narrat-Mxee6Ea-.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/narrat-TOwJEJjR.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nextflow-C1NwtN0z.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nextflow-C_Qv8zDG.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nextflow-groovy-DAlrggmF.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nextflow-groovy-Dj78vdil.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nginx-BC6-xbBB.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nginx-D7LH65Ai.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/night-owl-9InBtAjC.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/night-owl-B-pQ9a9Q.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/night-owl-light-BtXUoJ4U.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/night-owl-light-DbU15zeC.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nim-BKvjbJlI.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nim-C6yy4nL4.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nix-BjWhcIbW.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nix-MU7YkmTj.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nord-9-ZoQHrm.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nord-BcJyQUmb.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nushell-B8_DDdb3.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/nushell-DWF6SIt1.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/objective-c-B1cYQCic.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/objective-c-DtzLfQiF.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/objective-cpp-B1tMWJeW.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/objective-cpp-D6fykwsV.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ocaml-Cogo7wDY.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ocaml-Db5BtEZ_.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/odin-BSjpagN-.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/odin-Wyey97tl.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/one-dark-pro-BAGGCn-N.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/one-dark-pro-l69gfoWu.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/one-light-CwJOs1lK.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/one-light-DAE9cqLK.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/openscad-COx1qddk.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/openscad-DXEC4Eb0.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pascal-Bdff2-Vs.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pascal-YVMyiu1-.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/perl-B9YOeN8d.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/perl-JIh433XS.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/php-C9ZcmCny.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/php-CJ6sQ0PR.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pkl-C2a4OMVB.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pkl-DqTVm91c.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/plastic-Dyn5AEHd.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/plastic-qNg5tm7R.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/plsql-Byc_dYvp.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/plsql-Dcvf8XpK.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/po-CGa1YhSR.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/po-cnAaIKyU.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/poimandres-B7A6tZsD.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/poimandres-DqHBFFXx.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/polar-DD5AJrdC.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/polar-DiqwdtJT.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/postcss-B_OJSVDy.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/postcss-Q2lnJn03.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/powerquery-BjjdD7_s.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/powerquery-CsQZtfOY.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/powershell-AYduwTWv.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/powershell-Da6xGI8H.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/prisma-CEQvRb0e.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/prisma-YqbCTeps.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/prolog-YI4cbIQt.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/prolog-nxKQFFqZ.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/proto-C2Omzx20.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/proto-CBFO1qam.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pug-BiVUnR1d.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pug-Dx8iz11S.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/puppet-ChhOqSDz.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/puppet-JtfBG5Wm.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/purescript-CN6EfCnF.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/purescript-CZcdzn0z.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/python-C_gkXk6h.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/python-DatD60oP.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qml-B7pwgWlH.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qml-Fs2TBfk1.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qmldir-Ccv7pGih.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qmldir-Da5eqWnL.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qss-9H94gPcz.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/qss-BQAhKQIJ.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/r-CAztSBCL.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/r-Cl5Xhj2Z.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/racket-DPv8C75k.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/racket-Dzu2zirj.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/raku-CK46Iobg.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/raku-DdryfivA.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/razor-CFITu40b.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/razor-Cid0cBiA.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/red-BO70Vhbc.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/red-Dxx-ekw0.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/reg-C7bm-1ph.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/reg-CubmLs2l.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/regexp-CgzrsrfD.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/regexp-CrcNu_fq.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rel-Aaz_TEB1.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rel-DAHUgZiV.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/riscv-B7f5Wg7e.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/riscv-Bx_xYt8t.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ron-8fqmJOho.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ron-EGVdaRJl.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-B-A15_oX.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-BHKTr7t2.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-dawn-Bfw-xbNm.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-dawn-COm6OQ6w.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-moon-7GumIUpy.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rose-pine-moon-D_MosxXQ.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rosmsg-BFltsUMn.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rosmsg-prfzMgaU.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rst-DCnQ2N6H.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rst-HNYymk9r.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ruby-CYlAapId.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ruby-f_LLuSut.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rust-BRCfKvq8.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/rust-CQAlbj5L.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sas-B1lZGFWq.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sas-B4aNzYcS.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sass-BYufT8gp.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sass-C8IcTV--.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scala-CukmHdsv.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scala-Dp4JDRVq.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scheme-8ZMTjcep.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scheme-BbXpR1wI.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scss-B4An-a-k.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/scss-CDjd4FNG.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sdbl-SRNBlYcC.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sdbl-amxWBw6j.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shaderlab-BHPqWiAd.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shaderlab-D3mvLKwK.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shellscript-C5iQyF4A.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shellscript-CcJpHk2G.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shellsession-Bsx4fNxZ.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/shellsession-BynpTPlt.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/slack-dark-BctWwG-X.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/slack-dark-qfoG55hM.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/slack-ochin-DUF0rV-1.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/slack-ochin-zMTA6HwF.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/smalltalk-BXe68gq1.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/smalltalk-DlXJdIoO.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/snazzy-light-Cdu_dzbV.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/snazzy-light-DayEJiis.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solarized-dark-DzpZRY4f.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solarized-dark-xTv36Ghx.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solarized-light-3tzUvhj-.js                    0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solidity-DR7lVZhW.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/solidity-LBkK2RLP.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/soy--R0u10TH.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/soy-DvTicdZY.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sparql-Cw9ADQGV.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sparql-dr-x-_zJ.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/splunk-D5Fb_NrZ.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/splunk-Dl_JmfgV.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sql-BaVBvWLQ.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sql-BmsFZ1zk.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ssh-config-D0vriUsu.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ssh-config-DgJ7GJJz.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stata-ChKWeaR0.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stata-DRresHAF.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stylus-DV_5upyo.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stylus-DwXclNEF.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/surrealql-8c2bJx04.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/surrealql-Bi5k7xIG.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/svelte-Caj9IUss.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/svelte-Dwmi9KOe.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/swift-CJcrSZlS.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/swift-D9YDWIRt.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/swimlanes-SLNWSIFB-B-DBV6EP.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/synthwave-84-C5kzZQ2F.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/system-verilog-DEsar88h.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/system-verilog-nCGwZ2Xx.js                     0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/systemd-shERtVIV.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/systemd-vm461Ipv.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/talonscript-C-T02hxY.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/talonscript-VPqRETgb.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tasl-Bi4brcOF.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tasl-CvKEI2cj.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tcl-BUYy_ICW.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tcl-Co8NrcWN.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/templ-BAarOkFZ.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/templ-Dd-V5QHJ.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/terraform-AYHz9pdE.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/terraform-DVnemhpd.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tex-BQr2MPw8.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tex-Bjxu7fa5.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tokyo-night-kKvOGzuV.js                        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/toml-CsDrSGC5.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/toml-DFg6lb8U.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ts-tags-D_uLw4XP.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ts-tags-Di1Lc_qs.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tsv-Bz5Wa1kc.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tsv-aOxeJGTN.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tsx-D7C_mLYD.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/tsx-Dkv0xvH_.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/turtle-BmO0hWoH.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/turtle-CGquXRU6.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/twig-Cy1-BZf7.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/twig-Da9ea3Ph.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typescript-CKwKmWZe.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typescript-DvCGTlZN.js                         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typespec-BPGY6Zja.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typespec-DF8mXNRl.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typst-BvdGMVyW.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/typst-WmExgAJp.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/v-Bk2k8CWX.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/v-CpWI76W0.js                                  0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vala-0LvnXLq1.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vala-CbTEbHfK.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vb-CdatuFYv.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vb-rWrFFRYo.js                                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/verilog-C8cU2x51.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/verilog-o5kVG5Nr.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vesper-DhSJIVtL.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vhdl-B3IRasIh.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vhdl-Bn98bnEf.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/viml-CSwnv94f.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/viml-D0Xnz8pX.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-black-BpLhM9Uv.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-dark-Dus_W2Vx.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vitesse-light-EV1N0sEB.js                      0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-CC2nThG5.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-CELepZd8.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-html-CSj6udKk.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-html-Den68qob.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-vine-Cqvt19oM.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vue-vine-D6SKV5Iq.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vyper-BG6nAHou.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vyper-D6u08pi5.js                              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wasm-D1hU1N6K.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wasm-UVvmtS10.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wenyan-DIVw-J4m.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wenyan-Dn5xTqQA.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wgsl-BWlkbqvh.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wgsl-DGuz1M-H.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wikitext-4faSE4QV.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wikitext-BmOf6Nyu.js                           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wit-CdC_rSJ0.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wit-Df93GNnm.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wolfram-DJhDrvg2.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wolfram-So_j5HwH.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/xml-B2A2-3Qd.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/xml-_gJwdyY3.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/xsl-D2b0eyG6.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/xsl-DKEklaTm.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/yaml-BEtFrB39.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/yaml-g7Twhj5V.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/zenscript-Cwo0lNpS.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/zenscript-Dk4kzrAn.js                          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/zig-DPd4ogXq.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/zig-Ds4o8Yi7.js                                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/abnfDiagram-N423BO3Z-B8gajPaF.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/architectureDiagram-T3A2C74G-DimGzy6-.js       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/blockDiagram-VBNYF7ZC-DVVPw3Ch.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/c4Diagram-5PPSVZJV-Dc86DU2Q.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/classDiagram-JCYQIIEL-DkNfkck1.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/classDiagram-v2-OCEON4UE-CGVnHvak.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/cynefinDiagram-MW4NZA55-BgWw4mnY.js            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diagram-7IWD3JNH-CeaDjnB9.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diagram-B4RE2ZJO-hrQEd6ME.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diagram-LBJQPF4R-BjN6ddph.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diagram-Q27KOJAE-CWhYRoUa.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/diagram-UB23O5K3-STkRXi4M.js                   0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/dist-Cvs6qp4O.js                               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ebnfDiagram-BXEA7PRR-CZpx_7vP.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/erDiagram-JOGREHBK-LiaGyr3r.js                 0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/flowDiagram-UKHOOZJN-BrebV2JU.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ganttDiagram-PKOTCBZU-idwMVjyF.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/gitGraphDiagram-DS77QQ5N-BDqgwzzo.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/infoDiagram-6WML65LV-By03HTtS.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/ishikawaDiagram-WSZJBQD7-B5Hf3oZS.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/journeyDiagram-NVQOT4AX-K5Yi2qnc.js            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/kanban-definition-27J2QSJJ-BK4-AH7Q.js         0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mermaid.core-iJGYBb2e.js                       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/mindmap-definition-FAOFIHXS-DFqjkn83.js        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pegDiagram-VL7TDLO6-BNmWGCM3.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/pieDiagram-7S7Q4E2Y-BePeGCkh.js                0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/quadrantDiagram-CIZ2JOQS-D4_z01zA.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/railroadDiagram-AXF67PYL-Cj3A4VhK.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/requirementDiagram-LRYGKXZP-BInW-efY.js        0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sankeyDiagram-W5VNT64P-CD8yH-p_.js             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/sequenceDiagram-SI44F4Z6-UNuo6Dzv.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stateDiagram-OKZ733FA-Cq57lFLR.js              0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/stateDiagram-v2-UEYNNEHI-C5U4XgRw.js           0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/swimlanesDiagram-ULZ7WXOC-Dsfw1kAw.js          0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/timeline-definition-Z64GVDOM-CpXD-805.js       0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/vennDiagram-T6HMQDX7-KgIXnT2V.js               0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/wardleyDiagram-T6FBY63Y-yiSCa6NZ.js            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/xychartDiagram-ELKLHX3M-DxDWGW-v.js            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/agents-DPvORWN1.js                             0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/javascript-BWjar7HY.js                         0.06 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/dist-kSJ1ivFA.js                               0.06 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/preview-Po2wbLsD.js                            0.06 kB │ gzip:     0.07 kB
+.dist-build-C2gFOM/product/assets/capabilities-B4YpclUw.js                       0.06 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/mermaid-GHXKKRXX-D5H-rNJ8.js                   0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/open-session-B5mTjSXC.js                       0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/sizeCapture-X5ZJPWSS-DgpXn7jr.js               0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/updates-CtKz4clx.js                            0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/pie-RZYD4A2V-Dg4z__tz.js                       0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/info-DKCQHKI2-eXE2JDtI.js                      0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/profile-ops-CskMG5hE.js                        0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/radar-I7S5WNFK-B1FzDkke.js                     0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/packet-7NZHBO7P-CKVIEJKD.js                    0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/treemap-6X3UGDF4-DRFaZPqn.js                   0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/wardley-OPB4EBWU-DQbN7tCt.js                   0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/cynefin-VYW2F7L2-CLiOSArL.js                   0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/gateway-DbmHBXHg.js                            0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/preview-act-xC4jMYlO.js                        0.07 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/treeView-QDETBFTQ-CNxW0Y1Z.js                  0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/gitGraph-TEB2WS4Q-BoExE9yj.js                  0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/railroad-3IZDKUUU-BpEbcAjF.js                  0.07 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/gateway-settings-CWwHVFK-.js                   0.08 kB │ gzip:     0.08 kB
+.dist-build-C2gFOM/product/assets/railroad-peg-LSFZ7HO6-u6-ZCJai.js              0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/tour-KdQ7pVHs.js                               0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/architecture-TIHT7OUA-B4LVz9MT.js              0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/railroad-abnf-AHOZXSZD-DlDynwWA.js             0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/railroad-ebnf-EBAXGLYW-BApWHpfk.js             0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/widget-shell-DtksZEjz.js                       0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/eventmodeling-45OFAUF4-jtpVXAn3.js             0.08 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/dagre-VZM6K2ZE-Pk7dtnOh.js                     0.09 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/connection-registry-state-DAsrfRtb.js          0.09 kB │ gzip:     0.09 kB
+.dist-build-C2gFOM/product/assets/wasm-Bh9G1LBx.js                               0.10 kB │ gzip:     0.11 kB
+.dist-build-C2gFOM/product/assets/wasm-XpRMFW6A.js                               0.10 kB │ gzip:     0.11 kB
+.dist-build-C2gFOM/product/assets/layout-constants-BlpFhqRb.js                   0.11 kB │ gzip:     0.12 kB
+.dist-build-C2gFOM/product/assets/IconCheck-R_O6BEkt.js                          0.13 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/utils-BRwGVQJx.js                              0.13 kB │ gzip:     0.13 kB
+.dist-build-C2gFOM/product/assets/IconChevronDown-DktUP03n.js                    0.14 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/local-models-flag-DCaWHCiq.js                  0.14 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/trackpad-gestures-B3jbuTYy.js                  0.14 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/ime-BxwG-PYM.js                                0.17 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/session-states-IGYZ5fHO.js                     0.17 kB │ gzip:     0.14 kB
+.dist-build-C2gFOM/product/assets/IconSearch-B4GgKGf1.js                         0.19 kB │ gzip:     0.16 kB
+.dist-build-C2gFOM/product/assets/context-menu-handle-BdAReS_7.js                0.19 kB │ gzip:     0.16 kB
+.dist-build-C2gFOM/product/assets/IconCircleCheck-hScsOavE.js                    0.20 kB │ gzip:     0.17 kB
+.dist-build-C2gFOM/product/assets/format-CYnFnnkk.js                             0.21 kB │ gzip:     0.18 kB
+.dist-build-C2gFOM/product/assets/IconRefresh-BHRMaJqN.js                        0.22 kB │ gzip:     0.18 kB
+.dist-build-C2gFOM/product/assets/session-request-router-BaPZvkSb.js             0.23 kB │ gzip:     0.16 kB
+.dist-build-C2gFOM/product/assets/IconAlertCircle-DCJC3fZk.js                    0.23 kB │ gzip:     0.18 kB
+.dist-build-C2gFOM/product/assets/row-button-Bq-_7Rwu.js                         0.26 kB │ gzip:     0.20 kB
+.dist-build-C2gFOM/product/assets/personalities-CdaCckBj.js                      0.28 kB │ gzip:     0.21 kB
+.dist-build-C2gFOM/product/assets/IconMaximize-BX3RA17K.js                       0.30 kB │ gzip:     0.19 kB
+.dist-build-C2gFOM/product/assets/diff-ChtP43wD.js                               0.30 kB │ gzip:     0.23 kB
+.dist-build-C2gFOM/product/assets/IconDeviceFloppy-DAkOUXD-.js                   0.30 kB │ gzip:     0.21 kB
+.dist-build-C2gFOM/product/assets/IconAlertTriangle-CkAI8D4s.js                  0.34 kB │ gzip:     0.22 kB
+.dist-build-C2gFOM/product/assets/IconTrash-zQXLX3R4.js                          0.34 kB │ gzip:     0.20 kB
+.dist-build-C2gFOM/product/assets/IconFileText-DPeTJiPx.js                       0.35 kB │ gzip:     0.21 kB
+.dist-build-C2gFOM/product/assets/store-DBeTVbMq.js                              0.36 kB │ gzip:     0.27 kB
+.dist-build-C2gFOM/product/assets/IconMail-CMxgHWXt.js                           0.37 kB │ gzip:     0.23 kB
+.dist-build-C2gFOM/product/assets/gateway-reconnect-B04g6njJ.js                  0.38 kB │ gzip:     0.27 kB
+.dist-build-C2gFOM/product/assets/IconCopy-B4aZFhNq.js                           0.39 kB │ gzip:     0.23 kB
+.dist-build-C2gFOM/product/assets/disclosure-caret-DUl0Zpea.js                   0.39 kB │ gzip:     0.28 kB
+.dist-build-C2gFOM/product/assets/display-toggles-D7kGackd.js                    0.41 kB │ gzip:     0.30 kB
+.dist-build-C2gFOM/product/assets/profile-color-TXT65diY.js                      0.42 kB │ gzip:     0.28 kB
+.dist-build-C2gFOM/product/assets/reactions-enabled-Ctn5FfyS.js                  0.43 kB │ gzip:     0.30 kB
+.dist-build-C2gFOM/product/assets/use-is-dark-fTMZToji.js                        0.48 kB │ gzip:     0.34 kB
+.dist-build-C2gFOM/product/assets/confirm-D_Z7Rl7m.js                            0.48 kB │ gzip:     0.32 kB
+.dist-build-C2gFOM/product/assets/use-on-profile-switch-DHPrTKR3.js              0.51 kB │ gzip:     0.34 kB
+.dist-build-C2gFOM/product/assets/page-loader-gWR3cFbI.js                        0.54 kB │ gzip:     0.36 kB
+.dist-build-C2gFOM/product/assets/pane-visibility-DDcgRsdO.js                    0.54 kB │ gzip:     0.33 kB
+.dist-build-C2gFOM/product/assets/svg-embed-BUZnt8ex.js                          0.56 kB │ gzip:     0.40 kB
+.dist-build-C2gFOM/product/assets/runtime-gone-D-K5qqeg.js                       0.56 kB │ gzip:     0.35 kB
+.dist-build-C2gFOM/product/assets/live-sync-gbaqKuGw.js                          0.56 kB │ gzip:     0.29 kB
+.dist-build-C2gFOM/product/assets/use-refresh-hotkey-BsyhHMXl.js                 0.57 kB │ gzip:     0.36 kB
+.dist-build-C2gFOM/product/assets/cron-CsaC4T2G.js                               0.57 kB │ gzip:     0.30 kB
+.dist-build-C2gFOM/product/assets/highlighted-body-OFNGDK62-70rh_FYx.js          0.58 kB │ gzip:     0.38 kB
+.dist-build-C2gFOM/product/assets/brainfuck-D5EjA2JK.js                          0.59 kB │ gzip:     0.32 kB
+.dist-build-C2gFOM/product/assets/IconPhoto-WEJyE6Wr.js                          0.62 kB │ gzip:     0.33 kB
+.dist-build-C2gFOM/product/assets/use-theme-epoch-DiFe7PYp.js                    0.63 kB │ gzip:     0.42 kB
+.dist-build-C2gFOM/product/assets/textarea-DuKBcCSi.js                           0.65 kB │ gzip:     0.43 kB
+.dist-build-C2gFOM/product/assets/use-media-query-B05b2gdc.js                    0.65 kB │ gzip:     0.40 kB
+.dist-build-C2gFOM/product/assets/properties-C357ku5U.js                         0.66 kB │ gzip:     0.34 kB
+.dist-build-C2gFOM/product/assets/preview-script-runner-2C-ZS0h3.js              0.69 kB │ gzip:     0.41 kB
+.dist-build-C2gFOM/product/assets/shiki-plain-D0OgA58K.js                        0.69 kB │ gzip:     0.46 kB
+.dist-build-C2gFOM/product/assets/use-resize-observer-Bo2JZ3RX.js                0.74 kB │ gzip:     0.44 kB
+.dist-build-C2gFOM/product/assets/cmake-84nbDH0I.js                              0.75 kB │ gzip:     0.45 kB
+.dist-build-C2gFOM/product/assets/renderer-loop-pause-ajXSgtU7.js                0.77 kB │ gzip:     0.41 kB
+.dist-build-C2gFOM/product/assets/asciiarmor-C_eisQCp.js                         0.77 kB │ gzip:     0.40 kB
+.dist-build-C2gFOM/product/assets/syntax-diff-fQ53X8_5.js                        0.78 kB │ gzip:     0.50 kB
+.dist-build-C2gFOM/product/assets/protobuf-D1ij_kNL.js                           0.80 kB │ gzip:     0.51 kB
+.dist-build-C2gFOM/product/assets/session-owner-resolution-CkFtZXvB.js           0.81 kB │ gzip:     0.48 kB
+.dist-build-C2gFOM/product/assets/spotify-embed-CYh07Aeo.js                      0.84 kB │ gzip:     0.55 kB
+.dist-build-C2gFOM/product/assets/http-CLVgA2GD.js                               0.84 kB │ gzip:     0.42 kB
+.dist-build-C2gFOM/product/assets/job-state-oEJkaw0Z.js                          0.84 kB │ gzip:     0.48 kB
+.dist-build-C2gFOM/product/assets/skeleton-BbMrkrWw.js                           0.85 kB │ gzip:     0.42 kB
+.dist-build-C2gFOM/product/assets/solr-BBopId9w.js                               0.86 kB │ gzip:     0.45 kB
+.dist-build-C2gFOM/product/assets/connection-registry-state-C4MY4T6q.js          0.90 kB │ gzip:     0.53 kB
+.dist-build-C2gFOM/product/assets/troff-C2dAgh7P.js                              0.95 kB │ gzip:     0.43 kB
+.dist-build-C2gFOM/product/assets/rolldown-runtime-C_s2cVnS.js                   0.95 kB │ gzip:     0.52 kB
+.dist-build-C2gFOM/product/assets/open-session-BNzVRZqt.js                       0.97 kB │ gzip:     0.52 kB
+.dist-build-C2gFOM/product/assets/toml-BPTmHmyx.js                               1.04 kB │ gzip:     0.53 kB
+.dist-build-C2gFOM/product/assets/field-Mxkk8rWA.js                              1.07 kB │ gzip:     0.60 kB
+.dist-build-C2gFOM/product/assets/display-path-ljP0gNzP.js                       1.07 kB │ gzip:     0.51 kB
+.dist-build-C2gFOM/product/assets/codicon-BRUNJc5R.js                            1.10 kB │ gzip:     0.67 kB
+.dist-build-C2gFOM/product/assets/spreadsheet-CTIncYxj.js                        1.13 kB │ gzip:     0.53 kB
+.dist-build-C2gFOM/product/assets/badge-BZAttg1Q.js                              1.14 kB │ gzip:     0.62 kB
+.dist-build-C2gFOM/product/assets/archive-skill-confirm-dialog-DadMGLaT.js       1.18 kB │ gzip:     0.71 kB
+.dist-build-C2gFOM/product/assets/wake-indicator-root-BCTgSeDE.js                1.18 kB │ gzip:     0.69 kB
+.dist-build-C2gFOM/product/assets/computed-DbtowzdA.js                           1.22 kB │ gzip:     0.62 kB
+.dist-build-C2gFOM/product/assets/utils-CyDxMi3r.js                              1.33 kB │ gzip:     0.62 kB
+.dist-build-C2gFOM/product/assets/built-in-tour-ccojMe4Q.js                      1.36 kB │ gzip:     0.75 kB
+.dist-build-C2gFOM/product/assets/mbox-BEMVcqjs.js                               1.38 kB │ gzip:     0.65 kB
+.dist-build-C2gFOM/product/assets/session-view-DeO9a5jg.js                       1.57 kB │ gzip:     0.84 kB
+.dist-build-C2gFOM/product/assets/rpm-gpDK5sbt.js                                1.59 kB │ gzip:     0.81 kB
+.dist-build-C2gFOM/product/assets/sieve-BAxa3IjF.js                              1.61 kB │ gzip:     0.77 kB
+.dist-build-C2gFOM/product/assets/code-card-DcAjMj-q.js                          1.62 kB │ gzip:     0.69 kB
+.dist-build-C2gFOM/product/assets/profile-D4KYYefZ.js                            1.63 kB │ gzip:     0.73 kB
+.dist-build-C2gFOM/product/assets/factor-LKH5gN8L.js                             1.66 kB │ gzip:     0.60 kB
+.dist-build-C2gFOM/product/assets/search-field-CuAcc7py.js                       1.67 kB │ gzip:     0.87 kB
+.dist-build-C2gFOM/product/assets/titlebar-icon-CrFxZUB1.js                      1.67 kB │ gzip:     0.89 kB
+.dist-build-C2gFOM/product/assets/youtube-embed-heCg95uI.js                      1.68 kB │ gzip:     0.98 kB
+.dist-build-C2gFOM/product/assets/eiffel-BEjRio4Q.js                             1.69 kB │ gzip:     0.90 kB
+.dist-build-C2gFOM/product/assets/z80-CL1naaMV.js                                1.75 kB │ gzip:     0.79 kB
+.dist-build-C2gFOM/product/assets/system-actions-CRlxMjBL.js                     1.75 kB │ gzip:     0.84 kB
+.dist-build-C2gFOM/product/assets/load-more-row-75l3CnVv.js                      1.76 kB │ gzip:     0.97 kB
+.dist-build-C2gFOM/product/assets/social-embed-CPUYS-Ge.js                       1.78 kB │ gzip:     1.05 kB
+.dist-build-C2gFOM/product/assets/mumps-BSzj6Xyz.js                              1.82 kB │ gzip:     0.95 kB
+.dist-build-C2gFOM/product/assets/elm-Cshzl8qu.js                                1.86 kB │ gzip:     0.81 kB
+.dist-build-C2gFOM/product/assets/mathematica-u8YMmbU0.js                        1.89 kB │ gzip:     0.80 kB
+.dist-build-C2gFOM/product/assets/dockerfile-DJkHQgkl.js                         1.90 kB │ gzip:     0.65 kB
+.dist-build-C2gFOM/product/assets/turtle-Cx3rYX2g.js                             1.95 kB │ gzip:     0.89 kB
+.dist-build-C2gFOM/product/assets/alert-CZXEAYwT.js                              1.96 kB │ gzip:     0.84 kB
+.dist-build-C2gFOM/product/assets/ebnf-D4c0_ac3.js                               1.97 kB │ gzip:     0.80 kB
+.dist-build-C2gFOM/product/assets/dist-CQeZwX-M.js                               1.98 kB │ gzip:     1.26 kB
+.dist-build-C2gFOM/product/assets/smalltalk-BLp5-jwC.js                          1.99 kB │ gzip:     0.85 kB
+.dist-build-C2gFOM/product/assets/error-state-CrSU-qr3.js                        1.99 kB │ gzip:     1.01 kB
+.dist-build-C2gFOM/product/assets/fcl-ClOhbFR7.js                                2.02 kB │ gzip:     0.95 kB
+.dist-build-C2gFOM/product/assets/ntriples-B9h1VB_g.js                           2.06 kB │ gzip:     0.72 kB
+.dist-build-C2gFOM/product/assets/page-search-shell-Y_-Q1aPA.js                  2.08 kB │ gzip:     1.01 kB
+.dist-build-C2gFOM/product/assets/dtd-DTF72YNO.js                                2.09 kB │ gzip:     0.87 kB
+.dist-build-C2gFOM/product/assets/octave-D2Q8cUp1.js                             2.10 kB │ gzip:     1.07 kB
+.dist-build-C2gFOM/product/assets/yacas-CXXgtw0p.js                              2.14 kB │ gzip:     1.08 kB
+.dist-build-C2gFOM/product/assets/segmented-control-B-9Xp6aq.js                  2.17 kB │ gzip:     1.06 kB
+.dist-build-C2gFOM/product/assets/input-BtaxYWmy.js                              2.22 kB │ gzip:     1.09 kB
+.dist-build-C2gFOM/product/assets/pascal-Dp_KdFgX.js                             2.25 kB │ gzip:     1.17 kB
+.dist-build-C2gFOM/product/assets/simple-mode-DXiLM1-G.js                        2.27 kB │ gzip:     1.09 kB
+.dist-build-C2gFOM/product/assets/apl-gfMMiTNf.js                                2.29 kB │ gzip:     1.22 kB
+.dist-build-C2gFOM/product/assets/commonlisp-DgAKBe0r.js                         2.31 kB │ gzip:     1.09 kB
+.dist-build-C2gFOM/product/assets/tcl-BGfruO1u.js                                2.35 kB │ gzip:     1.22 kB
+.dist-build-C2gFOM/product/assets/shell-DwuoZtxw.js                              2.43 kB │ gzip:     1.20 kB
+.dist-build-C2gFOM/product/assets/confirm-dialog-C12KV_bV.js                     2.44 kB │ gzip:     1.17 kB
+.dist-build-C2gFOM/product/assets/webidl-D5jiJvOU.js                             2.44 kB │ gzip:     1.24 kB
+.dist-build-C2gFOM/product/assets/session-request-router-BJWUrFZS.js             2.45 kB │ gzip:     1.11 kB
+.dist-build-C2gFOM/product/assets/pig-AF4Hwhju.js                                2.51 kB │ gzip:     1.37 kB
+.dist-build-C2gFOM/product/assets/puppet-BZyAS7I4.js                             2.51 kB │ gzip:     1.19 kB
+.dist-build-C2gFOM/product/assets/forth-Cezjo90N.js                              2.54 kB │ gzip:     1.32 kB
+.dist-build-C2gFOM/product/assets/frame-embed-Dyak59Ow.js                        2.59 kB │ gzip:     1.26 kB
+.dist-build-C2gFOM/product/assets/dist-GEZKg7WE.js                               2.60 kB │ gzip:     1.49 kB
+.dist-build-C2gFOM/product/assets/cron-actions-Pih-C0DR.js                       2.61 kB │ gzip:     1.12 kB
+.dist-build-C2gFOM/product/assets/time-BGCVC9ln.js                               2.65 kB │ gzip:     1.02 kB
+.dist-build-C2gFOM/product/assets/overlay-view-Cd5nB9uG.js                       2.65 kB │ gzip:     1.21 kB
+.dist-build-C2gFOM/product/assets/velocity-CqftRsjg.js                           2.70 kB │ gzip:     1.11 kB
+.dist-build-C2gFOM/product/assets/tiddlywiki-VlUiK86J.js                         2.76 kB │ gzip:     1.07 kB
+.dist-build-C2gFOM/product/assets/modelica-CqHI_q-D.js                           2.79 kB │ gzip:     1.28 kB
+.dist-build-C2gFOM/product/assets/oz-BwTct_5T.js                                 2.88 kB │ gzip:     1.27 kB
+.dist-build-C2gFOM/product/assets/r-CxDmU1I4.js                                  2.92 kB │ gzip:     1.33 kB
+.dist-build-C2gFOM/product/assets/stex-DNzd62Q_.js                               3.09 kB │ gzip:     1.17 kB
+.dist-build-C2gFOM/product/assets/shiki-block-C5vnJs-i.js                        3.09 kB │ gzip:     1.55 kB
+.dist-build-C2gFOM/product/assets/copy-button-CmKkHQ0G.js                        3.09 kB │ gzip:     1.35 kB
+.dist-build-C2gFOM/product/assets/translucency-CUfRIc3Z.js                       3.12 kB │ gzip:     1.35 kB
+.dist-build-C2gFOM/product/assets/lua-CiA1ziua.js                                3.13 kB │ gzip:     1.40 kB
+.dist-build-C2gFOM/product/assets/cypher-p9eYesGn.js                             3.18 kB │ gzip:     1.49 kB
+.dist-build-C2gFOM/product/assets/tiki-AK6FwT8q.js                               3.22 kB │ gzip:     1.25 kB
+.dist-build-C2gFOM/product/assets/vhdl-kS471soi.js                               3.31 kB │ gzip:     1.49 kB
+.dist-build-C2gFOM/product/assets/dist-SizmCzfK.js                               3.32 kB │ gzip:     1.68 kB
+.dist-build-C2gFOM/product/assets/sparql-Dz-mlCAC.js                             3.33 kB │ gzip:     1.59 kB
+.dist-build-C2gFOM/product/assets/mscgen-qgSLujhx.js                             3.49 kB │ gzip:     0.97 kB
+.dist-build-C2gFOM/product/assets/profile-scope-D53TXPek.js                      3.51 kB │ gzip:     1.63 kB
+.dist-build-C2gFOM/product/assets/local-setup-offer-2Ehv2ESn.js                  3.61 kB │ gzip:     1.62 kB
+.dist-build-C2gFOM/product/assets/vb-BthdM_4N.js                                 3.65 kB │ gzip:     1.81 kB
+.dist-build-C2gFOM/product/assets/d-DWkQyNnU.js                                  3.69 kB │ gzip:     1.67 kB
+.dist-build-C2gFOM/product/assets/q-B9NhS7L_.js                                  3.69 kB │ gzip:     1.69 kB
+.dist-build-C2gFOM/product/assets/swift-DKB6_1j6.js                              3.76 kB │ gzip:     1.81 kB
+.dist-build-C2gFOM/product/assets/coffeescript-De_zI4J0.js                       3.84 kB │ gzip:     1.69 kB
+.dist-build-C2gFOM/product/assets/fortran-Bt6PBEDR.js                            3.86 kB │ gzip:     1.93 kB
+.dist-build-C2gFOM/product/assets/quick-entry-root-EErXWK3N.js                   3.95 kB │ gzip:     1.69 kB
+.dist-build-C2gFOM/product/assets/asn1-DCl_8MCW.js                               3.97 kB │ gzip:     1.95 kB
+.dist-build-C2gFOM/product/assets/dylan-C6jEEEk-.js                              4.04 kB │ gzip:     1.63 kB
+.dist-build-C2gFOM/product/assets/asterisk-BEn0Cwpx.js                           4.05 kB │ gzip:     1.73 kB
+.dist-build-C2gFOM/product/assets/tab-dropdown-B4mmQVZv.js                       4.06 kB │ gzip:     1.80 kB
+.dist-build-C2gFOM/product/assets/livescript-BXxG0Yva.js                         4.08 kB │ gzip:     1.62 kB
+.dist-build-C2gFOM/product/assets/ttcn-cfg-2b4Gb5sE.js                           4.09 kB │ gzip:     1.72 kB
+.dist-build-C2gFOM/product/assets/groovy-D5BFAy6W.js                             4.12 kB │ gzip:     1.74 kB
+.dist-build-C2gFOM/product/assets/helpers-BouT-__G.js                            4.12 kB │ gzip:     1.95 kB
+.dist-build-C2gFOM/product/assets/haskell-BRsoo5mP.js                            4.15 kB │ gzip:     1.91 kB
+.dist-build-C2gFOM/product/assets/markdown-code-DogWT6b2.js                      4.23 kB │ gzip:     1.82 kB
+.dist-build-C2gFOM/product/assets/use-zoom-pan-BaGgDQ84.js                       4.23 kB │ gzip:     1.62 kB
+.dist-build-C2gFOM/product/assets/quick-entry-lLEIrHHs.js                        4.27 kB │ gzip:     1.30 kB
+.dist-build-C2gFOM/product/assets/gas-BHEdbvp9.js                                4.55 kB │ gzip:     1.27 kB
+.dist-build-C2gFOM/product/assets/mllike-B45xgp2S.js                             4.82 kB │ gzip:     1.57 kB
+.dist-build-C2gFOM/product/assets/ttcn-PPSTk1ow.js                               4.84 kB │ gzip:     2.14 kB
+.dist-build-C2gFOM/product/assets/dist-cVrkCP24.js                               4.93 kB │ gzip:     2.33 kB
+.dist-build-C2gFOM/product/assets/crystal-Bsdphhtm.js                            5.01 kB │ gzip:     2.10 kB
+.dist-build-C2gFOM/product/assets/ruby-BjXV7-Qa.js                               5.02 kB │ gzip:     2.14 kB
+.dist-build-C2gFOM/product/assets/ecl-BVIeWmwY.js                                5.11 kB │ gzip:     2.30 kB
+.dist-build-C2gFOM/product/assets/julia-CQfgDRfP.js                              5.26 kB │ gzip:     2.16 kB
+.dist-build-C2gFOM/product/assets/subagents-CUnNQUC3.js                          5.36 kB │ gzip:     2.21 kB
+.dist-build-C2gFOM/product/assets/vbscript-D9f6rSsU.js                           5.43 kB │ gzip:     2.56 kB
+.dist-build-C2gFOM/product/assets/error-boundary-BwGuVLba.js                     5.54 kB │ gzip:     2.34 kB
+.dist-build-C2gFOM/product/assets/mirc-C9zpzAZU.js                               5.91 kB │ gzip:     2.70 kB
+.dist-build-C2gFOM/product/assets/chat-runtime-DtuNzi1X.js                       5.93 kB │ gzip:     2.43 kB
+.dist-build-C2gFOM/product/assets/glyph-spinner-B0Bl4ny9.js                      6.04 kB │ gzip:     2.02 kB
+.dist-build-C2gFOM/product/assets/xquery-BOL914df.js                             6.15 kB │ gzip:     2.57 kB
+.dist-build-C2gFOM/product/assets/cobol-DHLQUbN7.js                              6.19 kB │ gzip:     2.98 kB
+.dist-build-C2gFOM/product/assets/python-B5eWn6H5.js                             6.27 kB │ gzip:     2.67 kB
+.dist-build-C2gFOM/product/assets/vibe-hearts-enabled-PKbQJSNh.js                6.32 kB │ gzip:     2.56 kB
+.dist-build-C2gFOM/product/assets/scheme-tChLYBuY.js                             6.35 kB │ gzip:     2.37 kB
+.dist-build-C2gFOM/product/assets/pug-Wky5Dnfy.js                                6.63 kB │ gzip:     1.99 kB
+.dist-build-C2gFOM/product/assets/checkbox-Bj3KX_4e.js                           6.72 kB │ gzip:     2.89 kB
+.dist-build-C2gFOM/product/assets/textile-C4jVoHG1.js                            6.74 kB │ gzip:     2.44 kB
+.dist-build-C2gFOM/product/assets/nsis-CfSuhXs5.js                               6.80 kB │ gzip:     2.99 kB
+.dist-build-C2gFOM/product/assets/loader-DBJHJTBE.js                             6.98 kB │ gzip:     2.49 kB
+.dist-build-C2gFOM/product/assets/button-t5B39bjn.js                             7.01 kB │ gzip:     2.84 kB
+.dist-build-C2gFOM/product/assets/use-deep-link-highlight-CVUlfaj-.js            7.12 kB │ gzip:     3.18 kB
+.dist-build-C2gFOM/product/assets/notifications-ByPMGfXP.js                      7.34 kB │ gzip:     3.09 kB
+.dist-build-C2gFOM/product/assets/nginx-BMaDbqW3.js                              7.40 kB │ gzip:     2.73 kB
+.dist-build-C2gFOM/product/assets/listing-embed-BEzpeoY0.js                      7.67 kB │ gzip:     3.43 kB
+.dist-build-C2gFOM/product/assets/powershell-BcIto6Sf.js                         7.69 kB │ gzip:     3.29 kB
+.dist-build-C2gFOM/product/assets/erlang-BV0c4Hdn.js                             7.84 kB │ gzip:     2.90 kB
+.dist-build-C2gFOM/product/assets/zoomable-image-DRUFG8yR.js                     7.86 kB │ gzip:     3.64 kB
+.dist-build-C2gFOM/product/assets/haxe-DjVOVvNP.js                               7.86 kB │ gzip:     2.94 kB
+.dist-build-C2gFOM/product/assets/verilog-Be6GoVpy.js                            8.18 kB │ gzip:     3.46 kB
+.dist-build-C2gFOM/product/assets/menu-DPfFB_Tx.js                               8.30 kB │ gzip:     3.14 kB
+.dist-build-C2gFOM/product/assets/overlay-split-layout-DK52Uydg.js               8.31 kB │ gzip:     3.00 kB
+.dist-build-C2gFOM/product/assets/dist-Djd5AZj5.js                               8.43 kB │ gzip:     3.59 kB
+.dist-build-C2gFOM/product/assets/prompts-d1jHjFo_.js                            8.50 kB │ gzip:     3.36 kB
+.dist-build-C2gFOM/product/assets/rename-profile-dialog-BPfmHeIS.js              8.52 kB │ gzip:     3.36 kB
+.dist-build-C2gFOM/product/assets/log-tail-dWX28NU5.js                           8.63 kB │ gzip:     4.03 kB
+.dist-build-C2gFOM/product/assets/profiles-DDRrgJeC.js                           8.66 kB │ gzip:     3.69 kB
+.dist-build-C2gFOM/product/assets/panes-CR1fbrCL.js                              8.90 kB │ gzip:     3.55 kB
+.dist-build-C2gFOM/product/assets/sas-C2OyD2Y6.js                                9.33 kB │ gzip:     4.11 kB
+.dist-build-C2gFOM/product/assets/clojure-BflJGmDX.js                            9.40 kB │ gzip:     4.02 kB
+.dist-build-C2gFOM/product/assets/credential-key-ui-DScI9Rx4.js                  9.52 kB │ gzip:     3.79 kB
+.dist-build-C2gFOM/product/assets/perl-BkSkiI9m.js                               9.73 kB │ gzip:     3.50 kB
+.dist-build-C2gFOM/product/assets/idl-BUZw3wgd.js                                9.82 kB │ gzip:     4.40 kB
+.dist-build-C2gFOM/product/assets/gherkin-oBAE_ms0.js                           10.15 kB │ gzip:     5.09 kB
+.dist-build-C2gFOM/product/assets/overlay-root-BVoyvLba.js                      10.51 kB │ gzip:     4.37 kB
+.dist-build-C2gFOM/product/assets/primitives-IgQQes4X.js                        10.63 kB │ gzip:     4.01 kB
+.dist-build-C2gFOM/product/assets/panel-DzfS78qN.js                             10.68 kB │ gzip:     3.76 kB
+.dist-build-C2gFOM/product/assets/context-menu-CkW8jw3F.js                      10.71 kB │ gzip:     3.03 kB
+.dist-build-C2gFOM/product/assets/mermaid-embed-BkIT1Nla.js                     11.03 kB │ gzip:     4.60 kB
+.dist-build-C2gFOM/product/assets/diff-lines-DRnSqxXI.js                        11.21 kB │ gzip:     4.74 kB
+.dist-build-C2gFOM/product/assets/dialog-Bi3I8YFF.js                            11.32 kB │ gzip:     3.69 kB
+.dist-build-C2gFOM/product/assets/dist-BIBYNzFA.js                              11.55 kB │ gzip:     5.18 kB
+.dist-build-C2gFOM/product/assets/status-dot-CSwD96eJ.js                        12.06 kB │ gzip:     4.44 kB
+.dist-build-C2gFOM/product/assets/webhooks-BAFee4vg.js                          12.06 kB │ gzip:     4.30 kB
+.dist-build-C2gFOM/product/assets/embedded-images-3KlbeIyx.js                   13.27 kB │ gzip:     5.06 kB
+.dist-build-C2gFOM/product/assets/directive-text-VIx86AU7.js                    13.30 kB │ gzip:     5.70 kB
+.dist-build-C2gFOM/product/assets/platform-status-DB69eD2e.js                   13.33 kB │ gzip:     5.35 kB
+.dist-build-C2gFOM/product/assets/dist-CflEw8bU.js                              14.30 kB │ gzip:     5.77 kB
+.dist-build-C2gFOM/product/assets/pane-focus-BAj_1eR8.js                        14.41 kB │ gzip:     5.86 kB
+.dist-build-C2gFOM/product/assets/use-pet-zoom-gesture-WxID3vVy.js              14.91 kB │ gzip:     6.47 kB
+.dist-build-C2gFOM/product/assets/agents-B9E_bTeX.js                            16.21 kB │ gzip:     6.10 kB
+.dist-build-C2gFOM/product/assets/dist-zpwNbuxL.js                              16.22 kB │ gzip:     7.46 kB
+.dist-build-C2gFOM/product/assets/profile-C2X1abT6.js                           16.27 kB │ gzip:     5.95 kB
+.dist-build-C2gFOM/product/assets/javascript-D-FtdkNC.js                        16.94 kB │ gzip:     5.71 kB
+.dist-build-C2gFOM/product/assets/fleet-roster-DKinDJ7o.js                      19.28 kB │ gzip:     6.96 kB
+.dist-build-C2gFOM/product/assets/dist-CTjhQfX-.js                              20.68 kB │ gzip:     9.32 kB
+.dist-build-C2gFOM/product/assets/dist-Dwf-Sj6z.js                              20.94 kB │ gzip:     9.66 kB
+.dist-build-C2gFOM/product/assets/select-AqzLJ1Rt.js                            21.01 kB │ gzip:     7.36 kB
+.dist-build-C2gFOM/product/assets/clike-DfEtMM_h.js                             22.05 kB │ gzip:     7.76 kB
+.dist-build-C2gFOM/product/assets/onboarding-BATvhMyo.js                        22.79 kB │ gzip:     8.23 kB
+.dist-build-C2gFOM/product/assets/dist-CA4j1TbZ.js                              22.95 kB │ gzip:    10.42 kB
+.dist-build-C2gFOM/product/assets/preview-Bk0eZiD5.js                           23.04 kB │ gzip:     8.44 kB
+.dist-build-C2gFOM/product/assets/browser-C-aZSVNC.js                           23.47 kB │ gzip:     8.86 kB
+.dist-build-C2gFOM/product/assets/stylus-BOVgKnng.js                            23.51 kB │ gzip:     8.55 kB
+.dist-build-C2gFOM/product/assets/gateway-Ub7ndvYb.js                           24.21 kB │ gzip:     7.47 kB
+.dist-build-C2gFOM/product/assets/context-vtjJd155.js                           24.27 kB │ gzip:     9.51 kB
+.dist-build-C2gFOM/product/assets/css-CnaYoQib.js                               24.66 kB │ gzip:     8.25 kB
+.dist-build-C2gFOM/product/assets/command-center-DlUGTgVx.js                    25.95 kB │ gzip:     8.20 kB
+.dist-build-C2gFOM/product/assets/projects-CMqiDW56.js                          25.99 kB │ gzip:     9.44 kB
+.dist-build-C2gFOM/product/assets/dist-QuGB9Sgt.js                              26.44 kB │ gzip:     8.68 kB
+.dist-build-C2gFOM/product/assets/dist-sHns9vcr.js                              26.56 kB │ gzip:    12.58 kB
+.dist-build-C2gFOM/product/assets/artifacts-CDZp7NxI.js                         26.61 kB │ gzip:     9.60 kB
+.dist-build-C2gFOM/product/assets/bundle-mjs-DxdGK6Xj.js                        26.85 kB │ gzip:     8.55 kB
+.dist-build-C2gFOM/product/assets/dist-Bew5kbn_.js                              28.26 kB │ gzip:    11.49 kB
+.dist-build-C2gFOM/product/assets/cron-CTEswUSY.js                              28.75 kB │ gzip:    10.37 kB
+.dist-build-C2gFOM/product/assets/dist-snIvpmp7.js                              30.71 kB │ gzip:    12.72 kB
+.dist-build-C2gFOM/product/assets/shiki-highlighter-M_iZ1LVp.js                 30.76 kB │ gzip:    11.28 kB
+.dist-build-C2gFOM/product/assets/dropdown-menu-CkneQe37.js                     30.98 kB │ gzip:     9.41 kB
+.dist-build-C2gFOM/product/assets/layout-iy-Al7Pk.js                            31.56 kB │ gzip:    11.01 kB
+.dist-build-C2gFOM/product/assets/combo-Exs6hYOH.js                             33.44 kB │ gzip:    12.07 kB
+.dist-build-C2gFOM/product/assets/messaging-CXfDvFNo.js                         33.46 kB │ gzip:    11.85 kB
+.dist-build-C2gFOM/product/assets/preview-act-YWFFj-y-.js                       34.88 kB │ gzip:    12.67 kB
+.dist-build-C2gFOM/product/assets/session-BBQK2SPo.js                           36.07 kB │ gzip:    13.58 kB
+.dist-build-C2gFOM/product/assets/sql-DuQMFDvy.js                               36.83 kB │ gzip:    10.90 kB
+.dist-build-C2gFOM/product/assets/chat-messages-BwskRpAU.js                     38.66 kB │ gzip:    13.08 kB
+.dist-build-C2gFOM/product/assets/dist-Cc3Z2DrY.js                              40.70 kB │ gzip:    16.93 kB
+.dist-build-C2gFOM/product/assets/session-states-NH5aLQ-d.js                    40.77 kB │ gzip:    13.68 kB
+.dist-build-C2gFOM/product/assets/gateway-settings-DiHOx7qL.js                  41.09 kB │ gzip:    12.20 kB
+.dist-build-C2gFOM/product/assets/tooltip-Dmp2r8Jk.js                           42.25 kB │ gzip:    15.51 kB
+.dist-build-C2gFOM/product/assets/dist-D2RFnfYx.js                              43.74 kB │ gzip:    15.09 kB
+.dist-build-C2gFOM/product/assets/dist-Dmb_vQ2F.js                              44.57 kB │ gzip:    19.31 kB
+.dist-build-C2gFOM/product/assets/dist-CWRm8h5f.js                              46.96 kB │ gzip:    13.42 kB
+.dist-build-C2gFOM/product/assets/code-editor-BI_WzYQY.js                       50.83 kB │ gzip:    14.94 kB
+.dist-build-C2gFOM/product/assets/starmap-D8LgbU9k.js                           51.37 kB │ gzip:    21.61 kB
+.dist-build-C2gFOM/product/assets/tour-BzYD6NzP.js                              61.76 kB │ gzip:    12.42 kB
+.dist-build-C2gFOM/product/assets/dist-Cy34BK_5.js                              70.78 kB │ gzip:    26.09 kB
+.dist-build-C2gFOM/product/assets/updates-BpBloyM4.js                           83.56 kB │ gzip:    28.62 kB
+.dist-build-C2gFOM/product/assets/dist-Ti7danY7.js                              84.39 kB │ gzip:    33.65 kB
+.dist-build-C2gFOM/product/assets/request-BqzVz12S.js                           91.58 kB │ gzip:    32.82 kB
+.dist-build-C2gFOM/product/assets/dist-DtGxeoEV.js                              97.73 kB │ gzip:    28.63 kB
+.dist-build-C2gFOM/product/assets/dist-KOMAEXc6.js                             103.89 kB │ gzip:    34.75 kB
+.dist-build-C2gFOM/product/assets/profile-ops-C4wPQ9-V.js                      114.85 kB │ gzip:    36.81 kB
+.dist-build-C2gFOM/product/assets/chunk-BO2N2NFS-CjY23ijI.js                   123.46 kB │ gzip:    37.85 kB
+.dist-build-C2gFOM/product/assets/vendor-util-CYcTVS1Z.js                      132.88 kB │ gzip:    47.90 kB
+.dist-build-C2gFOM/product/assets/rfb-BbHiRrFx.js                              187.49 kB │ gzip:    56.53 kB
+.dist-build-C2gFOM/product/assets/external-link-DyiIkRRw.js                    237.27 kB │ gzip:    88.68 kB
+.dist-build-C2gFOM/product/assets/version-details-C-FJOYTO.js                  257.38 kB │ gzip:    84.43 kB
+.dist-build-C2gFOM/product/assets/vendor-react-C4pS_tun.js                     258.26 kB │ gzip:    82.37 kB
+.dist-build-C2gFOM/product/assets/katex-BpqM79Ca.js                            258.80 kB │ gzip:    77.49 kB
+.dist-build-C2gFOM/product/assets/dist-OhSADO_S.js                             277.71 kB │ gzip:    90.25 kB
+.dist-build-C2gFOM/product/assets/settings-BJBXerPq.js                         294.64 kB │ gzip:    87.73 kB
+.dist-build-C2gFOM/product/assets/vendor-md-BPTkkidF.js                        349.01 kB │ gzip:   106.93 kB
+.dist-build-C2gFOM/product/assets/sdk-CUN31bIV.js                              492.99 kB │ gzip:   165.56 kB
+.dist-build-C2gFOM/product/assets/i18n-B7q9d45I.js                           2,231.30 kB │ gzip:   712.58 kB
+.dist-build-C2gFOM/product/assets/mermaid-DcHeGz8i.js                        2,972.21 kB │ gzip:   784.47 kB
+.dist-build-C2gFOM/product/assets/index-D8wejk29.js                          3,106.00 kB │ gzip:   974.31 kB
+.dist-build-C2gFOM/product/assets/shiki-C9RSeBEV.js                         18,972.76 kB │ gzip: 3,311.79 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/plugins/hermes-bots/profile-ops.ts is dynamically imported by src/plugins/hermes-bots/data.ts but also statically imported by src/plugins/hermes-bots/bot-row.tsx, src/plugins/hermes-bots/create-dialog.tsx, src/plugins/hermes-bots/roster-pane-dialogs.tsx, src/plugins/hermes-bots/roster-pane-lifecycle.ts, dynamic import will not move module into another chunk.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - @rolldown/plugin-babel (84%)
+  - vite:css (5%)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+✓ built in 22.45s
+
+  .dist-build-C2gFOM/product/electron-main.mjs  2.9mb ⚠️
+
+⚡ Done in 132ms
+
+  .dist-build-C2gFOM/product/electron-preload.js  44.0kb
+
+⚡ Done in 14ms
+
+  .dist-build-C2gFOM/product/preview-guest-preload.js  962b 
+
+⚡ Done in 6ms
+
+> hermes@0.0.0 prebuilder
+> node scripts/patch-electron-builder-mac-binary.mjs
+
+
+> hermes@0.0.0 builder
+> node scripts/run-electron-builder.mjs
+
+file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/scripts/prepare-packaging-tools.mjs:26
+    throw new Error(`Installed ${name} is not the source's lock-pinned package; prepare Node dependencies first`)
+          ^
+
+Error: Installed app-builder-lib is not the source's lock-pinned package; prepare Node dependencies first
+    at pinnedPackageRoot (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/scripts/prepare-packaging-tools.mjs:26:11)
+    at preparePackagingTools (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/scripts/prepare-packaging-tools.mjs:58:23)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/scripts/prepare-packaging-tools.mjs:133:21
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.22.3
+npm error Lifecycle script `builder` failed with error:
+npm error code 1
+npm error path /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error workspace hermes@0.0.0
+npm error location /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error command failed
+npm error command sh -c node scripts/run-electron-builder.mjs
+npm error Lifecycle script `dist` failed with error:
+npm error code 1
+npm error path /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error workspace hermes@0.0.0
+npm error location /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error command failed
+npm error command sh -c npm run build && npm run builder
+npm error Lifecycle script `dist:bundled` failed with error:
+npm error code 1
+npm error path /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error workspace hermes@0.0.0
+npm error location /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+npm error command failed
+npm error command sh -c npm run payload && cross-env HERMES_DESKTOP_VARIANT=bundled npm run dist
