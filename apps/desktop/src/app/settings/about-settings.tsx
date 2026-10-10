@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react'
 import { type ReactElement, useEffect } from 'react'
 
+import { BRAND } from '@/brand'
 import { UpdateStatusCard, VersionHero } from '@/components/update-status'
 import { VersionDetails } from '@/components/version-details'
 import { useI18n } from '@/i18n'
@@ -53,6 +54,10 @@ function AppUpdatesSettings({ includeUninstall }: AppUpdatesSettingsProps): Reac
   return (
     <SettingsContent>
       <VersionHero version={version} />
+      <p className="mx-auto max-w-2xl text-center text-xs text-muted-foreground">
+        Derived from {BRAND.attribution.upstream}. Copyright © {BRAND.attribution.year} {BRAND.attribution.holder}.{' '}
+        {BRAND.attribution.license} license; see {BRAND.attribution.file}.
+      </p>
       <div className="mx-auto mt-4 w-full max-w-2xl">
         <SectionHeading icon={RefreshCw} title={t.settings.about.updates} />
         <div className="grid gap-3" id={settingElementId(SETTING_IDS.about.updates)}>

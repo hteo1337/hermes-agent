@@ -9,10 +9,10 @@ const MARK = String.fromCharCode(0xe000)
 const RESTORE = new RegExp(`${MARK}(\\d+)${MARK}`, 'g')
 
 const RULES: ReadonlyArray<readonly [RegExp, string]> = [
-  [/\bNous Research\b/g, 'the provider'],
-  [/\bNous Portal\b/g, 'the portal'],
-  [/\bNous (account|accounts|subscription|service|free tier|staff)\b/g, 'portal $1'],
-  [/\bNous\b/g, 'the portal'],
+  [/\bNous Research\b/g, BRAND.name],
+  [/\bNous Portal\b/g, `${BRAND.name} Portal`],
+  [/\bNous (account|accounts|subscription|service|free tier|staff)\b/g, `${BRAND.name} $1`],
+  [/\bNous\b/g, BRAND.name],
   [/\bHermes Agent\b/g, BRAND.name],
   [/\bHermes\b/g, BRAND.name]
 ]

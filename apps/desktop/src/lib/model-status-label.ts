@@ -1,3 +1,5 @@
+import { brandText } from '@/i18n/brand-text'
+
 /** Which model/provider pair a picker should mark "current". SessionView state
  *  also drives the composer label, so a complete pair there wins over an older
  *  `model.options` response. During initial hydration (or pre-session startup),
@@ -49,7 +51,7 @@ export const PROVIDER_DISPLAY_NAMES: Readonly<Record<string, string>> = {
 export function providerDisplayName(provider: string): string {
   const normalized = provider.trim().toLowerCase()
 
-  return PROVIDER_DISPLAY_NAMES[normalized] ?? provider.trim()
+  return brandText(PROVIDER_DISPLAY_NAMES[normalized] ?? provider.trim())
 }
 
 /** Strip provider prefix and normalize for display. */

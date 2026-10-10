@@ -15,15 +15,24 @@ import {
   validateProviderCredential
 } from '@/hermes'
 import { translateNow } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import { isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
 import { evaluateRuntimeReadiness, type RuntimeReadinessResult } from '@/lib/runtime-readiness'
-import { ackFreeTierNotice, freeTierReadyPending, refreshFreeTierStatus, setFreeTierRoute } from '@/store/free-tier'
+import {
+  ackFreeTierNotice,
+  freeTierReadyPending,
+  NOUS_PROVIDER_ID,
+  refreshFreeTierStatus,
+  setFreeTierRoute
+} from '@/store/free-tier'
 import { $gatewayBootGeneration } from '@/store/live-sync'
 import { setMainModelAssignment } from '@/store/model-assignment'
 import { dismissNotification, notify, notifyError } from '@/store/notifications'
 import { afterOnboardingStateRead, guidedOnboardingActive } from '@/store/onboarding-gate'
 import { captureOnboardingScope, type OnboardingScope } from '@/store/onboarding-scope'
 import type { OAuthProvider, OAuthStartResponse } from '@/types/hermes'
+
+import { ENDPOINTS } from '../../endpoints'
 
 type PkceStart = Extract<OAuthStartResponse, { flow: 'pkce' }>
 type DeviceStart = Extract<OAuthStartResponse, { flow: 'device_code' }>
@@ -301,7 +310,7 @@ function shouldPreserveConfiguredOnBootRace(runtime: RuntimeReadinessResult, sta
 }
 
 function notifyReady(provider: string) {
-  notify({ kind: 'success', title: 'Hermes is ready', message: `${provider} connected.` })
+  notify({ kind: 'success', title: `${PRODUCT_NAME} is ready`, message: `${brandText(provider)} connected.` })
 }
 
 // Human-friendly labels for tools auto-routed through the Nous Tool Gateway,
@@ -329,7 +338,7 @@ function notifyGatewayTools(tools: string[] | undefined) {
   notify({
     durationMs: 8000,
     kind: 'info',
-    message: `${list} now run through your Nous subscription — no separate API keys needed.`,
+    message: `${list} now run through your ${PRODUCT_NAME} Portal subscription — no separate API keys needed.`,
     title: 'Tool Gateway enabled'
   })
 }
@@ -476,7 +485,7 @@ async function completeWithModelConfirm(
         return
       }
 
-      onFail(error instanceof Error ? error.message : 'Hermes could not save the selected model.')
+      onFail(error instanceof Error ? brandText(error.message) : `${PRODUCT_NAME} could not save the selected model.`)
 
       return
     }
@@ -516,8 +525,8 @@ function providerResolutionFailure(reason: null | string) {
   const detail = reason?.trim()
 
   return detail
-    ? `Connected, but Hermes still cannot resolve a usable provider. ${detail}`
-    : 'Connected, but Hermes still cannot resolve a usable provider.'
+    ? `Connected, but ${PRODUCT_NAME} still cannot resolve a usable provider. ${brandText(detail)}`
+    : `Connected, but ${PRODUCT_NAME} still cannot resolve a usable provider.`
 }
 
 /** Re-read the OAuth provider list into the onboarding cache. Exported so a
@@ -667,6 +676,10 @@ export function startManualLocalEndpoint(reason: null | string = null, profile?:
 let pendingProviderOAuthId: null | string = null
 
 export function startManualProviderOAuth(providerId: string, profile?: ProfileScope) {
+  if (providerId === NOUS_PROVIDER_ID && !ENDPOINTS.portal) {
+    return
+  }
+
   pendingProviderOAuthId = providerId
   startManualOnboarding(null, profile)
 }
@@ -802,8 +815,7 @@ export async function refreshOnboarding(ctx: OnboardingContext, stillWanted?: ()
         id: 'runtime-not-ready',
         kind: 'info',
         title: 'Runtime not ready',
-        message:
-          `${PRODUCT_NAME} could not verify the running backend on startup. Some features may be unavailable until the gateway is reachable.`
+        message: `${PRODUCT_NAME} could not verify the running backend on startup. Some features may be unavailable until the gateway is reachable.`
       })
     }
 
@@ -897,6 +909,10 @@ async function openSignInUrl(url: string) {
 }
 
 export async function startProviderOAuth(provider: OAuthProvider, ctx: OnboardingContext) {
+  if (provider.id === NOUS_PROVIDER_ID && !ENDPOINTS.portal) {
+    return
+  }
+
   ctx = captureContext(ctx)
   const generation = flowGeneration
   flowScope = ctx.scope
@@ -1109,7 +1125,7 @@ export async function recheckExternalSignin(ctx: OnboardingContext) {
       provider,
       message:
         reason?.trim() ||
-        `Hermes still cannot reach ${provider.name}. Run \`${provider.cli_command}\` in a terminal first.`
+        `${PRODUCT_NAME} still cannot reach ${brandText(provider.name)}. Run \`${provider.cli_command}\` in a terminal first.`
     })
   )
 }
@@ -1294,7 +1310,10 @@ export async function saveOnboardingLocalEndpoint(
     if (!runtime.ready) {
       const detail = (runtime.reason ?? '').trim()
 
-      return { ok: false, message: detail || `Saved, but Hermes still cannot reach ${resolvedUrl}.` }
+      return {
+        ok: false,
+        message: brandText(detail) || `Saved, but ${PRODUCT_NAME} still cannot reach ${resolvedUrl}.`
+      }
     }
 
     notifyReady('Local / custom endpoint')

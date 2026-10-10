@@ -1,10 +1,13 @@
 import { atom, computed } from 'nanostores'
 
+import { brandText } from '@/i18n/brand-text'
 import { runFreeTierChallenge } from '@/store/free-tier-challenge'
 import { setModeContext } from '@/store/interface-mode'
 import { $onboardingGate, guidedOnboardingActive } from '@/store/onboarding-gate'
 import { onboardingSurfaceActive } from '@/store/onboarding-presence'
 import type { FreeTierStatus } from '@/types/hermes'
+
+import { ENDPOINTS } from '../../endpoints'
 
 /** The model the free-tier route runs on. Used to recognise a session that is
  *  still homed on the free tier after a sign-in. */
@@ -33,7 +36,7 @@ export const $freeTierStatus = atom<FreeTierStatus | null>(null)
  */
 export const $freeTierSignInOpen = computed(
   [$freeTierStatus, $onboardingGate],
-  status => Boolean(status?.available) && !guidedOnboardingActive()
+  status => Boolean(ENDPOINTS.portal && status?.available) && !guidedOnboardingActive()
 )
 
 // Fed here, beside the atom, so every importer of this store gets the same link.
@@ -61,6 +64,12 @@ export async function refreshFreeTierStatus(
   requestGateway: FreeTierRequester,
   isCurrent?: () => boolean
 ): Promise<FreeTierStatus | null> {
+  if (!ENDPOINTS.portal) {
+    $freeTierStatus.set(null)
+
+    return null
+  }
+
   try {
     const status = await requestGateway<FreeTierStatus>('free_tier.status')
 
@@ -101,7 +110,7 @@ export interface FreeTierSetupFailure {
 const UNREACHABLE_CODES = new Set<string>(['anon_server_error', 'anon_unreachable'])
 
 export function freeTierSetupFailure(status: FreeTierStatus | null): FreeTierSetupFailure | null {
-  if (!status || !status.enabled || status.has_guest) {
+  if (!ENDPOINTS.portal || !status || !status.enabled || status.has_guest) {
     return null
   }
 
@@ -114,7 +123,7 @@ export function freeTierSetupFailure(status: FreeTierStatus | null): FreeTierSet
   return {
     code,
     door: UNREACHABLE_CODES.has(code) ? 'retry' : 'sign_in',
-    message: typeof status.error === 'string' ? status.error : '',
+    message: typeof status.error === 'string' ? brandText(status.error) : '',
     retryAfter: Math.max(0, Math.round(Number(status.retry_after) || 0)),
     retryable: status.retryable === true
   }
@@ -152,6 +161,10 @@ export function friendlyWait(seconds: number): string {
  * status, or the last known one when the call itself failed.
  */
 export async function provisionFreeTier(requestGateway: FreeTierRequester): Promise<FreeTierStatus | null> {
+  if (!ENDPOINTS.portal) {
+    return null
+  }
+
   try {
     await requestGateway('free_tier.provision')
   } catch {
@@ -164,6 +177,10 @@ export async function provisionFreeTier(requestGateway: FreeTierRequester): Prom
 /** Persist the one-time notice acknowledgement, then re-read so every surface
  *  keyed on `notice_pending` drops away together. */
 export async function ackFreeTierNotice(requestGateway: FreeTierRequester): Promise<boolean> {
+  if (!ENDPOINTS.portal) {
+    return false
+  }
+
   try {
     const result = await requestGateway<{ acked?: boolean }>('free_tier.ack_notice')
 
@@ -189,12 +206,12 @@ export async function ackFreeTierNotice(requestGateway: FreeTierRequester): Prom
 export const $freeTierRoute = atom<boolean | null>(null)
 
 export function setFreeTierRoute(route: boolean | null | undefined) {
-  $freeTierRoute.set(typeof route === 'boolean' ? route : null)
+  $freeTierRoute.set(ENDPOINTS.portal && typeof route === 'boolean' ? route : null)
 }
 
 /** True when the one-time introduction is still owed to this user. */
 export function freeTierNoticePending(status: FreeTierStatus | null): boolean {
-  return Boolean(status?.has_guest && status.notice_pending)
+  return Boolean(ENDPOINTS.portal && status?.has_guest && status.notice_pending)
 }
 
 /** The introduction is owed AND the free tier is the route: the overlay's ready screen. */

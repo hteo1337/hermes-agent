@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { BRAND } from '@/brand'
 import type { DesktopUpdateStatus, DesktopVersionInfo, HermesConnection } from '@/global'
 import { en } from '@/i18n/en'
 import type * as SessionStore from '@/store/session'
@@ -93,6 +94,8 @@ describe('AboutSettings', (): void => {
 
     expect(screen.getByRole('heading', { name: en.updates.appName })).toBeTruthy()
     expect(screen.getByText(en.updates.versionDetailsInstallId)).toBeTruthy()
+    expect(screen.getByText(new RegExp(`${BRAND.attribution.holder}.*${BRAND.attribution.license}`))).toBeTruthy()
+    expect(screen.queryByText(/\/test\/hermes/)).toBeNull()
     expect(screen.getByText(en.updates.latestBody)).toBeTruthy()
     expect(screen.queryByText(en.updates.latestBodyBackend)).toBeNull()
     expect(refreshDesktopVersion).toHaveBeenCalledTimes(1)

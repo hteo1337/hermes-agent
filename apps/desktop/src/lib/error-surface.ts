@@ -7,6 +7,8 @@
 // Advisory contract: older backends never send this — every consumer must
 // keep working when it is absent (legacy string-sniffing stays as fallback).
 
+import { brandText } from '@/i18n/brand-text'
+
 export const ERROR_SURFACE_LAYERS = [
   'provider',
   'endpoint',
@@ -128,9 +130,11 @@ export function parseErrorSurface(value: unknown): ErrorSurface | null {
     ...(typeof raw.provider === 'string' && raw.provider ? { provider: raw.provider } : {}),
     ...(typeof raw.model === 'string' && raw.model ? { model: raw.model } : {}),
     ...(raw.auth_kind === 'oauth' || raw.auth_kind === 'api_key' ? { authKind: raw.auth_kind } : {}),
-    ...(typeof raw.provider_label === 'string' && raw.provider_label ? { providerLabel: raw.provider_label } : {}),
+    ...(typeof raw.provider_label === 'string' && raw.provider_label
+      ? { providerLabel: brandText(raw.provider_label) }
+      : {}),
     ...(typeof raw.api_key_env === 'string' && raw.api_key_env ? { apiKeyEnv: raw.api_key_env } : {}),
-    ...(typeof raw.message === 'string' && raw.message.trim() ? { message: raw.message.trim() } : {}),
+    ...(typeof raw.message === 'string' && raw.message.trim() ? { message: brandText(raw.message.trim()) } : {}),
     ...(typeof raw.resets_at === 'number' && Number.isFinite(raw.resets_at) && raw.resets_at > 0
       ? { resetsAt: raw.resets_at }
       : {})

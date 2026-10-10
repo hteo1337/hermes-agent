@@ -3,6 +3,14 @@ import { atom } from 'nanostores'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type * as EndpointsModule from '../../../endpoints'
+
+vi.mock('../../../endpoints', async importOriginal => {
+  const original = await importOriginal<typeof EndpointsModule>()
+
+  return { ...original, ENDPOINTS: { ...original.ENDPOINTS, portal: 'https://envoy.invalid' } }
+})
+
 import { ConfirmHost } from '@/components/confirm-host'
 import { $confirmRequest } from '@/store/confirm'
 import type { EnvVarInfo, OAuthProvider } from '@/types/hermes'
@@ -160,9 +168,9 @@ describe('ProvidersSettings', () => {
       await renderProvidersSettings()
       expect(getEnvVars).toHaveBeenCalledWith('beta')
       expect(listOAuthProviders).toHaveBeenCalledWith('beta')
-      fireEvent.click(await screen.findByText('Nous Portal'))
+      fireEvent.click(await screen.findByText('Envoy Portal'))
       expect(startManualProviderOAuth).toHaveBeenCalledWith('nous', 'beta')
-      fireEvent.click(await screen.findByRole('button', { name: 'Remove Nous Portal' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove Envoy Portal' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Disconnect' }))
       await waitFor(() => expect(disconnectOAuthProvider).toHaveBeenCalledWith('nous', 'beta'))
     } finally {
@@ -173,7 +181,7 @@ describe('ProvidersSettings', () => {
   it('disconnects a connected provider account and refreshes the accounts list', async () => {
     await renderProvidersSettings()
 
-    const remove = await screen.findByRole('button', { name: 'Remove Nous Portal' })
+    const remove = await screen.findByRole('button', { name: 'Remove Envoy Portal' })
     await act(async () => {
       fireEvent.click(remove)
     })
@@ -194,7 +202,7 @@ describe('ProvidersSettings', () => {
     await renderProvidersSettings()
 
     await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Remove Nous Portal' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove Envoy Portal' }))
     })
 
     await act(async () => {

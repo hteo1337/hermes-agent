@@ -1,8 +1,12 @@
 import { RowButton } from '@/components/ui/row-button'
 import { useI18n } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import { Check, ChevronRight, Cloud, Terminal } from '@/lib/icons'
 import { PROVIDER_DISPLAY_NAMES } from '@/lib/model-status-label'
+import { NOUS_PROVIDER_ID } from '@/store/free-tier'
 import type { OAuthProvider } from '@/types/hermes'
+
+import { ENDPOINTS } from '../../../endpoints'
 
 // Titles live in PROVIDER_DISPLAY_NAMES (shared with the model pill); this is
 // only the featured order. Both Anthropic entries sit at the bottom: the API-key
@@ -17,11 +21,13 @@ const PROVIDER_ORDER: Record<string, number> = {
   'claude-code': 6
 }
 
-export const providerTitle = (p: OAuthProvider) => PROVIDER_DISPLAY_NAMES[p.id] ?? p.name
+export const providerTitle = (p: OAuthProvider) => brandText(PROVIDER_DISPLAY_NAMES[p.id] ?? p.name)
 const orderOf = (p: OAuthProvider) => PROVIDER_ORDER[p.id] ?? 99
 
 export const sortProviders = (providers: OAuthProvider[]) =>
-  [...providers].sort((a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name))
+  providers
+    .filter(provider => provider.id !== NOUS_PROVIDER_ID || Boolean(ENDPOINTS.portal))
+    .sort((a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name))
 
 export function FeaturedProviderRow({
   onSelect,

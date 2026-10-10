@@ -1,0 +1,10 @@
+
+ RUN  v4.1.10 /Users/hteo/.paseo/worktrees/1so5obpm/envoy-brand-residual/apps/desktop
+
+Not implemented: Window's open() method
+Not implemented: Window's open() method
+
+ Test Files  17 passed (17)
+      Tests  221 passed (221)
+   Start at  03:15:47
+   Duration  19.74s (transform 13.50s, setup 1.50s, import 20.88s, tests 6.74s, environment 7.89s)

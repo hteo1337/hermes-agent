@@ -1,6 +1,14 @@
 import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type * as EndpointsModule from '../../endpoints'
+
+vi.mock('../../endpoints', async importOriginal => {
+  const original = await importOriginal<typeof EndpointsModule>()
+
+  return { ...original, ENDPOINTS: { ...original.ENDPOINTS, portal: 'https://envoy.invalid' } }
+})
+
 import * as notifications from '@/store/notifications'
 import { makeOAuthProvider } from '@/test/oauth-provider'
 import type { OAuthProvider } from '@/types/hermes'
