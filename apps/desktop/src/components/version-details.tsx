@@ -67,7 +67,11 @@ export function VersionDetails({ version }: { version: DesktopVersionInfo }) {
           <dt className="text-muted-foreground">{u.versionDetailsCommit}</dt>
           <dd className="break-all text-right">
             {UPDATE_REPOSITORY ? (
-              <ExternalLink className="break-all font-mono text-xs" href={`https://github.com/${UPDATE_REPOSITORY}/commit/${version.commit}`} native>
+              <ExternalLink
+                className="break-all font-mono text-xs"
+                href={`https://github.com/${UPDATE_REPOSITORY}/commit/${version.commit}`}
+                native
+              >
                 {version.commit.slice(0, 14)}
               </ExternalLink>
             ) : (
@@ -101,9 +105,7 @@ export function VersionDetails({ version }: { version: DesktopVersionInfo }) {
       {version.installId && (
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">{u.versionDetailsInstallId}</dt>
-          <dd className="break-all text-right font-mono text-xs">
-            {version.installId} ({version.hermesRoot})
-          </dd>
+          <dd className="break-all text-right font-mono text-xs">{version.installId}</dd>
         </div>
       )}
     </dl>

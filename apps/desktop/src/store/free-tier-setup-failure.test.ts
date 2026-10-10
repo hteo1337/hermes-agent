@@ -1,4 +1,12 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import type * as EndpointsModule from '../../endpoints'
+
+vi.mock('../../endpoints', async importOriginal => {
+  const original = await importOriginal<typeof EndpointsModule>()
+
+  return { ...original, ENDPOINTS: { ...original.ENDPOINTS, portal: 'https://envoy.invalid' } }
+})
 
 import { $freeTierStatus, type FreeTierRequester, freeTierSetupFailure, provisionFreeTier } from '@/store/free-tier'
 import type { FreeTierStatus } from '@/types/hermes'
