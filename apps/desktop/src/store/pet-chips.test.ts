@@ -7,7 +7,7 @@ import { answerPetChip, petChipsFrom } from './pet-chips'
 
 vi.mock('@/store/prompts', async importOriginal => ({
   ...(await importOriginal<typeof prompts>()),
-  answerApproval: vi.fn(async () => undefined)
+  answerApproval: vi.fn(async () => true)
 }))
 
 const ask = (sessionId: string, requestId: string | undefined, command = 'rm -rf /tmp/x') => ({
@@ -58,5 +58,19 @@ describe('answerPetChip', () => {
     expect(prompts.answerApproval).toHaveBeenCalledTimes(1)
     expect(vi.mocked(prompts.answerApproval).mock.calls[0]?.[2]).toBe('once')
     expect(await answerPetChip('s1', 'r1', 'once')).toBe(false)
+  })
+
+  it('keeps a queued chip when the backend resolves no approval', async () => {
+    $gateway.set({} as never)
+    prompts.setApprovalRequest(ask('s1', 'r1'))
+    vi.mocked(prompts.answerApproval).mockResolvedValueOnce(false)
+
+    expect(await answerPetChip('s1', 'r1', 'once')).toBe(false)
+    expect(
+      prompts
+        .sessionApprovalRequests('s1')
+        .get()
+        .map(item => item.requestId)
+    ).toContain('r1')
   })
 })

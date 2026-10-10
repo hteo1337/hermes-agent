@@ -87,7 +87,10 @@ export async function answerPetChip(sessionId: string, requestId: string, choice
     return false
   }
 
-  await answerApproval(gateway, request, choice)
+  if (!(await answerApproval(gateway, request, choice))) {
+    return false
+  }
+
   clearApprovalRequest(sessionId, requestId)
 
   return true

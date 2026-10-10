@@ -14084,9 +14084,33 @@ function spawnPetOverlayWindow(bounds) {
 
     wireWindowReveal(win, { show: () => win.showInactive() })
 
-    // Log-only renderer lifecycle (#81290): a dead overlay must never resurrect
-    // itself over the app, but its loss belongs in desktop.log.
-    installWindowRendererLifecycle(win, { kind: 'overlay', callbacks: { log: rememberLog } })
+    // Recover the chat if this overlay stays open with a dead or unloaded renderer.
+    const recoverOverlayRenderer = () => {
+      if (petOverlayWindow !== win || petOverlayClosing || appQuitting) {
+        return
+      }
+
+      void petMorph.recoverAfterOverlayFailure().then(recovered => {
+        if (recovered && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('hermes:pet-overlay:control', { type: 'pop-in' })
+        }
+      })
+    }
+
+    installWindowRendererLifecycle(win, {
+      kind: 'overlay',
+      callbacks: {
+        log: rememberLog,
+        reload: () => win.webContents.reload(),
+        onRendererTerminated: recoverOverlayRenderer,
+        onFailedLoadBudgetExhausted: recoverOverlayRenderer
+      },
+      isIntentionalTeardown: rendererTeardownInProgress,
+      reloadWindowMs: RENDERER_RELOAD_WINDOW_MS,
+      reloadMax: RENDERER_RELOAD_MAX,
+      recentReloadTimesRef: rendererReloadTimesRef,
+      reloadOnFailedLoad: true
+    })
 
     win.on('closed', () => {
       // A stale window openPetOverlay replaced must not touch its replacement.

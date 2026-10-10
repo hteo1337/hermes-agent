@@ -342,7 +342,7 @@ export async function replayPendingApproval(gateway: ApprovalGateway | null, ses
  * (the response frame goes back over the socket it arrived on — the owner by
  * construction), else the queue-level `approval.respond` RPC for a prompt that
  * was restored from `approval.pending` or is being answered from another
- * surface. Returns after the backend has the decision.
+ * surface. Returns whether the backend still had a decision to resolve.
  */
 
 // #55433: the backend honors an answer for the whole `approvals.timeout` window
@@ -365,9 +365,9 @@ export async function answerApproval(
   request: Pick<ApprovalRequest, 'requestId' | 'serverRequestId' | 'sessionId'>,
   choice: string,
   all = false
-): Promise<void> {
+): Promise<boolean> {
   if (respondToServerRequest(request.serverRequestId, { choice, ...(all ? { all: true } : {}) })) {
-    return
+    return true
   }
 
   if (!gateway) {
@@ -382,13 +382,15 @@ export async function answerApproval(
   }
 
   try {
-    await requestForOwnedSession(
+    const result = await requestForOwnedSession(
       request.sessionId,
       ambientRequestFor(gateway),
       'approval.respond',
       params,
       APPROVAL_RESPOND_REQUEST_TIMEOUT_MS
     )
+
+    return (result as { resolved?: number } | null)?.resolved !== 0
   } catch (error) {
     if (!isRequestTimeoutError(error)) {
       throw error
@@ -396,13 +398,15 @@ export async function answerApproval(
 
     // The deadline fired while the approval may still be pending server-side
     // (WS stall behind a long LLM stream). Resolve is idempotent: re-send once.
-    await requestForOwnedSession(
+    const result = await requestForOwnedSession(
       request.sessionId,
       ambientRequestFor(gateway),
       'approval.respond',
       params,
       APPROVAL_RESPOND_REQUEST_TIMEOUT_MS
     )
+
+    return (result as { resolved?: number } | null)?.resolved !== 0
   }
 }
 

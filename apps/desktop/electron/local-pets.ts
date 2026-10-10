@@ -118,6 +118,7 @@ function parsePngChunks(buf: Buffer): { header: PngHeader; idat: Buffer[] } | nu
       if (offset !== 8) {
         return null
       }
+
       header = parsePngHeader(data)
 
       if (!header) {
@@ -160,6 +161,7 @@ function pngRows(header: PngHeader): Array<{ bytes: number; count: number }> {
     if (!passWidth || !passHeight) {
       continue
     }
+
     rows.push({ bytes: Math.ceil((passWidth * header.channels * header.bitDepth) / 8), count: passHeight })
   }
 
@@ -199,6 +201,7 @@ function readPngSize(buf: Buffer): { width: number; height: number } | null {
       if (decoded[cursor] > 4) {
         return null
       }
+
       cursor += bytes + 1
     }
   }
@@ -292,9 +295,17 @@ function inspectLocalPet(dir: string, folderName: string): { pet: LocalPet; atla
   }
 
   let manifest: LocalPetManifest
+  let manifestDescriptor: number | null = null
 
   try {
-    const result = validateManifest(JSON.parse(fs.readFileSync(manifestPath, 'utf8')))
+    manifestDescriptor = fs.openSync(manifestPath, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0))
+    const opened = fs.fstatSync(manifestDescriptor)
+
+    if (!opened.isFile()) {
+      return reject('pet.json and atlas.png must be regular files')
+    }
+
+    const result = validateManifest(JSON.parse(fs.readFileSync(manifestDescriptor, 'utf8')))
 
     if (typeof result === 'string') {
       return reject(result)
@@ -303,6 +314,10 @@ function inspectLocalPet(dir: string, folderName: string): { pet: LocalPet; atla
     manifest = result
   } catch {
     return reject('pet.json is not valid JSON')
+  } finally {
+    if (manifestDescriptor !== null) {
+      fs.closeSync(manifestDescriptor)
+    }
   }
 
   if (manifest.id !== folderName) {
@@ -323,6 +338,7 @@ function inspectLocalPet(dir: string, folderName: string): { pet: LocalPet; atla
     if (opened.size > MAX_PNG_BYTES) {
       return reject(`atlas.png exceeds ${MAX_PNG_BYTES} bytes`)
     }
+
     atlas = fs.readFileSync(descriptor)
   } catch {
     return reject('atlas.png is unreadable')
@@ -361,6 +377,7 @@ export function readLocalPetAtlas(petsDir: string, id: string): Buffer | null {
   if (typeof id !== 'string' || !ID_PATTERN.test(id)) {
     return null
   }
+
   const result = inspectLocalPet(path.join(petsDir, id), id)
 
   return 'reason' in result ? null : result.atlas

@@ -222,6 +222,52 @@ export function createPetMorphController(deps: PetMorphDeps) {
     })
   }
 
+  async function recoverAfterOverlayFailure(): Promise<boolean> {
+    const current = deps.getMainWindow()
+
+    if (!current || current.isDestroyed()) {
+      return false
+    }
+
+    if (savedChatBounds === null && !deps.isPetSized(current)) {
+      deps.closeOverlay()
+
+      if (current.isMinimized()) {
+        current.restore()
+      }
+
+      current.show()
+
+      return true
+    }
+
+    if (await morphToChat(false)) {
+      return true
+    }
+
+    const win = deps.getMainWindow()
+
+    if (!win || win.isDestroyed()) {
+      return false
+    }
+
+    // A blank overlay cannot be the retry surface used by ordinary morphs.
+    const to = savedChatBounds ?? win.getBounds()
+
+    const recovered = recoverChatAfterFailedMorph(win, to, deps.minimum, {
+      markAppSized: deps.markAppSized,
+      clearPetSized: deps.clearPetSized,
+      closeOverlay: deps.closeOverlay,
+      log: error => deps.log(`[pet-morph] renderer failure recovery failed: ${error}`)
+    })
+
+    if (recovered) {
+      savedChatBounds = null
+    }
+
+    return recovered
+  }
+
   return {
     isActive: () => {
       const win = deps.getMainWindow()
@@ -229,6 +275,7 @@ export function createPetMorphController(deps: PetMorphDeps) {
       return savedChatBounds !== null || Boolean(win && !win.isDestroyed() && deps.isPetSized(win))
     },
     morphToPet,
-    morphToChat
+    morphToChat,
+    recoverAfterOverlayFailure
   }
 }

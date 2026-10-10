@@ -20,7 +20,7 @@ set -u
 # hygiene can't break the locked sync the way it used to before pm owned it.
 export UV_NO_CONFIG=1
 
-REPO_URL="${HERMES_REPO_URL:-https://github.com/NousResearch/hermes-agent.git}"
+REPO_URL="${HERMES_REPO_URL:-}"
 BRANCH="main"
 INSTALL_COMMIT=""
 INSTALL_DIR="${HERMES_INSTALL_DIR:-}"
@@ -634,6 +634,7 @@ stage_repository() {
             log_warn "not fast-forwardable; reset to origin/$BRANCH"
         fi
     else
+        [ -n "$REPO_URL" ] || fail "HERMES_REPO_URL is required to create a new checkout" git_clone_failed
         # `mv <clone> <existing dir>` nests the checkout INSIDE it as
         # <dir>/tree, so a pre-existing destination must be empty (we take
         # the empty dir over) or we refuse: whatever lives there is not ours.

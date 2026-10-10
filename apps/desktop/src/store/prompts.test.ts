@@ -297,7 +297,7 @@ describe('answerApproval', () => {
       }
     }
 
-    await answerApproval(gateway as never, target, 'once')
+    expect(await answerApproval(gateway as never, target, 'once')).toBe(true)
 
     // #55433: the generic 30s default fires long before the backend's 300s
     // approvals.timeout; the RPC must carry an explicit longer deadline.
@@ -318,12 +318,12 @@ describe('answerApproval', () => {
           throw new Error(`request timed out after 330s: approval.respond`)
         }
 
-        return { resolved: 1 }
+        return { resolved: 0 }
       }
     }
 
-    // Resolves on the retry; a duplicate resolve is idempotent server-side.
-    await expect(answerApproval(gateway as never, target, 'deny')).resolves.toBeUndefined()
+    // A duplicate answer is idempotent server-side and reports no resolution.
+    await expect(answerApproval(gateway as never, target, 'deny')).resolves.toBe(false)
     expect(calls).toBe(2)
   })
 
@@ -347,7 +347,9 @@ describe('answerApproval', () => {
     rememberServerRequest({ fail: vi.fn(), id: 'srv-1', method: 'approval', params: {}, respond })
     const request = vi.fn()
 
-    await answerApproval({ request } as never, { requestId: 'r1', serverRequestId: 'srv-1', sessionId: 's1' }, 'once')
+    expect(
+      await answerApproval({ request } as never, { requestId: 'r1', serverRequestId: 'srv-1', sessionId: 's1' }, 'once')
+    ).toBe(true)
 
     expect(respond).toHaveBeenCalledWith({ choice: 'once' })
     expect(request).not.toHaveBeenCalled()

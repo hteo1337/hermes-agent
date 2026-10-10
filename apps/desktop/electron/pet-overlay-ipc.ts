@@ -1,6 +1,6 @@
 // IPC surface for the pop-out pet overlay (mascot window). Extracted from
 // main.ts; window handles stay injected because main.ts owns their lifecycle.
-import { type BrowserWindow, ipcMain, screen } from 'electron'
+import { type BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent, screen } from 'electron'
 
 import { petOverlayClickThrough, resolvePetOverlayBounds } from './pet-overlay'
 
@@ -81,7 +81,23 @@ export function registerPetOverlayIpc({
   morphToPet,
   morphToChat
 }: PetOverlayIpcDeps) {
-  ipcMain.handle('hermes:pet-overlay:open', async (_event, request) => {
+  const fromMain = (event: IpcMainEvent | IpcMainInvokeEvent) => {
+    const win = getMainWindow()
+
+    return Boolean(win && !win.isDestroyed() && event.sender === win.webContents)
+  }
+
+  const fromOverlay = (event: IpcMainEvent) => {
+    const win = getPetOverlayWindow()
+
+    return Boolean(win && !win.isDestroyed() && event.sender === win.webContents)
+  }
+
+  ipcMain.handle('hermes:pet-overlay:open', async (event, request) => {
+    if (!fromMain(event)) {
+      return { ok: false }
+    }
+
     const screenBounds = resolveScreenBounds(request, getMainWindow())
 
     if (!screenBounds) {
@@ -92,14 +108,22 @@ export function registerPetOverlayIpc({
 
     return { ok: true, bounds: screenBounds }
   })
-  ipcMain.handle('hermes:pet-overlay:close', async () => {
+  ipcMain.handle('hermes:pet-overlay:close', async event => {
+    if (!fromMain(event)) {
+      return { ok: false }
+    }
+
     closePetOverlay()
 
     return { ok: true }
   })
   // toPet: shrink the main window into this spot, hide it, open the overlay
   // there — the chat window visibly becomes the mascot (PLAN-ENVOY-INTEGRATION A).
-  ipcMain.handle('hermes:pet-overlay:morph-to-pet', async (_event, request) => {
+  ipcMain.handle('hermes:pet-overlay:morph-to-pet', async (event, request) => {
+    if (!fromMain(event)) {
+      return { ok: false }
+    }
+
     const screenBounds = resolveScreenBounds(request, getMainWindow())
 
     if (!screenBounds) {
@@ -116,7 +140,11 @@ export function registerPetOverlayIpc({
   })
   // toChat: reverse — show the main window at the overlay's spot, grow it back
   // to the saved chat bounds, then close the overlay.
-  ipcMain.handle('hermes:pet-overlay:morph-to-chat', async (_event, request) => {
+  ipcMain.handle('hermes:pet-overlay:morph-to-chat', async (event, request) => {
+    if (!fromMain(event)) {
+      return { ok: false }
+    }
+
     try {
       const resolved = await morphToChat(Boolean(request?.animate))
 
@@ -131,7 +159,11 @@ export function registerPetOverlayIpc({
   // The window is created non-resizable (no stray edge-drag on the transparent
   // frameless panel), which on Windows/Linux also blocks programmatic setBounds
   // sizing — so briefly flip resizable on whenever the size actually changes.
-  ipcMain.on('hermes:pet-overlay:set-bounds', (_event, bounds) => {
+  ipcMain.on('hermes:pet-overlay:set-bounds', (event, bounds) => {
+    if (!fromOverlay(event)) {
+      return
+    }
+
     const petOverlayWindow = getPetOverlayWindow()
 
     if (!petOverlayWindow || petOverlayWindow.isDestroyed() || !bounds) {
@@ -162,7 +194,11 @@ export function registerPetOverlayIpc({
   // Click-through: the overlay window is a full rectangle but only the pet pixels
   // should be interactive. The renderer toggles this as the cursor enters/leaves
   // the sprite so transparent margins pass clicks to whatever is behind.
-  ipcMain.on('hermes:pet-overlay:ignore-mouse', (_event, ignore) => {
+  ipcMain.on('hermes:pet-overlay:ignore-mouse', (event, ignore) => {
+    if (!fromOverlay(event)) {
+      return
+    }
+
     const petOverlayWindow = getPetOverlayWindow()
 
     // No forward on Linux: an ignoring overlay could never be re-armed.
@@ -178,7 +214,11 @@ export function registerPetOverlayIpc({
   // the app's cmd/alt-tab anchor from the main window. But the pop-up composer
   // needs the keyboard, so the renderer asks us to flip it focusable + focus it
   // while the composer is open, then back to non-activating when it closes.
-  ipcMain.on('hermes:pet-overlay:set-focusable', (_event, focusable) => {
+  ipcMain.on('hermes:pet-overlay:set-focusable', (event, focusable) => {
+    if (!fromOverlay(event)) {
+      return
+    }
+
     const petOverlayWindow = getPetOverlayWindow()
 
     if (!petOverlayWindow || petOverlayWindow.isDestroyed()) {
@@ -192,7 +232,11 @@ export function registerPetOverlayIpc({
     }
   })
   // Main renderer → overlay: forward the latest pet state for the overlay to render.
-  ipcMain.on('hermes:pet-overlay:state', (_event, payload) => {
+  ipcMain.on('hermes:pet-overlay:state', (event, payload) => {
+    if (!fromMain(event)) {
+      return
+    }
+
     const petOverlayWindow = getPetOverlayWindow()
 
     if (petOverlayWindow && !petOverlayWindow.isDestroyed()) {
@@ -200,7 +244,11 @@ export function registerPetOverlayIpc({
     }
   })
   // Overlay → main renderer: control messages (pop back in, composer submit).
-  ipcMain.on('hermes:pet-overlay:control', (_event, payload) => {
+  ipcMain.on('hermes:pet-overlay:control', (event, payload) => {
+    if (!fromOverlay(event)) {
+      return
+    }
+
     const mainWindow = getMainWindow()
 
     if (!mainWindow || mainWindow.isDestroyed()) {
