@@ -13,3 +13,7 @@ Acceptance: three branch heads represented in local merge history; no unresolved
 Risk: host load can time out tests; classify any failure using the branch baseline before calling it a regression.
 
 Verification: `npm run typecheck`; `node scripts/egress-audit.mjs --check`; `node scripts/brand-audit.mjs --check`; focused `npx vitest run --maxWorkers=2 ...`; focused Python `scripts/run_tests.sh -j 2 ...` for backend decoupling.
+
+
+## Envoy residual brand (2026-10-10)
+Scope: desktop theme, backend display boundaries, optional portal surfaces, About attribution and audit baseline. Assumption: an empty `ENDPOINTS.portal` disables the bundled Nous account experience; configured portals appear as Envoy Portal while provider and RPC identifiers remain stable. Work order: gate portal state/providers, brand display payloads, align About/attribution, update focused contracts, lower audit baseline. Verify with desktop typecheck, egress and brand audit checks, and touched-file focused Vitest under isolated homes; do not run the full suite. Risks: user-authored text must remain verbatim, and backend protocol identifiers must remain stable.

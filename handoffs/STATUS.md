@@ -118,3 +118,25 @@ An extra `scripts/check --only health --base envoy/main` was run: exit 1, **5 bl
 ```dispatch-outcome
 {"accomplished":"complete","evidence":{"artifacts":["envoy/integration merge commits 39edf7e643,b2992e8ae1,202a8ab1fa","handoffs/STATUS.md","handoffs/integration-focused-desktop-final-110.log","handoffs/integration-focused-python-final-verified.log","handoffs/integration-typecheck-final-110.log","handoffs/integration-egress-final-head.log","handoffs/integration-brand-final-head.log"],"commands":["git show -s --format=%P on three merges: requested heads in order","npm run typecheck: exit 0","egress-audit --check: exit 0, 10 hits/5 files","brand-audit --check: exit 0, 2128 hits/710 files","vitest run --maxWorkers=2 on 16 focused files: 110 passed","scripts/run_tests.sh -j 2 on 6 focused files: 72 passed, 1 skipped","git diff --check envoy/main..HEAD: exit 0"]},"blocker_category":"none","remaining_work":[]}
 ```
+
+## Envoy residual desktop rebrand — 2026-10-10 (`envoy/brand-residual`)
+
+Started from `envoy/integration` at `6de9e1510e`; this worktree was clean. The requested step is PLAN-FINISH.md §7. The disabled portal is the shipped `brand.json` setting (`endpoints.portal: ""`). `PASEO_AGENT_ID` was unset, so this turn used the unique `handoffs/CHECKLIST-unset-01.md` fallback without touching other checklists.
+
+Changes: the built-in gold preset is listed as **Classic Gold** while its `classic` ID and CLI skin protocol stay intact. Backend display boundaries brand provider names, errors, notifications, update messages, and dynamic skin labels through `src/i18n/brand-text.ts`; commands, paths, env vars and RPC names remain untouched. Portal OAuth choices and direct start actions are gated by `ENDPOINTS.portal`; free-tier reads, retries, acknowledgements, notices and routes are inert without it. Configured portal labels read **Envoy Portal**. Renderer About takes the MIT attribution holder/year/upstream/notice path from `brand.json`, while native macOS About takes its holder/year from the same file (matching `NOTICE.md`); version details no longer reveal the backend checkout path. `LICENSE` and `NOTICE.md` remain present and unmodified.
+
+Verification at final source state (all exit 0):
+
+- Before changes, `cd apps/desktop && node scripts/brand-audit.mjs --check`: **2128 hits in 710 files**. The old checked-in baseline totaled 2789. After changes, `cd apps/desktop && node scripts/brand-audit.mjs --write && node scripts/brand-audit.mjs --check`: **2120 hits in 710 files**. A JSON comparison against the pre-change `6de9e1510e:apps/desktop/brand-audit.baseline.json` reported **0 raised per-file entries**; total baseline **2789 → 2120**.
+- `cd apps/desktop && node scripts/egress-audit.mjs --check`: **10 hits in 5 files**.
+- `cd apps/desktop && npm run typecheck`: exit 0; all four TypeScript checks completed with no diagnostics.
+- `cd apps/desktop && npx eslint <27 touched TypeScript files>`: exit 0, no diagnostics. `cd apps/desktop && npx prettier --check brand.json <10 touched files>`: exit 0, all matched. `git diff --check`: exit 0.
+- `cd apps/desktop && test_root=$(mktemp -d); HERMES_HOME="$test_root/home" HERMES_RUNTIME_DIR="$test_root/runtime" HERMES_DESKTOP_USER_DATA_DIR="$test_root/desktop" npx vitest run --maxWorkers=2 src/i18n/brand-text.test.ts src/themes/classic-skin.test.tsx src/lib/desktop-remote-auth.test.ts src/components/boot-failure-reauth.test.ts src/lib/error-surface.test.ts src/components/update-status.test.tsx src/app/settings/about-settings.test.tsx src/components/onboarding/index.test.tsx src/components/onboarding/portal-disabled.test.ts src/app/settings/providers-settings.test.tsx src/lib/model-status-label.test.ts src/store/notifications.test.ts src/components/assistant-ui/thread/assistant-message.test.tsx src/store/onboarding.test.ts src/store/free-tier-setup-failure.test.ts src/store/free-tier-offer.test.ts src/store/free-tier-sign-in.test.ts`: **17 files passed, 221 tests passed**. Final output: `handoffs/residual-focused-final.log`. Configured portal fixture tests and disabled portal controls were both exercised.
+
+Local code commits: `9def54a08c` (backend display and themes) and `88c9af597a` (portal, About, audit).
+
+Unverified: full suite (explicitly prohibited for this host), packaged/native Electron visual pass, CI, and independent review (PLAN-FINISH.md §8 is a separate step). No push or remote action was taken.
+
+```dispatch-outcome
+{"accomplished":"complete","evidence":{"artifacts":["9def54a08c","88c9af597a","envoy/brand-residual","handoffs/STATUS.md","handoffs/residual-focused-final.log","apps/desktop/brand-audit.baseline.json"],"commands":["apps/desktop npm run typecheck: exit 0","apps/desktop egress-audit --check: 10 hits/5 files","apps/desktop brand-audit --check: 2120 hits/710 files; 0 raised per-file limits","apps/desktop focused vitest --maxWorkers=2 with isolated homes: 17 files, 221 tests passed","ESLint, Prettier, git diff --check: exit 0"]},"blocker_category":"none","remaining_work":[]}
+```

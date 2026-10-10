@@ -573,3 +573,7 @@ The detailed state contract lives in the scoped
 - [ ] `cursor-pointer`, focus ring, and `Esc`-to-close behave?
 - [ ] Touched a primitive, token, or variant? Its named-contract entry in this
       file is updated in the same change.
+
+
+## Envoy residual brand acceptance (2026-10-10)
+Appearance lists the gold/navy preset as Classic Gold. Backend descriptions and errors use Envoy naming while commands and paths retain their literal protocol spelling. With no portal endpoint, account sign-in, billing and free-tier offers do not appear or act; with an endpoint, the offer reads Envoy Portal. About shows Envoy's version and a single NOTICE-derived MIT attribution, without exposing the backend checkout path. All states keep keyboard access, visible focus and existing responsive layout.
