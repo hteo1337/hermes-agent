@@ -1,0 +1,8 @@
+
+ RUN  v4.1.10 /Users/hteo/.paseo/worktrees/1so5obpm/envoy-egress-fixes/apps/desktop
+
+
+ Test Files  7 passed (7)
+      Tests  121 passed (121)
+   Start at  04:21:44
+   Duration  4.58s (transform 3.12s, setup 489ms, import 4.40s, tests 1.06s, environment 1.69s)

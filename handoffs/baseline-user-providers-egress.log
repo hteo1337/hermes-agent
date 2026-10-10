@@ -1,0 +1,171 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.hermes/installs/2f483bd94df07680/test-environment/gen-e6fd68dfaabd4c99bc5528abb7b30056/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 1 test files (~16 tests) under ['tests/hermes_cli/test_user_providers_model_switch.py']; running with -j 2
+[100.0% |    16/~16 | ✓0 | ✗2] ✗ tests/hermes_cli/test_user_providers_model_switch.py (2✗, 4.1s)
+
+  ╔╍ Failed: tests/hermes_cli/test_user_providers_model_switch.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║
+  ║         user_providers = {
+  ║             "local-ollama": {
+  ║                 "name": "Local Ollama",
+  ║                 "api": "http://localhost:11434/v1",
+  ║                 "default_model": "llama3",
+  ║                 # No api_key, no models: list — singular default only.
+  ║             }
+  ║         }
+  ║
+  ║         providers = list_authenticated_providers(
+  ║             current_provider="local-ollama",
+  ║             user_providers=user_providers,
+  ║             custom_providers=[],
+  ║             max_models=50,
+  ║         )
+  ║
+  ║ >       assert probed.get("called") is True, (
+  ║             "singular default_model must not suppress live discovery"
+  ║         )
+  ║ E       AssertionError: singular default_model must not suppress live discovery
+  ║ E       assert None is True
+  ║ E        +  where None = <built-in method get of dict object at 0x10e8dde40>('called')
+  ║ E        +    where <built-in method get of dict object at 0x10e8dde40> = {}.get
+  ║
+  ║ tests/hermes_cli/test_user_providers_model_switch.py:592: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/hermes_cli/test_user_providers_model_switch.py::test_list_authenticated_providers_enumerates_dict_format_models
+  ║ FAILED tests/hermes_cli/test_user_providers_model_switch.py::test_section3_probes_no_key_endpoint_with_singular_default_model
+  ║ ======================= 2 failed, 15 deselected in 1.67s =======================
+  ║
+  ║  Repro: python -m pytest tests/hermes_cli/test_user_providers_model_switch.py -k enumerates_dict_format_models or section3_probes_no_key_endpoint_with_singular_default_model
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+
+=== Summary: 1 files, 0 tests passed, 2 failed (100% complete) in 4.6s (2 workers) ===
+
+=== Per-file subprocess time distribution ===
+  Files:   1
+  Total subprocess CPU-wall: 4.1s  (runner wall: 4.6s, parallelism: 2x)
+  P50: 4.12s  P90: 4.12s  P95: 4.12s  P99: 4.12s  Max: 4.12s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+      4.12s  tests/hermes_cli/test_user_providers_model_switch.py
+
+=== Failure output ===
+
+--- tests/hermes_cli/test_user_providers_model_switch.py ---
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/hteo/.paseo/worktrees/envoy-egress-baseline-59217
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 17 items / 15 deselected / 2 selected
+
+tests/hermes_cli/test_user_providers_model_switch.py FF                  [100%]
+
+=================================== FAILURES ===================================
+_______ test_list_authenticated_providers_enumerates_dict_format_models ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d71ed70>
+
+    def test_list_authenticated_providers_enumerates_dict_format_models(monkeypatch):
+        """providers: dict entries with ``models:`` as a dict keyed by model id
+        (canonical Hermes write format) should surface every key in the picker.
+
+        Regression: the ``providers:`` dict path previously only accepted
+        list-format ``models:`` and silently dropped dict-format entries,
+        even though Hermes's own writer and downstream readers use dict format.
+        """
+        monkeypatch.setattr("agent.models_dev.fetch_models_dev", dict)
+        monkeypatch.setattr("hermes_cli.providers.HERMES_OVERLAYS", {})
+
+        user_providers = {
+            "local-ollama": {
+                "name": "Local Ollama",
+                "api": "http://localhost:11434/v1",
+                "default_model": "minimax-m2.7:cloud",
+                "models": {
+                    "minimax-m2.7:cloud": {"context_length": 196608},
+                    "kimi-k2.5:cloud": {"context_length": 200000},
+                    "glm-5.1:cloud": {"context_length": 202752},
+                },
+            }
+        }
+
+        providers = list_authenticated_providers(
+            current_provider="local-ollama",
+            user_providers=user_providers,
+            custom_providers=[],
+            max_models=50,
+        )
+
+        user_prov = next(
+            (p for p in providers if p.get("is_user_defined") and p["slug"] == "local-ollama"),
+            None,
+        )
+
+        assert user_prov is not None
+>       assert user_prov["total_models"] == 3
+E       assert 0 == 3
+
+tests/hermes_cli/test_user_providers_model_switch.py:109: AssertionError
+_______ test_section3_probes_no_key_endpoint_with_singular_default_model _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d71f100>
+
+    def test_section3_probes_no_key_endpoint_with_singular_default_model(monkeypatch):
+        """A providers: entry with no api_key and only a singular ``default_model``
+        (no explicit ``models:`` list) must still probe /v1/models — the singular
+        field is just the active selection, not the user narrowing the endpoint.
+
+        Regression for #40554 / PR #68984 (@vigilancetech-com): section 3 derived
+        ``has_explicit_models`` from the merged models list, so the lone
+        ``default_model`` entry suppressed live discovery and the /model picker
+        showed a one-line menu for local no-auth endpoints.
+        """
+        monkeypatch.setattr("agent.models_dev.fetch_models_dev", dict)
+        monkeypatch.setattr("hermes_cli.providers.HERMES_OVERLAYS", {})
+
+        probed = {}
+
+        def _fake_fetch(api_key, api_url, **kwargs):
+            probed["called"] = True
+            probed["api_key"] = api_key
+            return ["live-model-1", "live-model-2", "live-model-3"]
+
+        monkeypatch.setattr("hermes_cli.models.fetch_api_models", _fake_fetch)
+
+        user_providers = {
+            "local-ollama": {
+                "name": "Local Ollama",
+                "api": "http://localhost:11434/v1",
+                "default_model": "llama3",
+                # No api_key, no models: list — singular default only.
+            }
+        }
+
+        providers = list_authenticated_providers(
+            current_provider="local-ollama",
+            user_providers=user_providers,
+            custom_providers=[],
+            max_models=50,
+        )
+
+>       assert probed.get("called") is True, (
+            "singular default_model must not suppress live discovery"
+        )
+E       AssertionError: singular default_model must not suppress live discovery
+E       assert None is True
+E        +  where None = <built-in method get of dict object at 0x10e8dde40>('called')
+E        +    where <built-in method get of dict object at 0x10e8dde40> = {}.get
+
+tests/hermes_cli/test_user_providers_model_switch.py:592: AssertionError
+=========================== short test summary info ============================
+FAILED tests/hermes_cli/test_user_providers_model_switch.py::test_list_authenticated_providers_enumerates_dict_format_models
+FAILED tests/hermes_cli/test_user_providers_model_switch.py::test_section3_probes_no_key_endpoint_with_singular_default_model
+======================= 2 failed, 15 deselected in 1.67s =======================
+
+=== 1 file with test failures (2 tests failed) ===
+  tests/hermes_cli/test_user_providers_model_switch.py  (2 tests failed)

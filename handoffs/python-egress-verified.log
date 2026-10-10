@@ -1,0 +1,34 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.hermes/installs/2f483bd94df07680/test-environment/gen-e6fd68dfaabd4c99bc5528abb7b30056/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 8 test files (~184 tests) under ['tests/agent/test_models_dev.py', 'tests/hermes_cli/test_endpoints.py', 'tests/hermes_cli/test_auth_provider_gate.py', 'tests/hermes_cli/test_api_key_providers.py', 'tests/hermes_cli/test_copilot_catalog_oauth_fallback.py', 'tests/hermes_cli/test_copilot_in_model_list.py', 'tests/hermes_cli/test_models_dev_preferred_merge.py', 'tests/hermes_cli/test_external_process_auth_status.py']; running with -j 2
+[ 33.2% |    61/~184 | ✓61 | ✗ 0] ✓ tests/hermes_cli/test_api_key_providers.py (61✓, 25.7s)
+[ 71.2% |   131/~184 | ✓138 | ✗  0] ✓ tests/agent/test_models_dev.py (77✓, 25.8s)
+[ 72.3% |   133/~184 | ✓140 | ✗  0] ✓ tests/hermes_cli/test_copilot_catalog_oauth_fallback.py (2✓, 1.1s)
+[ 81.0% |   149/~184 | ✓156 | ✗  0] ✓ tests/hermes_cli/test_auth_provider_gate.py (16✓, 4.5s)
+[ 83.7% |   154/~184 | ✓161 | ✗  0] ✓ tests/hermes_cli/test_endpoints.py (5✓, 1.5s)
+[ 86.4% |   159/~184 | ✓167 | ✗  0] ✓ tests/hermes_cli/test_copilot_in_model_list.py (6✓, 6.7s)
+[ 89.1% |   164/~184 | ✓172 | ✗  0] ✓ tests/hermes_cli/test_models_dev_preferred_merge.py (5✓, 2.3s)
+[100.0% |   184/~184 | ✓194 | ✗  0] ✓ tests/hermes_cli/test_external_process_auth_status.py (22✓ 1s, 5.6s)
+
+=== Summary: 8 files, 194 tests passed, 0 failed, 1 skipped (100% complete) in 37.9s (2 workers) ===
+
+  note: platforms('windows') tests (in 1 file) were SKIPPED on this host (darwin); they run on the Windows Python-tests lane.
+  Durations cached to test_durations.json (8 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   8
+  Total subprocess CPU-wall: 73.2s  (runner wall: 37.9s, parallelism: 2x)
+  P50: 5.65s  P90: 25.76s  P95: 25.76s  P99: 25.76s  Max: 25.76s
+  <1s: 0 files (0%)  <2s: 2 files (25%)
+  Top 10 slowest:
+     25.76s  tests/agent/test_models_dev.py
+     25.71s  tests/hermes_cli/test_api_key_providers.py
+      6.68s  tests/hermes_cli/test_copilot_in_model_list.py
+      5.65s  tests/hermes_cli/test_external_process_auth_status.py
+      4.47s  tests/hermes_cli/test_auth_provider_gate.py
+      2.33s  tests/hermes_cli/test_models_dev_preferred_merge.py
+      1.47s  tests/hermes_cli/test_endpoints.py
+      1.14s  tests/hermes_cli/test_copilot_catalog_oauth_fallback.py

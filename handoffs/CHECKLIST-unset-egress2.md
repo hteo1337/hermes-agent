@@ -1,0 +1,6 @@
+- [x] Identify startup egress paths and record baseline behavior. (Probe: 43 CONNECTs; baseline: 81 Python tests passed, desktop lacked deps before npm ci.)
+- [x] Gate Copilot discovery and telemetry to explicit Copilot use with focused proof. (Copilot list: 6/6 after both overlay and canonical gates; auth: ambient token no exchange, explicit token exchanges.)
+- [x] Route model catalog through empty-by-default brand endpoint with offline fallback and focused proof. (Endpoint test: empty makes zero requests; configured local endpoint fetched sample registry.)
+- [x] Remove remote font loads and extend egress audit with focused proof. (7 desktop files, 121 tests; audit injected-host control failed and clean control passed; build emitted five font assets and both OFL texts.)
+- [x] Run requested typecheck, ESLint, Ruff, audits, focused tests; inspect diff and commit. (Typecheck, audits, ESLint and Ruff exit 0; focused tests 194 Python, 121 desktop, 17 bundle; commits c454bef91e and c5dba45881.)
+- [x] Record commit, results, and omissions in handoffs/STATUS.md. (D5 section names both commits, test counts, baseline failures, reviewer disposition and the omitted packaged probe.)
