@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 
 import pytest
@@ -54,6 +55,23 @@ def test_piped_one_liner_runs_the_installer():
                             capture_output=True, timeout=30)
     assert result.returncode == 0, result.stderr.decode()
     assert json.loads(result.stdout)["protocol_version"] == 1
+
+
+def test_new_checkout_requires_explicit_repository_source(tmp_path):
+    result = _run(tmp_path, "stage_repository", env={"HERMES_REPO_URL": ""})
+    assert result.returncode != 0
+    assert "HERMES_REPO_URL is required" in result.stderr
+    assert not (tmp_path / "install").exists()
+
+    if shutil.which("pwsh"):
+        ps1 = INSTALL_SH.with_suffix(".ps1")
+        command = f". '{ps1}' -HermesHome $env:HERMES_HOME -InstallDir (Join-Path $env:HERMES_HOME install); function Ensure-Git {{ return $true }}; Stage-Repository"
+        ps_env = dict(os.environ, HERMES_REPO_URL="", HERMES_HOME=str(tmp_path / "ps-home"))
+        ps_result = subprocess.run(["pwsh", "-NoProfile", "-Command", command], env=ps_env,
+                                   capture_output=True, text=True, timeout=30)
+        assert ps_result.returncode != 0
+        assert "HERMES_REPO_URL is required" in ps_result.stderr
+        assert not (tmp_path / "ps-home" / "install").exists()
 
 
 def test_rerun_parks_local_work_before_updating(tmp_path):

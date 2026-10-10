@@ -200,7 +200,13 @@ export function registerPetOverlayIpc({
     }
   })
   // Overlay → main renderer: control messages (pop back in, composer submit).
-  ipcMain.on('hermes:pet-overlay:control', (_event, payload) => {
+  ipcMain.on('hermes:pet-overlay:control', (event, payload) => {
+    const overlay = getPetOverlayWindow()
+
+    if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) {
+      return
+    }
+
     const mainWindow = getMainWindow()
 
     if (!mainWindow || mainWindow.isDestroyed()) {

@@ -143,10 +143,13 @@ test('atlas bytes remain validated when pathname is replaced after opening', () 
   const replacement = path.join(root, 'replacement.png')
   fs.writeFileSync(replacement, 'not an atlas')
   const originalFstat = fs.fstatSync
+  let fstatCalls = 0
 
   const spy = vi.spyOn(fs, 'fstatSync').mockImplementation(fd => {
-    fs.renameSync(atlasPath, path.join(dir, 'original.png'))
-    fs.symlinkSync(replacement, atlasPath)
+    if (++fstatCalls === 2) {
+      fs.renameSync(atlasPath, path.join(dir, 'original.png'))
+      fs.symlinkSync(replacement, atlasPath)
+    }
 
     return originalFstat(fd)
   })
@@ -155,6 +158,37 @@ test('atlas bytes remain validated when pathname is replaced after opening', () 
     assert.deepEqual(readLocalPetAtlas(root, 'valid'), expected)
     assert.equal(fs.readFileSync(atlasPath, 'utf8'), 'not an atlas')
     assert.equal(readLocalPetAtlas(root, ['valid'] as unknown as string), null)
+  } finally {
+    spy.mockRestore()
+    fs.rmSync(root, { force: true, recursive: true })
+  }
+})
+
+test('manifest swap to a symlink at open is rejected', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'envoy-manifest-swap-'))
+  const dir = path.join(root, 'valid')
+  fs.mkdirSync(dir)
+  const manifestPath = path.join(dir, 'pet.json')
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest('valid')))
+  fs.copyFileSync(realAtlas, path.join(dir, 'atlas.png'))
+  const replacement = path.join(root, 'outside.json')
+  fs.writeFileSync(replacement, JSON.stringify(manifest('valid')))
+  const originalOpen = fs.openSync
+
+  const spy = vi.spyOn(fs, 'openSync').mockImplementation((path, flags, mode) => {
+    if (path === manifestPath) {
+      fs.renameSync(manifestPath, manifestPath + '.original')
+      fs.symlinkSync(replacement, manifestPath)
+    }
+
+    return originalOpen(path, flags, mode)
+  })
+
+  try {
+    const result = scanLocalPets(root)
+    assert.deepEqual(result.pets, [])
+    assert.equal(result.rejected[0]?.id, 'valid')
+    assert.equal(fs.lstatSync(manifestPath).isSymbolicLink(), true)
   } finally {
     spy.mockRestore()
     fs.rmSync(root, { force: true, recursive: true })

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { test, vi } from 'vitest'
 
 import { createPetMorphController } from './pet-morph-window'
+import { installWindowRendererLifecycle } from './window-renderer-lifecycle'
 
 const chat = { x: 100, y: 80, width: 1200, height: 800 }
 const pet = { x: 250, y: 180, width: 240, height: 300 }
@@ -41,6 +42,7 @@ function setup(openThrows = false, destroyFails = false) {
     if (destroyFails) {
       return false
     }
+
     overlay = null
 
     return true
@@ -126,4 +128,36 @@ test('failed reverse morph keeps overlay and saved chat bounds for retry', async
   assert.equal(state.visible(), true)
   assert.equal(state.controller.isActive(), false)
   assert.equal(state.destroyOverlay.mock.calls.length, 1)
+})
+
+test('failed overlay renderer restores visible chat even when ordinary reverse morph fails', async () => {
+  const state = setup()
+  assert.deepEqual(await state.controller.morphToPet(pet, false), pet)
+  assert.equal(state.visible(), false)
+  state.win.setBounds.mockImplementationOnce(() => {
+    throw new Error('native setBounds failed')
+  })
+
+  const handlers = new Map<string, (...args: unknown[]) => void>()
+  let recovery: Promise<boolean> | null = null
+  installWindowRendererLifecycle(
+    { isDestroyed: () => false, webContents: { on: (name, handler) => handlers.set(name, handler) } },
+    {
+      kind: 'overlay',
+      callbacks: {
+        log: vi.fn(),
+        reload: vi.fn(),
+        onRendererTerminated: () => {
+          recovery = state.controller.recoverAfterOverlayFailure()
+        }
+      }
+    }
+  )
+  handlers.get('render-process-gone')!({}, { reason: 'launch-failed' })
+
+  assert.equal(await recovery, true)
+  assert.equal(state.visible(), true)
+  assert.deepEqual(state.bounds(), chat)
+  assert.equal(state.controller.isActive(), false)
+  assert.equal(state.overlay(), null)
 })

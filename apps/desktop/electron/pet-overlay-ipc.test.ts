@@ -15,6 +15,9 @@ import { registerPetOverlayIpc } from './pet-overlay-ipc'
 beforeEach(() => listeners.clear())
 
 function controlWith(morphActive: boolean) {
+  const overlayContents = { send: vi.fn() }
+  const overlay = { isDestroyed: () => false, webContents: overlayContents }
+
   const window = {
     isDestroyed: () => false,
     isMinimized: () => false,
@@ -27,7 +30,7 @@ function controlWith(morphActive: boolean) {
 
   registerPetOverlayIpc({
     getMainWindow: () => window as never,
-    getPetOverlayWindow: () => null,
+    getPetOverlayWindow: () => overlay as never,
     isMorphActive: () => morphActive,
     openPetOverlay: vi.fn(),
     closePetOverlay: vi.fn(),
@@ -37,26 +40,43 @@ function controlWith(morphActive: boolean) {
 
   const control = listeners.get('hermes:pet-overlay:control')!
 
-  return { control, window }
+  return { control, overlayContents, window }
 }
 
 test('overlay reveal controls restore a morphed chat before showing it', () => {
-  const { control, window } = controlWith(true)
+  const { control, overlayContents, window } = controlWith(true)
 
-  control({}, { type: 'toggle-app' })
+  control({ sender: overlayContents }, { type: 'toggle-app' })
   expect(window.webContents.send).toHaveBeenCalledWith('hermes:pet-overlay:control', { type: 'pop-in' })
   expect(window.show).not.toHaveBeenCalled()
 
-  control({}, { type: 'open-app' })
+  control({ sender: overlayContents }, { type: 'open-app' })
   expect(window.webContents.send).toHaveBeenCalledWith('hermes:pet-overlay:control', { type: 'open-app' })
   expect(window.show).not.toHaveBeenCalled()
   expect(window.focus).not.toHaveBeenCalled()
 })
 
 test('non-morphed overlay keeps the existing window reveal behavior', () => {
-  const { control, window } = controlWith(false)
+  const { control, overlayContents, window } = controlWith(false)
 
-  control({}, { type: 'toggle-app' })
+  control({ sender: overlayContents }, { type: 'toggle-app' })
   expect(window.show).toHaveBeenCalledTimes(1)
   expect(window.focus).toHaveBeenCalledTimes(1)
+})
+
+test('a different renderer cannot send a chip answer or window control', () => {
+  const { control, overlayContents, window } = controlWith(false)
+
+  control({ sender: { send: vi.fn() } }, { type: 'chip-answer', sessionId: 's1', requestId: 'r1', choice: 'once' })
+  control({ sender: { send: vi.fn() } }, { type: 'toggle-app' })
+  expect(window.webContents.send).not.toHaveBeenCalled()
+  expect(window.show).not.toHaveBeenCalled()
+
+  control({ sender: overlayContents }, { type: 'chip-answer', sessionId: 's1', requestId: 'r1', choice: 'once' })
+  expect(window.webContents.send).toHaveBeenCalledWith('hermes:pet-overlay:control', {
+    type: 'chip-answer',
+    sessionId: 's1',
+    requestId: 'r1',
+    choice: 'once'
+  })
 })
