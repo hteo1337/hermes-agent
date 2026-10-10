@@ -1,0 +1,2 @@
+{"time":"2026-10-10T01:57:13.480Z","method":"GET","target":"http://example.invalid/positive-control","host":"example.invalid"}
+{"time":"2026-10-10T01:57:13.491Z","method":"CONNECT","target":"example.invalid:443","host":"example.invalid:443"}

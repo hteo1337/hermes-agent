@@ -1,0 +1,28 @@
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on en0, link-type EN10MB (Ethernet), snapshot length 524288 bytes
+05:04:39.814158 IP 192.168.1.141.52528 > 1.1.1.1.53: 26531+ SOA? local. (23)
+05:04:39.814309 IP 192.168.1.141.52120 > 1.1.1.1.53: 64788+ Type64? _dns.resolver.arpa. (36)
+05:04:39.820273 IP 1.1.1.1.53 > 192.168.1.141.52528: 26531 NXDomain 0/1/0 (98)
+05:04:39.824420 IP 1.1.1.1.53 > 192.168.1.141.52120: 64788 2/0/4 Type64, Type64 (347)
+05:04:39.826879 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [SEW], seq 1651079930, win 65535, options [mss 1460,nop,wscale 6,nop,nop,TS val 568661728 ecr 0,sackOK,eol], length 0
+05:04:39.835631 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [S.E], seq 1886402498, ack 1651079931, win 65535, options [mss 1452,sackOK,TS val 1302789978 ecr 568661728,nop,wscale 13], length 0
+05:04:39.836070 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], ack 1, win 2070, options [nop,nop,TS val 568661737 ecr 1302789978], length 0
+05:04:39.836090 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], seq 1:1441, ack 1, win 2070, options [nop,nop,TS val 568661738 ecr 1302789978], length 1440
+05:04:39.836094 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [P.], seq 1441:1531, ack 1, win 2070, options [nop,nop,TS val 568661738 ecr 1302789978], length 90
+05:04:39.842824 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [.], ack 1531, win 16, options [nop,nop,TS val 1302789986 ecr 568661738], length 0
+05:04:39.842825 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [.], seq 1:1441, ack 1531, win 16, options [nop,nop,TS val 1302789986 ecr 568661738], length 1440
+05:04:39.843079 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], ack 1441, win 2048, options [nop,nop,TS val 568661744 ecr 1302789986], length 0
+05:04:39.845090 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [.], seq 1441:2881, ack 1531, win 16, options [nop,nop,TS val 1302789986 ecr 568661738], length 1440
+05:04:39.845091 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [.], seq 2881:4321, ack 1531, win 16, options [nop,nop,TS val 1302789986 ecr 568661738], length 1440
+05:04:39.845092 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [P.], seq 4321:4372, ack 1531, win 16, options [nop,nop,TS val 1302789986 ecr 568661738], length 51
+05:04:39.845318 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], ack 4372, win 2003, options [nop,nop,TS val 568661747 ecr 1302789986], length 0
+05:04:39.845320 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], ack 4372, win 2048, options [nop,nop,TS val 568661747 ecr 1302789986], length 0
+05:04:39.849043 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [P.], seq 1531:1611, ack 4372, win 2048, options [nop,nop,TS val 568661750 ecr 1302789986], length 80
+05:04:39.849747 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [FP.], seq 1611:1635, ack 4372, win 2048, options [nop,nop,TS val 568661751 ecr 1302789986], length 24
+05:04:39.856081 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [.], ack 1636, win 16, options [nop,nop,TS val 1302790000 ecr 568661750], length 0
+05:04:39.856082 IP 1.0.0.1.853 > 192.168.1.141.64451: Flags [F.], seq 4372, ack 1636, win 16, options [nop,nop,TS val 1302790000 ecr 568661750], length 0
+05:04:39.856170 IP 192.168.1.141.64451 > 1.0.0.1.853: Flags [.], ack 4373, win 2048, options [nop,nop,TS val 568661758 ecr 1302790000], length 0
+
+22 packets captured
+487971 packets received by filter
+0 packets dropped by kernel

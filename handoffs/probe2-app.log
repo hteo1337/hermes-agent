@@ -1,0 +1,4 @@
+[hermes] install stamp: 0d1e8a1981c7 (envoy/release) from local
+
+DevTools listening on ws://127.0.0.1:9224/devtools/browser/cdccbd6e-2ffb-4dac-ad55-57d0a2e81748
+2026-10-10 05:01:13.675 Envoy Agent[53271:461617656] representedObject is not a WeakPtrToElectronMenuModelAsNSObject
