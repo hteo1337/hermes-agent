@@ -52,6 +52,29 @@ def test_ambient_pool_source_does_not_count_as_explicit(tmp_path, monkeypatch):
     assert is_provider_explicitly_configured("copilot") is False
 
 
+def test_ambient_github_token_does_not_select_copilot(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
+    monkeypatch.setenv("GH_TOKEN", "ambient-test-token")
+    monkeypatch.delenv("COPILOT_GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    _write_config(tmp_path, {"model": {"provider": "openai"}})
+
+    from unittest.mock import patch
+    from hermes_cli.auth import get_api_key_provider_status, is_provider_explicitly_configured
+    assert not is_provider_explicitly_configured("copilot")
+    with patch("hermes_cli.copilot_auth.resolve_copilot_token", return_value=("raw-test-token", "GH_TOKEN")), \
+         patch("hermes_cli.copilot_auth.get_copilot_api_token", return_value=("exchanged-test-token", None)) as exchange:
+        assert get_api_key_provider_status("copilot")["configured"]
+        exchange.assert_not_called()
+
+    monkeypatch.setenv("COPILOT_GITHUB_TOKEN", "explicit-test-token")
+    assert is_provider_explicitly_configured("copilot")
+    with patch("hermes_cli.copilot_auth.resolve_copilot_token", return_value=("raw-test-token", "COPILOT_GITHUB_TOKEN")), \
+         patch("hermes_cli.copilot_auth.get_copilot_api_token", return_value=("exchanged-test-token", None)) as exchange:
+        assert get_api_key_provider_status("copilot")["configured"]
+        exchange.assert_called_once_with("raw-test-token")
+
+
 def test_vertex_adc_counts_as_explicit_when_config_present(tmp_path, monkeypatch):
     """A keyless Vertex provider is explicitly configured when the user pointed
     Hermes at it (VERTEX_PROJECT_ID / vertex.project_id / VERTEX_CREDENTIALS_PATH),

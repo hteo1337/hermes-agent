@@ -644,8 +644,16 @@ def _discover_endpoint_models(
     return None, False
 
 
+def _copilot_discovery_allowed(slug: str, current_provider: str) -> bool:
+    if slug not in {"copilot", "copilot-acp"} or slug == current_provider:
+        return True
+    from hermes_cli.auth import is_provider_explicitly_configured
+    return is_provider_explicitly_configured(slug)
+
+
 def _collect_authed_provider_slugs(
-    models_dev_data: dict, curated: dict[str, list[str]], excluded: list[str]) -> list[str]:
+    models_dev_data: dict, curated: dict[str, list[str]], excluded: list[str],
+    current_provider: str = "") -> list[str]:
     """Quick-scan which providers have credentials, without fetching model lists.
 
     Mirrors the credential checks of sections 1, 2 and 2b of :func:`list_authenticated_providers`
@@ -666,13 +674,16 @@ def _collect_authed_provider_slugs(
         seen.update(k.lower() for k in keys)
 
     for hermes_id, _mdev_id, _pconfig, env_vars in _iter_builtin_candidates(models_dev_data, excluded_set, seen):
+        if not _copilot_discovery_allowed(hermes_id, current_provider):
+            continue
         if _any_env(env_vars, _scoped_key_env) or _raw_pool_usable(hermes_id):
             _emit(hermes_id, hermes_id)
 
     mdev_to_hermes = {v: k for k, v in PROVIDER_TO_MODELS_DEV.items()}
     for pid, overlay in HERMES_OVERLAYS.items():
         hermes_slug = mdev_to_hermes.get(pid, pid)
-        if _skip(seen, excluded_set, pid, hermes_slug) or overlay.auth_type == "aws_sdk":
+        if (_skip(seen, excluded_set, pid, hermes_slug) or overlay.auth_type == "aws_sdk"
+                or not _copilot_discovery_allowed(hermes_slug, current_provider)):
             continue
         if (
             _overlay_has_env_creds(pid, hermes_slug, overlay, _scoped_key_env)
@@ -680,7 +691,7 @@ def _collect_authed_provider_slugs(
             _emit(hermes_slug, pid, hermes_slug)
 
     for cp in CANONICAL_PROVIDERS:
-        if _skip(seen, excluded_set, cp.slug):
+        if _skip(seen, excluded_set, cp.slug) or not _copilot_discovery_allowed(cp.slug, current_provider):
             continue
         cp_config = PROVIDER_REGISTRY.get(cp.slug)
         has_creds = bool(
@@ -841,6 +852,8 @@ def _lap_builtin_rows(b: _PickerBuild, data: dict, user_providers: dict) -> None
     from hermes_cli.model_switch import _declared_model_ids, _scoped_key_env
     from agent.models_dev import get_provider_info
     for hermes_id, mdev_id, pconfig, env_vars in _iter_builtin_candidates(data, b.excluded, b.seen_slugs):
+        if not _copilot_discovery_allowed(hermes_id, b.current_provider):
+            continue
         # Per-profile scope, never raw os.environ: a secondary profile's picker otherwise listed the
         # LAUNCH profile's env-keyed providers and hid its own .env-keyed ones.
         if not (_any_env(env_vars, _scoped_key_env) or _raw_pool_usable(hermes_id, for_picker=b.for_picker)):
@@ -915,6 +928,8 @@ def _lap_overlay_rows(b: _PickerBuild, data: dict, user_providers: dict) -> None
         hermes_slug = mdev_to_hermes.get(pid, pid)
         if _skip(b.seen_slugs, b.excluded, pid, hermes_slug):
             continue
+        if not _copilot_discovery_allowed(hermes_slug, b.current_provider):
+            continue
         if not _overlay_has_creds(b, pid, hermes_slug, overlay):
             continue
         if hermes_slug in {"openai-codex", "copilot", "copilot-acp"}:
@@ -950,6 +965,8 @@ def _lap_canonical_rows(b: _PickerBuild) -> None:
     from hermes_cli.models import CANONICAL_PROVIDERS
     for cp in CANONICAL_PROVIDERS:
         if _skip(b.seen_slugs, b.excluded, cp.slug):
+            continue
+        if not _copilot_discovery_allowed(cp.slug, b.current_provider):
             continue
         cp_config = PROVIDER_REGISTRY.get(cp.slug)
         has_creds = False
@@ -1285,7 +1302,7 @@ def list_authenticated_providers(
     # collects nothing either: every cache-only row read spawns its own deduped background refresh,
     # so no thread pool is joined and no probe can hold up the response.
     prefetch_slugs = ([] if (refresh or non_blocking_catalogs)
-                      else _collect_authed_provider_slugs(data, b.curated, excluded_providers or []))
+                      else _collect_authed_provider_slugs(data, b.curated, excluded_providers or [], current_provider))
     if len(prefetch_slugs) > 3:
         try:
             _prefetch_provider_models_parallel(prefetch_slugs)

@@ -13,7 +13,8 @@
     "portal": "",
     "hubUrl": "",
     "docsUrl": "",
-    "updateFeedUrl": ""
+    "updateFeedUrl": "",
+    "modelCatalogUrl": ""
   },
   "maintainer": "Envoy contributors <noreply@envoy.invalid>",
   "author": "Envoy contributors",

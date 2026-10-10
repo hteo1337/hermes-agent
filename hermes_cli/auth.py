@@ -385,7 +385,7 @@ def _resolve_api_key_provider_secret(provider_id: str, pconfig: ProviderConfig) 
             from hermes_cli.copilot_auth import resolve_copilot_token, get_copilot_api_token
             token, source = resolve_copilot_token()
             if token:
-                api_token, _base_url = get_copilot_api_token(token)
+                api_token = get_copilot_api_token(token)[0] if is_provider_explicitly_configured("copilot") else token
                 return api_token, source
         except ValueError as exc:
             logger.warning("Copilot token validation failed: %s", exc)
@@ -1266,7 +1266,7 @@ def _explicit_pool_entry_present(normalized: str) -> bool:
 
 
 # Set by Claude Code itself, not by the user explicitly configuring anthropic in Hermes.
-_IMPLICIT_ENV_VARS = frozenset({"CLAUDE_CODE_OAUTH_TOKEN"})
+_IMPLICIT_ENV_VARS = frozenset({"CLAUDE_CODE_OAUTH_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"})
 _EXPLICIT_POOL_SOURCES = frozenset({"device_code", "loopback_pkce", "hermes_pkce", "manual"})
 _VERTEX_PROVIDER_IDS = ("vertex", "google-vertex", "vertex-ai", "gcp-vertex", "vertexai")
 

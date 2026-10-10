@@ -5,6 +5,7 @@ export interface DesktopEndpoints {
   hubUrl: string
   docsUrl: string
   updateFeedUrl: string
+  modelCatalogUrl: string
 }
 
 export const ENDPOINTS: Readonly<DesktopEndpoints> = Object.freeze(brand.endpoints)

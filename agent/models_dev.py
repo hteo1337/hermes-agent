@@ -10,6 +10,7 @@ quarantined, never served as ``{}``. ``models_dev.url`` in config.yaml = mirror.
 import contextlib
 import json
 import logging
+import os
 import re
 import threading
 import time
@@ -252,7 +253,10 @@ def _clear_etag() -> None:
 
 
 def _get_models_dev_url() -> str:
-    """The models.dev API URL, honoring the ``models_dev.url`` config override."""
+    """Catalog URL; a branded desktop with no endpoint stays offline."""
+    if os.getenv("HERMES_DESKTOP") == "1":
+        from hermes_cli.endpoints import endpoint
+        return endpoint("modelCatalogUrl")
     url = _cfg_get("models_dev", "url", default="")
     # Module global (not a captured constant) so patching MODELS_DEV_URL works.
     return url.strip() if isinstance(url, str) and url.strip() else MODELS_DEV_URL
@@ -443,6 +447,8 @@ def fetch_models_dev(force_refresh: bool = False, *, allow_network: bool = True)
     ``force_refresh=True`` bypasses the cache fast paths and the backoff, falling back to cached data
     only if the call fails. ``allow_network=False`` returns any memory/disk cache and never makes a request."""
     global _models_dev_cache, _models_dev_cache_time, _models_dev_retry_after
+    if not _get_models_dev_url():
+        allow_network = False
     if not allow_network:
         if not _models_dev_cache and (disk_data := _load_disk_cache()):
             _models_dev_cache = disk_data

@@ -2108,6 +2108,10 @@ def cached_provider_model_ids(
     normalized = _normalized_cache_slug(provider)
     if not normalized:
         return []
+    if normalized in {"copilot", "copilot-acp"}:
+        from hermes_cli.auth import is_provider_explicitly_configured
+        if not is_provider_explicitly_configured(normalized):
+            return []
     is_ollama = normalized == "ollama"
 
     cache = _load_provider_models_cache()

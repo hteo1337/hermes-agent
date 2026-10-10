@@ -65,7 +65,7 @@ export function modelBaseId(model: string): string {
 // Trailing model-id variants that should render as a grayed tag beside the
 // name (e.g. "Opus 4.8" + "Fast") rather than collapsing two distinct ids to
 // the same display name. `-flash` splits look-alike pairs the same way
-// (#118083): models.dev carries both `deepseek-flash` (alias) and
+// (#118083): the model catalog carries both `deepseek-flash` (alias) and
 // `deepseek-v4.1-flash` (full id) for the provider.
 const VARIANT_TAGS: ReadonlyArray<readonly [RegExp, string]> = [
   [/-fast$/i, 'Fast'],

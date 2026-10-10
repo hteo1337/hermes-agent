@@ -176,7 +176,7 @@ export type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { title?: string
 
 // simpleicons.org brand marks keyed by registrable domain. Lookup walks the
 // host's suffixes (see `resolveBrandIcon`), so one `github.com` entry also
-// covers `gist.github.com` and `api.github.com` — only list a subdomain when it
+// covers GitHub subdomains — only list a subdomain when it
 // belongs to a *different* brand than its parent.
 //
 // Some brands are absent on purpose: Simple Icons has removed Slack, LinkedIn,
@@ -402,7 +402,7 @@ const BRAND_ICONS: Record<string, BrandIcon> = {
 }
 
 // Resolve a hostname to its brand glyph, walking suffixes so subdomains inherit
-// their parent's mark (`api.github.com` → `github.com`). Longest match wins, so
+// their parent's mark. Longest match wins, so
 // a subdomain entry like `docs.google.com` beats the `google.com` fallback. The
 // bare TLD is never tested.
 export function resolveBrandIcon(hostname: string): BrandIcon | null {

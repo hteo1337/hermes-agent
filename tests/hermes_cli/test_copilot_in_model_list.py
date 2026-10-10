@@ -19,6 +19,9 @@ def test_copilot_picker_uses_live_catalog_when_available():
          patch("hermes_cli.models._resolve_copilot_catalog_api_key", return_value="gh-token"), \
          patch("hermes_cli.models._fetch_github_models", return_value=live_models):
         providers = list_authenticated_providers(current_provider="openrouter", max_models=50)
+        assert all(p["slug"] != "copilot" for p in providers)
+        with patch("hermes_cli.auth.is_provider_explicitly_configured", return_value=True):
+            providers = list_authenticated_providers(current_provider="copilot", max_models=50)
 
     copilot = next((p for p in providers if p["slug"] == "copilot"), None)
 
@@ -54,7 +57,7 @@ def _no_other_copilot_creds(monkeypatch):
     monkeypatch.setattr(model_switch_providers, "_credential_pool_is_usable", lambda *a, **k: False)
 
 
-def test_copilot_acp_listed_when_executable_resolves(tmp_path, monkeypatch, _no_other_copilot_creds):
+def test_copilot_acp_listed_when_selected_and_executable_resolves(tmp_path, monkeypatch, _no_other_copilot_creds):
     fake = tmp_path / ("copilot.exe" if os.name == "nt" else "copilot")
     fake.write_text("", encoding="utf-8")
     fake.chmod(0o755)
@@ -64,6 +67,8 @@ def test_copilot_acp_listed_when_executable_resolves(tmp_path, monkeypatch, _no_
          patch("hermes_cli.models._resolve_copilot_catalog_api_key", return_value=None), \
          patch("hermes_cli.models._fetch_github_models", return_value=[]):
         providers = list_authenticated_providers(current_provider="openrouter", max_models=50)
+        assert all(p["slug"] != "copilot-acp" for p in providers)
+        providers = list_authenticated_providers(current_provider="copilot-acp", max_models=50)
 
     acp = next((p for p in providers if p["slug"] == "copilot-acp"), None)
 

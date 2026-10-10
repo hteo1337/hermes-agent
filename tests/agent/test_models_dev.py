@@ -1,4 +1,5 @@
 """Tests for agent.models_dev — models.dev registry integration."""
+import json
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -135,6 +136,25 @@ class TestLookupModelsDevContext:
 
 
 class TestFetchModelsDev:
+    @patch("agent.models_dev.requests.get")
+    def test_desktop_catalog_requires_branded_endpoint(self, mock_get, monkeypatch, tmp_path):
+        import agent.models_dev as md
+        from hermes_cli import endpoints
+
+        monkeypatch.setenv("HERMES_DESKTOP", "1")
+        monkeypatch.setattr(endpoints, "_BRAND_FILE", tmp_path / "brand.json")
+        endpoints._BRAND_FILE.write_text(json.dumps({"endpoints": {"modelCatalogUrl": ""}}))
+        with patch.object(md, "_load_disk_cache", return_value={}):
+            assert fetch_models_dev() == {}
+        mock_get.assert_not_called()
+
+        endpoint = "http://127.0.0.1:7777/catalog.json"
+        endpoints._BRAND_FILE.write_text(json.dumps({"endpoints": {"modelCatalogUrl": endpoint}}))
+        mock_get.return_value = self._mock_response(SAMPLE_REGISTRY)
+        with patch.object(md, "_load_disk_cache", return_value={}), patch.object(md, "_load_etag", return_value=""):
+            assert fetch_models_dev() == SAMPLE_REGISTRY
+        assert mock_get.call_args.args[0] == endpoint
+
     @pytest.fixture(autouse=True)
     def _reset_fetch_state(self):
         import agent.models_dev as md

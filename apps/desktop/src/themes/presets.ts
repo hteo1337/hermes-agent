@@ -72,8 +72,7 @@ export const githubTheme: DesktopTheme = {
   ...THEME_PRESET_PALETTES.github,
   typography: {
     fontSans: SYSTEM_SANS,
-    fontMono: SYSTEM_MONO,
-    fontUrl: 'https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap'
+    fontMono: SYSTEM_MONO
   },
   terminal: {
     foreground: '#1f2328',
@@ -135,8 +134,7 @@ export const nousTheme: DesktopTheme = {
   ...THEME_PRESET_PALETTES.nous,
   typography: {
     fontSans: SYSTEM_SANS,
-    fontMono: SYSTEM_MONO,
-    fontUrl: 'https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap'
+    fontMono: SYSTEM_MONO
   },
   terminal: {
     foreground: '#1f2328',
@@ -335,8 +333,7 @@ export const nousAltTheme: DesktopTheme = {
   ...THEME_PRESET_PALETTES['nous-alt'],
   typography: {
     fontSans: SYSTEM_SANS,
-    fontMono: SYSTEM_MONO,
-    fontUrl: 'https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap'
+    fontMono: SYSTEM_MONO
   }
 }
 
@@ -395,8 +392,7 @@ export const midnightTheme: DesktopTheme = {
   description: 'Deep blue-violet with cool accents',
   ...THEME_PRESET_PALETTES.midnight,
   typography: {
-    fontMono: `"JetBrains Mono", ${SYSTEM_MONO}`,
-    fontUrl: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap'
+    fontMono: `"JetBrains Mono", ${SYSTEM_MONO}`
   }
 }
 
@@ -406,8 +402,7 @@ export const emberTheme: DesktopTheme = {
   description: 'Warm crimson and bronze — forge vibes',
   ...THEME_PRESET_PALETTES.ember,
   typography: {
-    fontMono: `"IBM Plex Mono", ${SYSTEM_MONO}`,
-    fontUrl: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap'
+    fontMono: `"IBM Plex Mono", ${SYSTEM_MONO}`
   }
 }
 

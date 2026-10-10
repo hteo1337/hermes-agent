@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { BUILTIN_THEME_LIST, DEFAULT_TYPOGRAPHY, nousTheme } from './presets'
 
+it('built-in themes use bundled or system fonts without a stylesheet request', () => {
+  expect(BUILTIN_THEME_LIST.every(theme => !theme.typography?.fontUrl)).toBe(true)
+})
+
 // #40364: none of the UI text/mono fonts carry emoji glyphs, so every font
 // stack must end with a color-emoji fallback or emoji render as tofu on
 // platforms whose default font lacks them (e.g. Linux).
