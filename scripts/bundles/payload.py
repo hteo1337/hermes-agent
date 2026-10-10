@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
 # themed icon when apps/desktop/assets is absent. Excluded here means:
 # not packaged, not compiled, not baked. Frontend product staging
 # (scripts/bundles/stage.py) needs its full tree and passes no exclusions.
+# The small brand endpoint manifest is restored explicitly after this filter.
 INERT_SNAPSHOT_DIRS = (
     "tests", "tests-js", "website", "evals", ".github", "nix", "docker",
     "apps", "ui-tui", "web", "scripts",
@@ -46,6 +47,15 @@ def snapshot(repo: Path, ref: str, destination: Path, exclude: tuple[str, ...] =
         destination.mkdir(parents=True)
         with tarfile.open(archive) as source:
             source.extractall(destination, filter="data")
+
+
+def stage_brand_manifest(repo: Path, ref: str, destination: Path) -> None:
+    """Carry the selected revision's endpoint contract into a sealed backend."""
+    content = subprocess.check_output(
+        ["git", "show", f"{ref}:apps/desktop/brand.json"], cwd=repo, timeout=30)
+    target = destination / "apps/desktop/brand.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(content)
 
 
 def _payload_file(root: Path, relative: str) -> Path:

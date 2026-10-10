@@ -9,11 +9,34 @@ import sys
 
 import pytest
 
-from scripts.bundles.payload import relativize_links, snapshot
+from scripts.bundles.payload import INERT_SNAPSHOT_DIRS, relativize_links, snapshot, stage_brand_manifest
 from scripts.build.inputs import project_entries
 from scripts.build.agent import plant_surfaces
 from scripts.build.launchers import posix_launcher
 from scripts.bundles.desktop import release_version
+
+
+def test_sealed_snapshot_carries_only_selected_brand_manifest(tmp_path):
+    repo = tmp_path / "source"
+    brand = repo / "apps/desktop/brand.json"
+    brand.parent.mkdir(parents=True)
+    brand.write_text(json.dumps({"endpoints": {"modelCatalogUrl": "https://catalog.example.test"}}))
+    (brand.parent / "unused.txt").write_text("desktop source")
+    (repo / "README.md").write_text("agent source")
+    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.test",
+                    "commit", "-m", "fixture"], cwd=repo, check=True, capture_output=True)
+    brand.write_text(json.dumps({"endpoints": {"modelCatalogUrl": "https://uncommitted.example.test"}}))
+
+    target = tmp_path / "payload"
+    assert "apps" in INERT_SNAPSHOT_DIRS
+    snapshot(repo, "HEAD", target, exclude=("apps",))
+    assert not (target / "apps").exists()
+    stage_brand_manifest(repo, "HEAD", target)
+    assert json.loads((target / "apps/desktop/brand.json").read_text()) == {
+        "endpoints": {"modelCatalogUrl": "https://catalog.example.test"}}
+    assert not (target / "apps/desktop/unused.txt").exists()
 
 
 def test_release_version_comes_from_the_release_identity_not_the_checkout(tmp_path):

@@ -52,6 +52,9 @@ def test_bundle_stages_git_tree_and_runs_native_children_before_manifest(tmp_pat
                         source_python.parents[1], dirs_exist_ok=True)
     repo = tmp_path / "repo"
     repo.mkdir()
+    brand = repo / "apps/desktop/brand.json"
+    brand.parent.mkdir(parents=True)
+    brand.write_text(json.dumps({"endpoints": {"modelCatalogUrl": ""}}))
     source = Path(__file__).resolve().parents[2]
     shutil.copytree(source / "pm", repo / "pm", ignore=shutil.ignore_patterns("__pycache__"))
     (repo / "hermes_cli").mkdir()
@@ -170,6 +173,7 @@ def test_bundle_stages_git_tree_and_runs_native_children_before_manifest(tmp_pat
     monkeypatch.setenv("HERMES_RUNTIME_DIR", str(user_store))
     monkeypatch.setenv("UV_CACHE_DIR", str(tmp_path / "cache"))
     prepared = native.prepare_native(out=output, ref="HEAD", source=repo, cache=tmp_path / "cache", tools=canonical, env=env)
+    assert (output / "hermes-agent/apps/desktop/brand.json").read_bytes() == brand.read_bytes()
     assert {name: tree_digest(canonical / facts.get(name)["entry"]) for name in selected} == canonical_before
     assert (canonical / "facts.json").read_bytes() == canonical_facts
     assert not target_python.samefile(source_python)
