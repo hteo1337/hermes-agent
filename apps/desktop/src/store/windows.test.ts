@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { $activeGatewayProfile } from './profile'
 import { $sessions } from './session'
 import {
+  isMainWindow,
   isPeerInstanceWindow,
   isProfilePinnedWindow,
   openBrowserInNewWindow,
@@ -49,6 +50,16 @@ describe('isPeerInstanceWindow', () => {
     expect(isPeerInstanceWindow('?peer=0')).toBe(false)
     expect(isPeerInstanceWindow('?win=secondary')).toBe(false)
     expect(isPeerInstanceWindow('')).toBe(false)
+    const original = window.location.href
+
+    try {
+      window.history.replaceState(null, '', '?peer=1')
+      expect(isMainWindow()).toBe(false)
+      window.history.replaceState(null, '', '?peer=0')
+      expect(isMainWindow()).toBe(true)
+    } finally {
+      window.history.replaceState(null, '', original)
+    }
   })
 })
 

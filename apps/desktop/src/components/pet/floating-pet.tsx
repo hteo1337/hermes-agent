@@ -25,7 +25,7 @@ import { $petChips, answerPetChip } from '@/store/pet-chips'
 import { resetPetGallery, setPetScale } from '@/store/pet-gallery'
 import { $petOverlayActive, initPetOverlayBridge, popOutPet, restorePetOverlay } from '@/store/pet-overlay'
 import { $gatewayState } from '@/store/session'
-import { isSecondaryWindow } from '@/store/windows'
+import { isMainWindow } from '@/store/windows'
 import { useTheme } from '@/themes/context'
 
 import { PET_STARTUP_RETRY_MS, petInfoPollIntervalMs } from './pet-info-poll'
@@ -284,7 +284,7 @@ export function FloatingPet() {
   // pop-out overlay belongs to it (main.ts positions it against the main
   // window and routes control messages back to it).
   useEffect(() => {
-    if (isSecondaryWindow()) {
+    if (!isMainWindow()) {
       return
     }
 
@@ -294,7 +294,7 @@ export function FloatingPet() {
   // Returning to the app (by any route, not just the mail icon) clears the pet's
   // "new message" hint — you've seen it now.
   useEffect(() => {
-    if (isSecondaryWindow()) {
+    if (!isMainWindow()) {
       return
     }
 
@@ -309,7 +309,7 @@ export function FloatingPet() {
   const restoredRef = useRef(false)
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
   useEffect(() => {
-    if (isSecondaryWindow() || restoredRef.current || !active) {
+    if (!isMainWindow() || restoredRef.current || !active) {
       return
     }
 
@@ -351,7 +351,7 @@ export function FloatingPet() {
 
     // Shift-click morphs the window into the floating pet overlay (chat
     // shrinks and hides) instead of starting an in-window drag. Primary only.
-    if (e.shiftKey && !isSecondaryWindow()) {
+    if (e.shiftKey && isMainWindow()) {
       popOutPet({ height: rect.height, width: rect.width, x: rect.left, y: rect.top })
 
       return
