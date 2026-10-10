@@ -1,4 +1,5 @@
 import type { DesktopAuthProvider } from '@/global'
+import { brandText } from '@/i18n/brand-text'
 
 export interface RemoteAuthProviderShape {
   isPassword: boolean
@@ -6,7 +7,7 @@ export interface RemoteAuthProviderShape {
 }
 
 function providerDisplayName(provider: DesktopAuthProvider): string {
-  return provider.displayName || provider.name
+  return brandText(provider.displayName || provider.name)
 }
 
 export function deriveRemoteAuthProviderShape(

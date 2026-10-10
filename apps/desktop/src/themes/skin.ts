@@ -19,6 +19,7 @@ import { ensureContrast, mix } from '@hermes/shared/color'
 import type { HermesSkin, SkinColors } from '@hermes/shared/skin'
 
 import { BRAND } from '@/brand'
+import { brandText } from '@/i18n/brand-text'
 
 import { luminance, normalizeHex, readableInk } from './color'
 import type { DesktopTheme, DesktopThemeColors } from './types'
@@ -110,7 +111,7 @@ export function skinToDesktopTheme(skin: HermesSkin): DesktopTheme | null {
 
   return {
     name,
-    label: titleCase(name),
+    label: brandText(titleCase(name)),
     description: `${BRAND.name} skin`,
     // Single palette in both slots: a skin is one-mode, so the light/dark toggle
     // shouldn't invert it. renderedModeFor still paints `.dark` from luminance.

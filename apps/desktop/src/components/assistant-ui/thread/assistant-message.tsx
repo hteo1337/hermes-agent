@@ -39,6 +39,7 @@ import { PreviewAttachment } from '@/components/chat/preview-attachment'
 import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
 import { useI18n } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import {
   errorRecoveryPlan,
   type ErrorSurface,
@@ -604,7 +605,7 @@ const ErrorCardHeadline: FC = () => {
       {errorText && (
         <details className="mt-0.5 min-w-0 text-[0.72rem] opacity-70">
           <summary className="cursor-pointer select-none">{t.assistant.thread.errorDetails}</summary>
-          <div className="wrap-anywhere mt-0.5 whitespace-pre-wrap font-mono">{errorText}</div>
+          <div className="wrap-anywhere mt-0.5 whitespace-pre-wrap font-mono">{brandText(errorText)}</div>
         </details>
       )}
     </>

@@ -165,7 +165,7 @@ describe('free-tier refusals', () => {
   })!
 
   it('carries the backend sentence and offers the free sign-in, never an OAuth re-login', () => {
-    expect(surface.message).toBe('Using Hermes without signing in is switched off right now. To sign in: /login.')
+    expect(surface.message).toBe('Using Envoy without signing in is switched off right now. To sign in: /login.')
     const plan = errorRecoveryPlan(surface)
     expect(plan.signInFreeTier).toBe(true)
     expect(plan.signInAgain).toBe(false)

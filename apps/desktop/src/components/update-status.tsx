@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import type { DesktopUpdateStatus, DesktopVersionInfo } from '@/global'
 import { type Translations, useI18n } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { shortVersion } from '@/lib/version-label'
@@ -93,13 +94,22 @@ function ordinaryUpdateStatus({ apply, checking, status, target, u }: UpdateStat
   const applying = apply.applying || apply.stage === 'restart'
 
   if (!supported) {
-    return { applying, line: status?.message ?? u.unsupportedMessage, supported, tone: 'unsupported', updateAvailable }
+    return {
+      applying,
+      line: status?.message ? brandText(status.message) : u.unsupportedMessage,
+      supported,
+      tone: 'unsupported',
+      updateAvailable
+    }
   }
 
   if (status?.error) {
     return {
       applying,
-      error: [status.message, status.error].filter(l => !!l).join('\n'),
+      error: [status.message, status.error]
+        .filter(l => !!l)
+        .map(line => brandText(line!))
+        .join('\n'),
       line: u.cantReach,
       supported,
       tone: 'error',

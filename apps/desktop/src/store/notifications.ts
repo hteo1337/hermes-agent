@@ -1,6 +1,7 @@
 import { atom } from 'nanostores'
 
 import { translateNow } from '@/i18n'
+import { brandText } from '@/i18n/brand-text'
 import { isOutOfSyncRpcParams } from '@/lib/gateway-rpc'
 import { isTimeoutError } from '@/lib/with-timeout'
 import { type ErrorToastCategory, recordFriction } from '@/store/desktop-metrics'
@@ -333,8 +334,8 @@ export function notifyError(
       id: options.id,
       kind: 'error',
       title: fallback,
-      message: poolSlotTimeout ? translateNow('desktop.poolSlotTimeoutBody') : readable.message,
-      detail: poolSlotTimeout ? readable.message : readable.detail
+      message: poolSlotTimeout ? translateNow('desktop.poolSlotTimeoutBody') : brandText(readable.message),
+      detail: poolSlotTimeout ? brandText(readable.message) : readable.detail ? brandText(readable.detail) : undefined
     },
     category
   )

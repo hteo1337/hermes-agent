@@ -21,8 +21,8 @@ describe('brandText', () => {
   it('renames the product and the vendor in prose', () => {
     expect(brandText('Hermes Agent is ready.')).toBe(`${BRAND.name} is ready.`)
     expect(brandText('Ask Hermes anything.')).toBe(`Ask ${BRAND.name} anything.`)
-    expect(brandText('Sign in with Nous Portal')).toBe('Sign in with the portal')
-    expect(brandText('Nous Research needs this.')).toBe('The provider needs this.')
+    expect(brandText('Sign in with Nous Portal')).toBe(`Sign in with ${BRAND.name} Portal`)
+    expect(brandText('Nous Research needs this.')).toBe(`${BRAND.name} needs this.`)
   })
 
   it('keeps names the backend owns', () => {
