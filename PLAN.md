@@ -1,0 +1,22 @@
+# Envoy local branch integration
+
+Scope: combine the three named local branches on `envoy/integration` based on `envoy/main`. No remote operations or full suite.
+
+Assumptions: the existing integration branch at the same commit as main is the requested branch. Preserve both desktop endpoint gating and pet morph state guards during conflicts. Keep all tests from each branch.
+
+Architecture: merge each branch in the specified order; resolve shared Electron main/window code around existing interfaces. Avoid changes outside conflicts or proven integration defects.
+
+Work: (1) inspect heads and merge desktop, (2) merge backend D3b, (3) merge pet morph, (4) run focused gates, (5) inspect diff and commit/report.
+
+Acceptance: three branch heads represented in local merge history; no unresolved conflicts; the named tests, typecheck, brand and egress audits have recorded real output; handoff names decisions and unverified work.
+
+Risk: host load can time out tests; classify any failure using the branch baseline before calling it a regression.
+
+Verification: `npm run typecheck`; `node scripts/egress-audit.mjs --check`; `node scripts/brand-audit.mjs --check`; focused `npx vitest run --maxWorkers=2 ...`; focused Python `scripts/run_tests.sh -j 2 ...` for backend decoupling.
+
+
+## Envoy residual brand (2026-10-10)
+Scope: desktop theme, backend display boundaries, optional portal surfaces, About attribution and audit baseline. Assumption: an empty `ENDPOINTS.portal` disables the bundled Nous account experience; configured portals appear as Envoy Portal while provider and RPC identifiers remain stable. Work order: gate portal state/providers, brand display payloads, align About/attribution, update focused contracts, lower audit baseline. Verify with desktop typecheck, egress and brand audit checks, and touched-file focused Vitest under isolated homes; do not run the full suite. Risks: user-authored text must remain verbatim, and backend protocol identifiers must remain stable.
+
+## D5 default-off egress (2026-10-10)
+Scope: packaged desktop boot, Settings and Capabilities provider discovery, model catalog, and font loading. Assumption: an empty brand endpoint disables catalog network access while retaining local curated/cache behavior. Architecture: provider-specific discovery remains available after explicit Copilot selection; the Python catalog reads the same bundled brand manifest as the renderer; font presets resolve to local assets or installed fonts. Work: trace call sites; gate requests; update endpoint contract and audit; verify focused behavior and quality gates; commit. Acceptance: fresh defaults make no requests to the six probed hosts; explicit Copilot configuration still works; offline model catalog remains usable; audits, focused tests, typecheck, lint pass. Risk: existing ambient provider discovery may depend on eager credential exchange. Verification: scripts/run_tests.sh for touched Python modules, npx vitest run --maxWorkers=2 for touched desktop modules, npm run typecheck, ESLint on touched files, Ruff on Python, brand-audit and egress-audit.

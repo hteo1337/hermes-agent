@@ -1,0 +1,42 @@
+[hermes] install stamp: b7b9f61e51e7 (envoy/final) [DIRTY] from local
+
+DevTools listening on ws://127.0.0.1:9223/devtools/browser/15742b91-3470-4aab-accf-08c323200d66
+Error occurred in handler for 'hermes:api': Error: Envoy is quitting.
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:20966:45
+    at Object.run [as shutdown] (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:81303:51
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82933:38)
+    at runTask (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49940:33)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:58
+    at Array.map (<anonymous>)
+    at Object.begin (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:32)
+    at EventEmitter.<anonymous> (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82938:24) {
+  __hermesExpectedTransition: true
+}
+Error occurred in handler for 'hermes:api': Error: Envoy is quitting.
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:20966:45
+    at Object.run [as shutdown] (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:81303:51
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82933:38)
+    at runTask (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49940:33)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:58
+    at Array.map (<anonymous>)
+    at Object.begin (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:32)
+    at EventEmitter.<anonymous> (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82938:24) {
+  __hermesExpectedTransition: true
+}
+Error occurred in handler for 'hermes:connection': Error: Envoy is quitting.
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:20966:45
+    at Object.run [as shutdown] (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:81303:51
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:2485:40)
+    at Object.run (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82933:38)
+    at runTask (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49940:33)
+    at file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:58
+    at Array.map (<anonymous>)
+    at Object.begin (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:49957:32)
+    at EventEmitter.<anonymous> (file:///Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop/release/mac-arm64/Envoy%20Agent.app/Contents/Resources/app.asar/dist/electron-main.mjs:82938:24) {
+  __hermesExpectedTransition: true
+}

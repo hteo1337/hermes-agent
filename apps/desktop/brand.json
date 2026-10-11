@@ -1,0 +1,28 @@
+{
+  "name": "Envoy",
+  "kebab": "envoy",
+  "pascal": "Envoy",
+  "tagline": "A desktop agent client",
+  "appIdPrefix": "app.envoy",
+  "msixOrg": "Envoy",
+  "protocol": "envoy",
+  "cliName": "envoy",
+  "telemetry": false,
+  "updateRepository": "",
+  "endpoints": {
+    "portal": "",
+    "hubUrl": "",
+    "docsUrl": "",
+    "updateFeedUrl": "",
+    "modelCatalogUrl": ""
+  },
+  "maintainer": "Envoy contributors <noreply@envoy.invalid>",
+  "author": "Envoy contributors",
+  "attribution": {
+    "file": "NOTICE.md",
+    "upstream": "Hermes Desktop",
+    "holder": "Nous Research",
+    "year": 2025,
+    "license": "MIT"
+  }
+}

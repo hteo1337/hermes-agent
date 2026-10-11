@@ -1,0 +1,25 @@
+
+> hermes@0.0.0 typecheck
+> tsc -p . --noEmit && tsc -p tsconfig.electron.json --noEmit && tsc -p tsconfig.e2e.json --noEmit && tsc --ignoreConfig --allowJs --checkJs --noEmit --skipLibCheck --module nodenext --moduleResolution nodenext --target es2022 electron-builder.config.cjs
+
+electron/challenge-window.ts(1,78): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+electron/challenge-window.ts(142,40): error TS7006: Parameter '_contents' implicitly has an 'any' type.
+electron/challenge-window.ts(142,51): error TS7006: Parameter '_permission' implicitly has an 'any' type.
+electron/challenge-window.ts(142,64): error TS7006: Parameter 'callback' implicitly has an 'any' type.
+electron/challenge-window.ts(144,31): error TS7006: Parameter 'event' implicitly has an 'any' type.
+electron/challenge-window.ts(277,44): error TS7006: Parameter '_event' implicitly has an 'any' type.
+electron/challenge-window.ts(277,52): error TS7006: Parameter 'url' implicitly has an 'any' type.
+electron/challenge-window.ts(277,57): error TS7006: Parameter 'isMainFrame' implicitly has an 'any' type.
+electron/challenge-window.ts(282,36): error TS7006: Parameter '_event' implicitly has an 'any' type.
+electron/challenge-window.ts(282,44): error TS7006: Parameter 'url' implicitly has an 'any' type.
+electron/challenge-window.ts(282,49): error TS7006: Parameter 'httpResponseCode' implicitly has an 'any' type.
+electron/machine-profile.ts(4,30): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+src/sdk/index.ts(2104,41): error TS2307: Cannot find module 'blobatar/blob' or its corresponding type declarations.
+src/sdk/index.ts(2105,26): error TS2307: Cannot find module 'blobatar/react' or its corresponding type declarations.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hteo/.paseo/worktrees/1so5obpm/envoy-integration/apps/desktop
+npm error workspace hermes@0.0.0
+npm error location /Users/hteo/.paseo/worktrees/1so5obpm/envoy-integration/apps/desktop
+npm error command failed
+npm error command sh -c tsc -p . --noEmit && tsc -p tsconfig.electron.json --noEmit && tsc -p tsconfig.e2e.json --noEmit && tsc --ignoreConfig --allowJs --checkJs --noEmit --skipLibCheck --module nodenext --moduleResolution nodenext --target es2022 electron-builder.config.cjs

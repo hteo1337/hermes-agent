@@ -1,0 +1,3 @@
+2026-10-10 04:57:35,028 [hermes] [boot] Using bundled payload at /Users/hteo/.paseo/worktrees/1so5obpm/envoy-release/apps/desktop/release/mac-arm64/Envoy Agent.app/Contents/Resources/agent-payload
+2026-10-10 04:57:40,934 [hermes] HERMES_BACKEND_READY port=54358
+2026-10-10 04:57:41,010 [hermes] [boot] Hermes backend is ready. Finalizing desktop startup

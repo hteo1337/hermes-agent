@@ -1,0 +1,55 @@
+
+=== health (failed) ===
+apps/desktop/electron/local-pets.ts:263  CC  inspectLocalPet
+    CC 23 > target 20 (new code must meet the target)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/electron/main.ts:1  FILE_LINES  <module>
+    lines 19811 > 19786, its value on main (over target 2000: it may only go down)
+    fix: offset the growth in the same PR: move an existing function or class into a topical sibling `<stem>_<topic>.py` (moved code keeps its cap; see root AGENTS.md), or put new tests in a new `test_<stem>_<topic>.py`; new behaviour never goes into a facade
+apps/desktop/scripts/generate-brand-assets.py:84  HX006  save_icns
+    subprocess/urlopen without timeout
+    fix: pass `timeout=`; an asyncio `proc.communicate()` goes inside `asyncio.wait_for(..., timeout=...)` (a child or socket that never answers hangs forever); after `proc.kill()` reap with `proc.wait()`, never a bare `communicate()` (it blocks while a grandchild holds the pipe)
+apps/desktop/scripts/generate-brand-assets.py:107  HX006  dmg_background
+    subprocess/urlopen without timeout
+    fix: pass `timeout=`; an asyncio `proc.communicate()` goes inside `asyncio.wait_for(..., timeout=...)` (a child or socket that never answers hangs forever); after `proc.kill()` reap with `proc.wait()`, never a bare `communicate()` (it blocks while a grandchild holds the pipe)
+apps/desktop/src/app/chat/composer/status-stack/index.tsx:113  CC  ComposerStatusStack
+    CC 33 > 32, its value on main (over target 20: it may only go down)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/app/contrib/wiring.tsx:296  CC  ContribWiring
+    CC 42 > 40, its value on main (over target 20: it may only go down)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/app/session/hooks/use-prompt-actions/index.test.tsx:1  FILE_LINES  <module>
+    lines 6579 > 6577, its value on main (over target 2000: it may only go down)
+    fix: offset the growth in the same PR: move an existing function or class into a topical sibling `<stem>_<topic>.py` (moved code keeps its cap; see root AGENTS.md), or put new tests in a new `test_<stem>_<topic>.py`; new behaviour never goes into a facade
+apps/desktop/src/app/settings/config-settings.tsx:98  CC  ConfigSettingsInner
+    CC 31 > 30, its value on main (over target 20: it may only go down)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/app/settings/gateway-settings.tsx:256  CC  GatewayConnectionSettings
+    CC 54 > 52, its value on main (over target 20: it may only go down)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/components/boot-failure-overlay.tsx:93  CC  BootFailureOverlay
+    CC 28 > 26, its value on main (over target 20: it may only go down)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/components/update-status.tsx:278  CC  UpdateStatusCard
+    CC 21 > target 20 (was 20)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/components/version-details.tsx:26  CC  VersionDetails
+    CC 21 > target 20 (was 20)
+    fix: split it: extract phases into a topical sibling (`<stem>_<topic>.py`), or replace a branch ladder with a dict/table -> handler
+apps/desktop/src/sdk/index.ts:1  FILE_LINES  <module>
+    lines 2111 > 2107, its value on main (over target 2000: it may only go down)
+    fix: offset the growth in the same PR: move an existing function or class into a topical sibling `<stem>_<topic>.py` (moved code keeps its cap; see root AGENTS.md), or put new tests in a new `test_<stem>_<topic>.py`; new behaviour never goes into a facade
+apps/desktop/src/store/gateway.ts:1  FILE_LINES  <module>
+    lines 2625 > 2624, its value on main (over target 2000: it may only go down)
+    fix: offset the growth in the same PR: move an existing function or class into a topical sibling `<stem>_<topic>.py` (moved code keeps its cap; see root AGENTS.md), or put new tests in a new `test_<stem>_<topic>.py`; new behaviour never goes into a facade
+
+code health: 293 files vs 517b5e10febd: 14 blocking, 0 advisory (21.2s)
+
+Each function and file has its own cap: its value on main if it is already over target,
+otherwise the target. New code meets the target; existing code may only go down. Fix the code
+(the `fix:` line is the repo's remedy); a genuine exception takes a reviewed comment on the line,
+`# health: allow <RULE> -- <why>`. Rules and targets: scripts/code_health/config.py.
+Reproduce locally: python scripts/check --only health (every lint check: python scripts/check;
+on every push: python scripts/check --install-hook pre-push).
+
+scripts/check: 1 checks, FAILED: health

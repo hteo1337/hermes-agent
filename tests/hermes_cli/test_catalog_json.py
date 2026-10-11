@@ -1,0 +1,198 @@
+"""The pulled catalog: packaged JSON is the offline truth, a configured fetch
+swaps entries in memory only, and min_engine gates day-0 models.
+
+Nothing here touches disk beyond the packaged file — the design constraint
+is that a git checkout must never see a dirty tracked catalog.json."""
+
+from __future__ import annotations
+
+import dataclasses
+import io
+import json
+import threading
+import urllib.request
+from types import SimpleNamespace
+
+import pytest
+
+import hermes_cli.local_runtime.catalog as cat
+
+
+@pytest.fixture(autouse=True)
+def _reset_refresh_state(monkeypatch):
+    """Each test starts outside the TTL window with the packaged catalog."""
+    monkeypatch.setattr(cat, "_last_refresh_attempt", 0.0)
+    monkeypatch.setattr(cat, "_last_refresh_url", "")
+    monkeypatch.setattr(cat, "_refresh_generation", 0)
+    monkeypatch.setattr(cat, "endpoint", lambda name: "https://catalog.example.invalid/models.json")
+    packaged = cat._packaged_catalog()
+    monkeypatch.setattr(cat, "CATALOG", packaged)
+    yield
+
+
+def _doc_from(entries):
+    """A fetchable catalog document built by mutating the packaged JSON."""
+    from importlib.resources import files
+
+    doc = json.loads(files("hermes_cli.local_runtime")
+                     .joinpath("catalog.json").read_text(encoding="utf-8"))
+    doc["models"] = entries(doc["models"])
+    return doc
+
+
+def _fetch_returns(monkeypatch, doc):
+    body = json.dumps(doc).encode()
+
+    class R(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fetch(req, *a, **k):
+        assert req.full_url == "https://catalog.example.invalid/models.json"
+        return R(body)
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+
+
+def test_empty_endpoint_disables_refresh_and_background_thread(monkeypatch):
+    monkeypatch.setattr(cat, "endpoint", lambda name: "")
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: pytest.fail("unexpected fetch"))
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: pytest.fail("unexpected thread"))
+    assert cat.refresh_catalog(force=True) is False
+    cat.refresh_catalog_soon()
+    assert cat._last_refresh_attempt == 0.0
+
+
+def test_source_change_retries_after_failed_refresh(monkeypatch):
+    source = {"url": "https://source-a.example.invalid/models.json"}
+    monkeypatch.setattr(cat, "endpoint", lambda name: source["url"])
+    requests = []
+
+    def fetch(req, *args, **kwargs):
+        requests.append(req.full_url)
+        if req.full_url == "https://source-a.example.invalid/models.json":
+            raise OSError("source A unavailable")
+        return io.BytesIO(json.dumps(_doc_from(lambda models: models)).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    assert cat.refresh_catalog(force=True) is False
+    source["url"] = "https://source-b.example.invalid/models.json"
+    started = []
+    monkeypatch.setattr(cat.threading, "Thread", lambda *a, **k: SimpleNamespace(
+        start=lambda: started.append(True)))
+    cat.refresh_catalog_soon()
+    assert started == [True]
+    assert cat.refresh_catalog() is True
+    assert requests == ["https://source-a.example.invalid/models.json", source["url"]]
+
+
+def test_old_background_response_cannot_replace_new_source(monkeypatch):
+    source = {"url": "https://source-a.example.invalid/models.json"}
+    monkeypatch.setattr(cat, "endpoint", lambda name: source["url"])
+    entered_a = threading.Event()
+    release_a = threading.Event()
+    results = []
+    bodies = {
+        "source-a": _doc_from(lambda models: [{**models[0], "id": "source-a"}, *models[1:]]),
+        "source-b": _doc_from(lambda models: [{**models[0], "id": "source-b"}, *models[1:]]),
+    }
+
+    def fetch(req, *args, **kwargs):
+        selected = "source-a" if "source-a" in req.full_url else "source-b"
+        if selected == "source-a":
+            entered_a.set()
+            assert release_a.wait(5)
+        return io.BytesIO(json.dumps(bodies[selected]).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fetch)
+    first = threading.Thread(target=lambda: results.append(("a", cat.refresh_catalog())))
+    first.start()
+    try:
+        assert entered_a.wait(5)
+        source["url"] = "https://source-b.example.invalid/models.json"
+        second = threading.Thread(target=lambda: results.append(("b", cat.refresh_catalog())))
+        second.start()
+        second.join(5)
+        assert not second.is_alive()
+    finally:
+        release_a.set()
+        first.join(5)
+    assert not first.is_alive()
+    assert results == [("b", True), ("a", False)]
+    assert "source-b" in cat.catalog_by_id()
+    assert "source-a" not in cat.catalog_by_id()
+
+
+def test_packaged_json_round_trips_the_catalog():
+    """The packaged JSON must produce a complete, selection-ready catalog:
+    every entry carries estimator inputs and at least one variant, and the
+    known invariants (best-first ordering, Q4 floor) hold — the same
+    contract the literals obeyed."""
+    assert len(cat.CATALOG) >= 4
+    for e in cat.CATALOG:
+        assert e.variants and e.n_ctx_train > 0 and e.per_layer_f16 >= 0
+        sizes = [v.size_bytes for v in e.variants]
+        assert sizes == sorted(sizes, reverse=True), f"{e.id} not best-first"
+
+
+def test_refresh_swaps_in_memory_only(monkeypatch, tmp_path):
+    """A fetched catalog replaces CATALOG in memory; the packaged file on
+    disk is untouched (checkout stays clean)."""
+    from importlib.resources import files
+
+    packaged_path = files("hermes_cli.local_runtime").joinpath("catalog.json")
+    before = packaged_path.read_text(encoding="utf-8")
+
+    def add_day0(models):
+        day0 = dict(models[0])
+        day0.update(id="day0-model", display_name="Day 0",
+                    description="new", min_engine="b99999")
+        return models + [day0]
+
+    _fetch_returns(monkeypatch, _doc_from(add_day0))
+    assert cat.refresh_catalog(force=True) is True
+    assert "day0-model" in {e.id for e in cat.CATALOG}
+    assert cat.catalog_by_id()["day0-model"].min_engine == "b99999"
+    assert packaged_path.read_text(encoding="utf-8") == before
+
+
+def test_refresh_failure_keeps_current_catalog(monkeypatch):
+    def boom(*a, **k):
+        raise OSError("offline")
+
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    ids_before = [e.id for e in cat.CATALOG]
+    assert cat.refresh_catalog(force=True) is False
+    assert [e.id for e in cat.CATALOG] == ids_before
+
+
+def test_refresh_rejects_wrong_schema(monkeypatch):
+    doc = _doc_from(lambda m: m)
+    doc["schema_version"] = cat._SCHEMA_VERSION + 1
+    _fetch_returns(monkeypatch, doc)
+    ids_before = [e.id for e in cat.CATALOG]
+    assert cat.refresh_catalog(force=True) is False
+    assert [e.id for e in cat.CATALOG] == ids_before
+
+
+def test_loader_ignores_unknown_fields():
+    doc = _doc_from(lambda m: m)
+    doc["models"][0]["future_field"] = {"anything": True}
+    entries = cat._load_catalog(doc)
+    assert entries[0].id == doc["models"][0]["id"]
+
+
+def test_min_engine_gate(monkeypatch):
+    from hermes_cli.web_routers.local_models import _engine_too_old
+
+    from hermes_cli.local_runtime.binaries import Engine
+    from pathlib import Path
+
+    monkeypatch.setattr("hermes_cli.local_runtime.binaries.installed_engine",
+                        lambda *args, **kwargs: Engine("cpu", "b10362", Path("unused")))
+    assert _engine_too_old("") is False, "no requirement, no gate"
+    assert _engine_too_old("b10000") is False, "installed engine suffices"
+    assert _engine_too_old("b10363") is True, "newer requirement gates"

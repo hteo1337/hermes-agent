@@ -1,0 +1,288 @@
+/**
+ * Pure geometry helpers for the popped-out pet overlay — deciding where its
+ * window may open and where it must be re-homed when the display topology
+ * changes. Side-effect-free so the on-screen validation is unit-testable
+ * without booting Electron; main.ts owns the live `screen` displays, the
+ * anchor window, and the overlay window itself.
+ *
+ * The bug this exists for: the renderer remembers the overlay's absolute
+ * screen position (localStorage hermes.desktop.pet-overlay-bounds.v1) and
+ * reuses it verbatim on the next pop-out / app restart. If that spot was on an
+ * external monitor that has since been unplugged, the overlay is created
+ * off-screen — and because it is a transparent, frameless, non-activating
+ * always-on-top panel hidden from Mission Control, an off-screen overlay is
+ * completely unfindable: the pet "vanishes." A window that only *mostly* left
+ * the screen is just as lost, so the overlay is kept wholly inside a work area
+ * rather than trusting a sliver of overlap (#85092).
+ */
+
+import type { BrowserWindow } from 'electron'
+
+import { matchingWorkArea } from './window-state'
+
+// Below this, a pet window is too small to be useful — mirrors the floor
+// enforced in main.ts's spawnPetOverlayWindow.
+const MIN_SIZE = 80
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi))
+
+/**
+ * Whether the overlay may start click-through. `setIgnoreMouseEvents(true, { forward: true })`
+ * only forwards pointer moves on macOS/Windows; on Linux an ignoring overlay never hears the
+ * cursor re-enter the sprite, so it stays a solid window (the X11 HUD makes the same call).
+ */
+export const petOverlayClickThrough = (platform = process.platform) => platform !== 'linux'
+
+export function destroyPetOverlayWindow(
+  win: BrowserWindow | null,
+  setIntentionalClose: (closing: boolean) => void,
+  log: (error: unknown) => void
+): boolean {
+  if (!win || win.isDestroyed()) {
+    return true
+  }
+
+  setIntentionalClose(true)
+
+  try {
+    win.destroy()
+
+    if (win.isDestroyed()) {
+      return true
+    }
+  } catch (error) {
+    log(error)
+  }
+
+  setIntentionalClose(false)
+
+  return false
+}
+
+// A failed overlay creation may happen after the chat window was hidden. Each
+// native recovery step is independent so one failed setBounds cannot also
+// prevent show(). Keep the pet marker until chat bounds are really restored.
+export function recoverChatAfterFailedMorph(win, bounds, minimum, actions): boolean {
+  try {
+    win.setMinimumSize(1, 1)
+  } catch (error) {
+    actions.log(error)
+  }
+
+  let boundsRestored = false
+
+  try {
+    actions.markAppSized(win, bounds)
+    win.setBounds(bounds)
+    boundsRestored = true
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    if (win.isMinimized()) {
+      win.restore()
+    }
+  } catch (error) {
+    actions.log(error)
+  }
+
+  let shown = false
+
+  try {
+    win.show()
+    shown = true
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    win.focus()
+  } catch (error) {
+    actions.log(error)
+  }
+
+  try {
+    win.setMinimumSize(minimum.width, minimum.height)
+  } catch (error) {
+    actions.log(error)
+  }
+
+  if (boundsRestored && shown) {
+    actions.clearPetSized(win)
+
+    try {
+      actions.closeOverlay()
+    } catch (error) {
+      actions.log(error)
+    }
+  }
+
+  return boundsRestored && shown
+}
+
+/**
+ * Whether the overlay window's 'closed' handler should tell the main renderer
+ * to pop the pet back in (#55920).
+ *
+ * The overlay going away on its own (⌘W, a display teardown) must echo back so
+ * the pet doesn't stay hidden. But when the app itself is quitting — the
+ * before-quit teardown closes the overlay, and on Windows/Linux so does the
+ * primary window's 'closed' handler — that echo is a bug: it runs popInPet(),
+ * which persists `$petOverlayActive=false`, so restorePetOverlay() on the next
+ * boot skips restoration and the pet silently reverts to in-window. The quit
+ * path must leave the persisted popped-out flag alone.
+ */
+export function shouldPopInOnOverlayClosed({
+  appQuitting,
+  mainWindowAlive,
+  intentionalClose = false
+}: {
+  appQuitting: boolean
+  mainWindowAlive: boolean
+  intentionalClose?: boolean
+}): boolean {
+  return !appQuitting && !intentionalClose && mainWindowAlive
+}
+
+/**
+ * Keep the WHOLE rect inside `workArea`: size is capped to the work area, then
+ * the origin is clamped so no edge crosses it.
+ */
+export function clampRectToWorkArea(rect, workArea) {
+  const width = clamp(Math.round(rect.width), MIN_SIZE, Math.round(workArea.width))
+  const height = clamp(Math.round(rect.height), MIN_SIZE, Math.round(workArea.height))
+
+  return {
+    x: clamp(Math.round(rect.x), workArea.x, workArea.x + workArea.width - width),
+    y: clamp(Math.round(rect.y), workArea.y, workArea.y + workArea.height - height),
+    width,
+    height
+  }
+}
+
+/**
+ * Resolve where the pet-overlay window may sit. A `requested` screen rect that
+ * overlaps any connected display is clamped wholly into the work area it
+ * overlaps most (the display Electron's `screen.getDisplayMatching` picks).
+ *
+ * A rect on no display at all (saved on a since-unplugged monitor) is
+ * re-centered on the display holding `anchor` (the main window's content
+ * bounds — where the user actually is), falling back to the primary display
+ * when the anchor is missing.
+ *
+ * Returns null for missing/garbage input (main falls back to its defaults);
+ * returns `requested` unchanged when there is nothing to validate against.
+ */
+export function resolvePetOverlayBounds(requested, displays, anchor) {
+  if (!requested) {
+    return null
+  }
+
+  const { x, y, width, height } = requested
+
+  if (![x, y, width, height].every(Number.isFinite)) {
+    return null
+  }
+
+  const list = Array.isArray(displays) ? displays : []
+
+  if (!list.length) {
+    return requested
+  }
+
+  const overlapping = matchingWorkArea({ x, y, width, height }, list, 1)
+
+  if (overlapping) {
+    return clampRectToWorkArea(requested, overlapping)
+  }
+
+  const area = workAreaForAnchor(list, anchor)
+
+  if (!area) {
+    return requested
+  }
+
+  const { width: w, height: h } = clampRectToWorkArea(requested, area)
+
+  return {
+    x: Math.round(area.x + (area.width - w) / 2),
+    y: Math.round(area.y + (area.height - h) / 2),
+    width: w,
+    height: h
+  }
+}
+
+// Morph animation timing (main window ⇄ pet overlay): mirrors Envoy's spring,
+// ~380ms stepped every 4ms. prefers-reduced-motion skips it (one jump).
+export const MORPH_DURATION_MS = 380
+export const MORPH_STEP_MS = 4
+
+const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3
+
+/** Intermediate rects for animating a window's bounds from `from` to `to`. The
+ *  last step equals `to` exactly, so the caller can land precisely. */
+export function morphSteps(
+  from: { x: number; y: number; width: number; height: number },
+  to: { x: number; y: number; width: number; height: number },
+  { durationMs = MORPH_DURATION_MS, stepMs = MORPH_STEP_MS } = {}
+): Array<{ x: number; y: number; width: number; height: number }> {
+  const steps = Math.max(1, Math.round(durationMs / stepMs))
+
+  return Array.from({ length: steps }, (_, i) => {
+    const t = easeOutCubic((i + 1) / steps)
+
+    return {
+      x: Math.round(from.x + (to.x - from.x) * t),
+      y: Math.round(from.y + (to.y - from.y) * t),
+      width: Math.round(from.width + (to.width - from.width) * t),
+      height: Math.round(from.height + (to.height - from.height) * t)
+    }
+  })
+}
+
+/** A serial queue: each run() waits for the previous one to settle before
+ *  starting, so an overlapping morph call queues instead of interleaving. */
+export function createSerialQueue(): <T>(run: () => Promise<T>) => Promise<T> {
+  let chain: Promise<unknown> = Promise.resolve()
+
+  return function queue<T>(run: () => Promise<T>): Promise<T> {
+    const result = chain.then(run, run)
+
+    chain = result.then(
+      () => undefined,
+      () => undefined
+    )
+
+    return result
+  }
+}
+
+// The work area of the display containing the anchor's center, or the first
+// display's when the anchor is missing. Null when no display has one.
+function workAreaForAnchor(displays, anchor) {
+  if (
+    anchor &&
+    Number.isFinite(anchor.x) &&
+    Number.isFinite(anchor.y) &&
+    Number.isFinite(anchor.width) &&
+    Number.isFinite(anchor.height)
+  ) {
+    const cx = anchor.x + anchor.width / 2
+    const cy = anchor.y + anchor.height / 2
+
+    const containing = displays.find(({ workArea: a }) => {
+      if (!a) {
+        return false
+      }
+
+      return cx >= a.x && cx < a.x + a.width && cy >= a.y && cy < a.y + a.height
+    })
+
+    if (containing?.workArea) {
+      return containing.workArea
+    }
+  }
+
+  return displays.find(({ workArea: a }) => a)?.workArea ?? null
+}

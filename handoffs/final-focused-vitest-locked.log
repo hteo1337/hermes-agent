@@ -1,0 +1,11 @@
+
+ RUN  v4.1.10 /Users/hteo/.paseo/worktrees/1so5obpm/envoy-final/apps/desktop
+
+Not implemented: Window's open() method
+Not implemented: Window's open() method
+
+ Test Files  23 passed (23)
+      Tests  277 passed (277)
+   Start at  03:43:23
+   Duration  16.37s (transform 10.30s, setup 1.43s, import 17.88s, tests 5.05s, environment 6.31s)
+

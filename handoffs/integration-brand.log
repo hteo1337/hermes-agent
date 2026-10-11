@@ -1,0 +1,4 @@
+brand-audit: electron/main.ts has 417, baseline 415
+brand-audit: electron/pet-overlay-ipc.ts has 11, baseline 9
+brand-audit: electron/preload.ts has 318, baseline 314
+brand hits: 2762 in 737 files
