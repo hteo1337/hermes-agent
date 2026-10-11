@@ -1,0 +1,17 @@
+# Envoy backend decoupling merge
+
+Current branch: `envoy/decouple-backend-merge`. Base A: `e3c893d672`. Reference B: `6aa3aba2b9` from common base `96e764cecc`. This work stays local and unpublished by request.
+
+Ported B's opt-in model catalog URL and empty fallback chain, configured Nous provider URL, auth/refresh routes chosen from current manifest or operator overrides, and fail-closed empty endpoint handling. Ported the corresponding B tests and fixtures. In A's auxiliary client, added the current endpoint gate and chose the configured route over saved or runtime URLs. The updated A tests prove that priority. See `OVERLAP-DECISIONS.md` for all five files changed on both lines.
+
+Baseline before edits: `scripts/run_tests.sh -j 3 tests/hermes_cli/test_endpoints.py tests/hermes_cli/test_model_catalog.py tests/hermes_cli/test_anon_auth_core.py -q`: 62 passed, 4 failed. The four failures were anonymous-Portal fixture expectations with no configured welcome URL. B's fixture update addresses them.
+
+First merged gate: 14 files, 442 passed, 3 failed, 1 skipped. The three failures were A tests expecting saved inference routes; their assertions were changed to pin configured-route precedence without excluding tests.
+
+Final requested gate: `scripts/run_tests.sh -j 4 tests/hermes_cli/test_anon_auth_core.py tests/hermes_cli/test_auth_nous_provider.py tests/hermes_cli/test_endpoints.py tests/hermes_cli/test_model_catalog.py tests/hermes_cli/test_nous_inference_url_validation.py tests/hermes_cli/test_nous_portal_staging_allowlist.py tests/hermes_cli/test_resolve_token_memo.py tests/hermes_cli/test_skills_hub.py tests/agent/test_auxiliary_client.py tests/agent/test_auxiliary_nous_endpoint.py tests/agent/test_provider_parity.py tests/hermes_cli/test_catalog_json.py tests/hermes_cli/test_plugin_catalog.py tests/hermes_cli/test_plugins_hub_live_catalog.py -q` with `HOME`, `HERMES_HOME`, `HERMES_RUNTIME_DIR` rooted in an isolated test home. Output: 14 files, 445 passed, 0 failed, 1 Linux-only test skipped, 106.8s. Full output in `gate-final.log`.
+
+URL audit: `rg -n 'nousresearch\.com|raw\.githubusercontent\.com' hermes_cli agent` returned 95 hits. `URL-AUDIT.md` lists each with its reason. Several account, billing, diagnostics, managed bot and telemetry surfaces still contain upstream defaults; they were present on both lines and were outside the B-only merge. This merge does not claim total backend egress decoupling.
+
+`python scripts/check` (after `source ./activate` with isolated HOME): 11 checks; failed only `health` with 10 findings in untouched `apps/desktop` files. No touched backend or test file appears in the final health output. The initial check scanned a temporary PM environment that I had placed under `handoffs/`; I moved that disposable environment to `/private/tmp` and reran the check. `git diff --check` and the pinned pre-commit `ruff check --config ./ruff.strict.toml {staged_files}` passed. The final commit is `2dc72ae2d6` (`fix(envoy): honor configured Nous and catalog endpoints`). The commit changed 19 files; no `apps/desktop`, LICENSE, NOTICE.md, CLAUDE.md, plugin catalog or local-runtime catalog file changed. `URL-AUDIT.md` and `OVERLAP-DECISIONS.md` are committed.
+
+Not run: full repository test suite, Linux-only test on Linux, CI, Desktop build, external independent review. No remote push or PR, as explicitly requested. Residual risk: ten pre-existing Desktop health failures and the remaining upstream URLs catalogued in the URL audit.
