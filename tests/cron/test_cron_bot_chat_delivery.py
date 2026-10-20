@@ -142,6 +142,23 @@ def test_deliver_runs_canonical_bot_chat_lane():
     assert calls["env"][TURN_REPORT_FILE_ENV] == calls["report_path"]
 
 
+def test_deliver_child_runs_with_lazy_installs_off(monkeypatch):
+    """Regression for TH1-1495: the delivery child's bootstrap must lease the committed dependency
+    generation; with lazy installs on, a drifted venv stamp made every tick publish a new one."""
+    monkeypatch.delenv("HERMES_DISABLE_LAZY_INSTALLS", raising=False)  # conftest sets it
+    calls = {}
+
+    def fake_run(argv, env, report_path, timeout):
+        calls["env"] = env
+        return _completed()
+
+    with mock.patch.object(sched_delivery, "_run_bot_chat_turn", side_effect=fake_run), \
+         mock.patch.object(sched_delivery.shutil, "which", return_value="/usr/bin/hermes"):
+        assert _deliver_to_bot_chat({"id": "j1", "name": "Daily digest"}, "the output", "") is None
+
+    assert calls["env"]["HERMES_DISABLE_LAZY_INSTALLS"] == "1"
+
+
 
 
 def test_deliver_failure_reports_both_streams_labeled():

@@ -19,6 +19,7 @@ import subprocess
 import sys
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, List, Optional
 
 
@@ -805,7 +806,6 @@ def _deliver_to_bot_chat(job: dict, content: str, profile: str, *, deferred: Opt
     )
     try:
         source_home = get_hermes_home().resolve()
-        from pathlib import Path
         home = (Path(deferred["home"]) if deferred is not None else
                 get_profile_dir(profile) if profile else source_home).resolve()
         for_failure = for_failure or bool((deferred or {}).get("for_failure"))
@@ -909,13 +909,13 @@ def _deliver_to_bot_chat(job: dict, content: str, profile: str, *, deferred: Opt
     except Exception as exc:  # unreadable target home / secret source: refuse, never fall back
         return _fail(f"bot-chat delivery to profile '{profile_label}' could not build the target "
                      f"profile's environment ({type(exc).__name__}: {exc}); do not resend")
+    # Off as for cron scripts: the child leases the committed generation, never publishes one.
+    env["HERMES_DISABLE_LAZY_INSTALLS"] = "1"
     if home.parent.name != "profiles":
         argv += ["-p", "default"]
     if argv[1:3] == ["-m", "hermes_cli.main"]:
         # served_profile_child_env strips Hermes-owned PYTHONPATH entries; under a store-python
         # shim the bare interpreter then cannot import the package find_spec just proved (#122487).
-        from pathlib import Path
-
         from cron.scheduler_worker_env import pin_hermes_tree_on_pythonpath
         pin_hermes_tree_on_pythonpath(env, Path(__file__).resolve().parents[1])
 
