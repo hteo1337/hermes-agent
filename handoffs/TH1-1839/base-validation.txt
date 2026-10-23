@@ -1,0 +1,37 @@
+TH1-1839 required-base validation; no behavioral test results are claimed.
+
+$ git log -1 --format=%h %cs %s fork/main
+b6322901664 2026-05-04 fix(gateway): handle planned service stops
+(no stderr)
+exit=0
+
+$ git ls-remote fork refs/heads/main
+b6322901664c0af138035d6f753feedeb1d2e8b7	refs/heads/main
+(no stderr)
+exit=0
+
+$ git ls-tree -r --name-only fork/main gateway/control_socket.py gateway/run_profile_reconcile.py gateway/session_mutation_compress.py apps/desktop
+(no stdout)
+(no stderr)
+exit=0
+
+$ git grep -n -e mintLocalGatewayTicket -e handle_request_line fork/main -- gateway tui_gateway
+(no stdout)
+(no stderr)
+exit=1
+
+$ git ls-tree -r --name-only bf0203a794a gateway/control_socket.py gateway/run_profile_reconcile.py gateway/session_mutation_compress.py apps/desktop/electron/local-gateway.ts
+apps/desktop/electron/local-gateway.ts
+gateway/control_socket.py
+gateway/run_profile_reconcile.py
+gateway/session_mutation_compress.py
+(no stderr)
+exit=0
+
+$ git diff --check
+(no stdout)
+(no stderr)
+exit=0
+
+Not run: gateway/tui_gateway suites, saturation regression, live ticket mint, CI review. The required base has no ticket-mint path.
+No gateway was started; no live installation, launchd service, credential or default branch was modified.

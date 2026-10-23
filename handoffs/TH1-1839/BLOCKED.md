@@ -1,0 +1,1 @@
+fork/main is b6322901664 (2026-05-04), missing the desktop app and gateway control-socket/ticket-mint implementation; the ticket regression and live acceptance path cannot run until the lead updates fork/main with the intended gateway source or authorizes a different base. No running install/service was changed.
