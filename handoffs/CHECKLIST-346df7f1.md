@@ -8,7 +8,7 @@ PASEO_AGENT_ID is unset; identifier comes from dispatcher issue_status agent 346
 - [ ] Prove one saturation regression fails on fork/main and passes on the implementation.
 - [ ] Run existing gateway and tui_gateway suites once and record exact counts.
 - [ ] Prove isolated live ticket mint under saturation on both base and implementation.
-- [ ] Push issue-scoped handoff and one PR to hteo1337/hermes-agent; link issue and record blockers.
+- [x] Push issue-scoped handoff and one PR to hteo1337/hermes-agent; link issue and record blockers (draft PR #2 inspected; Linear updated).
 - [ ] Complete required exact-head Sol review and adversarial review before PR-ready; do not merge.
 
 Blocked at base validation: fork/main b6322901664 has no gateway control socket, desktop ticket mint, profile reconcile or session mutation compression modules. See TH1-1839/BLOCKED.md. Acceptance boxes remain unchecked until evidence exists.
