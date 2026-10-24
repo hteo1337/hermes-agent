@@ -9,6 +9,7 @@ import asyncio
 import contextlib
 import concurrent.futures
 from contextvars import copy_context
+from functools import partial
 import json
 import logging
 import socket
@@ -40,8 +41,9 @@ _dashboard_client_touch_pending: set = set()
 _rpc_executor = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="gateway-rpc")
 
 
-async def _rpc_thread(func, *args):
-    return await asyncio.get_running_loop().run_in_executor(_rpc_executor, copy_context().run, func, *args)
+async def _rpc_thread(func, *args, **kwargs):
+    return await asyncio.get_running_loop().run_in_executor(
+        _rpc_executor, copy_context().run, partial(func, *args, **kwargs))
 
 
 def _touch_dashboard_client_marker(path) -> None:

@@ -1,1 +1,1 @@
-Existing suite hits HomeIOGuard on /Users/hteo/.hermes/hermes-agent/.git/worktrees/9e388d8001dc/hermes-update-pull; baseline the same failure, preserve protections, continue independent verification/reviews.
+Local full suite is not green (11488 pass / 2252 fail / 342 skip; 129 no-test files); representative HomeIOGuard metadata failure reproduces unchanged upstream; missing optional dependencies also observed. Preserve guards/test cap; CI and required reviews remain.
