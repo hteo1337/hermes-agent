@@ -10,7 +10,7 @@ Discovered 1 test files (~1 tests) under ['tests/gateway/test_executor_starvatio
   ║ self = <Timeout [expired]>
   ║ exc_type = <class 'asyncio.exceptions.CancelledError'>
   ║ exc_val = CancelledError(), exc_tb = <traceback object at 0x10f3213c0>
-  ║ 
+  ║
   ║     async def __aexit__(
   ║         self,
   ║         exc_type: type[BaseException] | None,
@@ -18,21 +18,21 @@ Discovered 1 test files (~1 tests) under ['tests/gateway/test_executor_starvatio
   ║         exc_tb: TracebackType | None,
   ║     ) -> bool | None:
   ║         assert self._state in (_State.ENTERED, _State.EXPIRING)
-  ║     
+  ║
   ║         if self._timeout_handler is not None:
   ║             self._timeout_handler.cancel()
   ║             self._timeout_handler = None
-  ║     
+  ║
   ║         if self._state is _State.EXPIRING:
   ║             self._state = _State.EXPIRED
-  ║     
+  ║
   ║             if self._task.uncancel() <= self._cancelling and exc_type is not None:
   ║                 # Since there are no new cancel requests, we're
   ║                 # handling this.
   ║                 if issubclass(exc_type, exceptions.CancelledError):
   ║ >                   raise TimeoutError from exc_val
   ║ E                   TimeoutError
-  ║ 
+  ║
   ║ /Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/timeouts.py:115: TimeoutError
   ║ =========================== short test summary info ============================
   ║ FAILED tests/gateway/test_executor_starvation.py::test_ticket_and_rpc_ping_survive_default_executor_saturation
@@ -72,16 +72,16 @@ fut = <_GatheringFuture finished exception=CancelledError()>, timeout = 5
 
     async def wait_for(fut, timeout):
         """Wait for the single Future or coroutine to complete, with timeout.
-    
+
         Returns result of the Future or coroutine.  When a timeout occurs,
         it cancels fut and raises TimeoutError.  To prevent fut from being
         cancelled, wrap it in shield().
-    
+
         If the wait is cancelled, fut is also cancelled.
-    
+
         If fut suppresses the cancellation and returns a value instead,
         that value is returned.
-    
+
         This function is a coroutine.
         """
         # The special case for timeout <= 0 is for the following case:
@@ -101,30 +101,30 @@ fut = <_GatheringFuture finished exception=CancelledError()>, timeout = 5
         #         assert False
         #
         # asyncio.run(test_waitfor())
-    
-    
+
+
         if timeout is not None and timeout <= 0:
             fut = ensure_future(fut)
-    
+
             if fut.done():
                 return fut.result()
-    
+
             await _cancel_and_wait(fut)
             try:
                 return fut.result()
             except exceptions.CancelledError as exc:
                 raise TimeoutError from exc
-    
+
         async with timeouts.timeout(timeout):
 >           return await fut
                    ^^^^^^^^^
 
-/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/tasks.py:486: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/tasks.py:486:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 tui_gateway/ws.py:375: in _dispatch_request
     return await asyncio.to_thread(server.dispatch, req, transport)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 func = <function dispatch at 0x10ef212d0>
 args = ({'jsonrpc': '2.0', 'id': 2, 'method': 'ping', 'params': {}}, namespace(desktop_local=True))
@@ -132,12 +132,12 @@ kwargs = {}
 
     async def to_thread(func, /, *args, **kwargs):
         """Asynchronously run function *func* in a separate thread.
-    
+
         Any *args and **kwargs supplied for this function are directly passed
         to *func*. Also, the current :class:`contextvars.Context` is propagated,
         allowing context variables from the main thread to be accessed in the
         separate thread.
-    
+
         Return a coroutine that can be awaited to get the eventual result of
         *func*.
         """
@@ -167,13 +167,13 @@ tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-va4ywcdm/pytest-of-ht
             loop.set_default_executor(ThreadPoolExecutor(max_workers=22))
             release = threading.Event()
             started = [asyncio.Event() for _ in range(22)]
-    
+
             def hold(event):
                 loop.call_soon_threadsafe(event.set)
                 release.wait()
-    
+
             holders = [loop.run_in_executor(None, hold, event) for event in started]
-    
+
             async def mint():
                 reader, writer = await asyncio.open_unix_connection(str(resolve_client_socket_path(home)))
                 try:
@@ -189,7 +189,7 @@ tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-va4ywcdm/pytest-of-ht
                 finally:
                     writer.close()
                     await writer.wait_closed()
-    
+
             try:
                 await asyncio.wait_for(asyncio.gather(*(event.wait() for event in started)), 5)
                 # All 22 workers have entered hold(). This probe must remain queued throughout
@@ -205,11 +205,11 @@ tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-va4ywcdm/pytest-of-ht
                 release.set()
                 await asyncio.gather(*holders)
                 await control.stop()
-    
+
 >       asyncio.run(scenario())
 
-tests/gateway/test_executor_starvation.py:68: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gateway/test_executor_starvation.py:68:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/runners.py:205: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -224,7 +224,7 @@ tests/gateway/test_executor_starvation.py:58: in scenario
 /Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/tasks.py:485: in wait_for
     async with timeouts.timeout(timeout):
                ^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <Timeout [expired]>
 exc_type = <class 'asyncio.exceptions.CancelledError'>
@@ -237,14 +237,14 @@ exc_val = CancelledError(), exc_tb = <traceback object at 0x10f3213c0>
         exc_tb: TracebackType | None,
     ) -> bool | None:
         assert self._state in (_State.ENTERED, _State.EXPIRING)
-    
+
         if self._timeout_handler is not None:
             self._timeout_handler.cancel()
             self._timeout_handler = None
-    
+
         if self._state is _State.EXPIRING:
             self._state = _State.EXPIRED
-    
+
             if self._task.uncancel() <= self._cancelling and exc_type is not None:
                 # Since there are no new cancel requests, we're
                 # handling this.

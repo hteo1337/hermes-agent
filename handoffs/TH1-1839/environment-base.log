@@ -20,10 +20,10 @@ Discovered 1 test files (~2 tests) under ['tests/gateway/test_gateway_mcp_oauth_
   ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
   ║ tests/home_io_guard.py:127: in check
   ║     self.refuse(value)
-  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-  ║ 
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+  ║
   ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-baseline-7f8c2b71/hermes-update-pull')
-  ║ 
+  ║
   ║     @staticmethod
   ║     def refuse(value):
   ║ >       raise AssertionError(
@@ -32,7 +32,7 @@ Discovered 1 test files (~2 tests) under ['tests/gateway/test_gateway_mcp_oauth_
   ║         )
   ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-baseline-7f8c2b71/hermes-update-pull
   ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
-  ║ 
+  ║
   ║ tests/home_io_guard.py:160: AssertionError
   ║ =========================== short test summary info ============================
   ║ FAILED tests/gateway/test_gateway_mcp_oauth_unattended.py::test_gateway_startup_discovery_suppresses_interactive_oauth
@@ -74,8 +74,8 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10bdfcc30>
     async def test_gateway_startup_discovery_suppresses_interactive_oauth(monkeypatch):
 >       import gateway.run as gateway_run
 
-tests/gateway/test_gateway_mcp_oauth_unattended.py:15: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/gateway/test_gateway_mcp_oauth_unattended.py:15:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 gateway/run.py:8: in <module>
     import hermes_bootstrap
 hermes_bootstrap.py:544: in <module>
@@ -95,7 +95,7 @@ tests/home_io_guard.py:187: in guarded
     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
 tests/home_io_guard.py:127: in check
     self.refuse(value)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-baseline-7f8c2b71/hermes-update-pull')
 
