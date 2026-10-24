@@ -752,6 +752,9 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     os.environ["HERMES_EXEC_ASK"] = "1"
     _start_gateway_resolve_terminal_cwd()
 
+    from gateway.executor_pools import observe_default_executor
+    observe_default_executor()
+
     from hermes_cli.resource_limits import apply_nofile_soft_limit
     apply_nofile_soft_limit()
 

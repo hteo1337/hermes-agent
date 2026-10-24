@@ -252,8 +252,9 @@ async def run_codex_hygiene_compaction(
     compressor = getattr(agent, "context_compressor", None)
     count_before = getattr(compressor, "compression_count", 0)
     # copy_context carries profile secret scope / HERMES_HOME override (executors don't propagate ContextVars).
-    worker_future = asyncio.get_running_loop().run_in_executor(
-        None, copy_context().run,
+    from gateway.executor_pools import submit_workload
+    worker_future = submit_workload(
+        gateway, "compression",
         lambda: agent._compress_context(history, "", approx_tokens=approx_tokens, task_id=session_id or "default", trigger="gateway_hygiene"))
     track_worker = getattr(gateway, "_track_deferred_agent_worker", None)
     if callable(track_worker):
@@ -1900,15 +1901,16 @@ async def _discover_gateway_mcp_tools(config: object) -> None:
     """
     from tools.mcp_oauth import suppress_interactive_oauth
     from tools.mcp_tool_discovery import discover_mcp_tools
+    from gateway.executor_pools import MCP_DISCOVERY_EXECUTOR
     loop = asyncio.get_running_loop()
     with suppress_interactive_oauth():
         if not getattr(config, "multiplex_profiles", False):
-            await loop.run_in_executor(None, copy_context().run, discover_mcp_tools)
+            await loop.run_in_executor(MCP_DISCOVERY_EXECUTOR, copy_context().run, discover_mcp_tools)
             return
         for profile_name, profile_home in _multiplex_profile_homes(config):
             try:
                 with _profile_runtime_scope(Path(profile_home)):
-                    await loop.run_in_executor(None, copy_context().run, discover_mcp_tools)
+                    await loop.run_in_executor(MCP_DISCOVERY_EXECUTOR, copy_context().run, discover_mcp_tools)
             except Exception:
                 logger.warning("MCP tool discovery failed for profile '%s'", profile_name, exc_info=True)
 
@@ -4089,21 +4091,19 @@ class GatewayRunner(
         ``drain_timeout=0`` is fire-and-forget; shutdown passes a bounded budget so blocking DB work
         cannot outlive ``SessionDB.close()``. ``cancel_futures`` only drops unstarted work and cancelling
         a ``run_in_executor`` awaitable does not stop its thread, so running workers are joined — on
-        the turn pool AND the housekeeping pool, both of which write to SessionDB."""
+        every runner-owned pool, including compression and summaries that write SessionDB."""
         lock = getattr(self, "_executor_lock", None)
         if lock is None:
             return 0
         with lock:
             self._executor_closing = True
-            executor = getattr(self, "_executor", None)
-            self._executor = None
-            housekeeping = getattr(self, "_housekeeping_executor", None)
-            self._housekeeping_executor = None
-        # Housekeeping workers run SessionDB writes too (session finalize, agent cleanup), so a wedged
-        # one is exactly the mid-write worker the #101093 skip-close heuristic exists for. Both pools
-        # are therefore joined under the SAME drain deadline and both contribute to the live count.
-        # Class-qualified: run_shutdown and tests invoke these unbound on a duck-typed `self`.
-        workers = GatewayRunner._stop_pool(executor) + GatewayRunner._stop_pool(housekeeping)
+            from gateway.executor_pools import WORKLOAD_ATTRIBUTES
+            pools = []
+            for attr in ("_executor", "_housekeeping_executor", *WORKLOAD_ATTRIBUTES):
+                pools.append(getattr(self, attr, None))
+                setattr(self, attr, None)
+        # Every runner-owned pool can hold a SessionDB writer; join all under one deadline.
+        workers = [thread for pool in pools for thread in GatewayRunner._stop_pool(pool)]
         deadline = time.monotonic() + max(float(drain_timeout or 0.0), 0.0)
         for worker in workers:
             remaining = deadline - time.monotonic()

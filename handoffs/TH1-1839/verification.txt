@@ -1,0 +1,8 @@
+TH1-1839 verification (in progress)
+Source base: upstream main 4dcef215cfe41bd2d02c2d1dad6e257a18101216, merged d602d0a437.
+Command: HERMES_PYTHON="$PWD/.venv/bin/python" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/test_executor_starvation.py -j 1
+Unmodified-source result: 1 failed in 5.82s, TimeoutError (22 acknowledged blocking workers).
+Implementation result: 1 passed, runner wall 0.7s; default-pool probe remained queued through mint and RPC ping.
+Command: .venv/bin/python scripts/check
+Result: 12 checks, ok; health 0 blocking / 0 advisory.
+Full gateway+tui_gateway suite: currently running once, -j 6; no other pytest or real-path checks concurrently.

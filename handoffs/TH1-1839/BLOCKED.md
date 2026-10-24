@@ -1,1 +1,1 @@
-Resolved 2026-10-24 by lead: base is bf0203a794a (installed source). See STATUS.md.
+Existing suite hits HomeIOGuard on /Users/hteo/.hermes/hermes-agent/.git/worktrees/9e388d8001dc/hermes-update-pull; baseline the same failure, preserve protections, continue independent verification/reviews.
