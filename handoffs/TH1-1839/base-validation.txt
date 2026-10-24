@@ -35,3 +35,16 @@ exit=0
 
 Not run: gateway/tui_gateway suites, saturation regression, live ticket mint, CI review. The required base has no ticket-mint path.
 No gateway was started; no live installation, launchd service, credential or default branch was modified.
+
+Continuation recheck (user reminder 1):
+$ git fetch fork main
+From https://github.com/hteo1337/hermes-agent
+ * branch main -> FETCH_HEAD
+exit=0
+$ git log -1 --format=%h %cs %s fork/main
+b6322901664 2026-05-04 fix(gateway): handle planned service stops
+exit=0
+$ git ls-tree -r --name-only fork/main gateway/control_socket.py gateway/run_profile_reconcile.py gateway/session_mutation_compress.py apps/desktop
+(no stdout)
+exit=0
+Linear issue and comments re-read: no corrected base authorized; no comments. No implementation or tests run.
