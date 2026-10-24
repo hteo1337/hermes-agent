@@ -1,0 +1,13 @@
+Verdict: CONFIRMED
+Issue: TH1-1839 (Agent Fleet); PR hteo1337/hermes-agent#2.
+Reviewed exact head: a95a4dc47e256870053ab4badf10d27452fd42e8
+Base: 4dcef215cfe41bd2d02c2d1dad6e257a18101216
+Separate reviewer checkout: /Users/hteo/.paseo/worktrees/th1-1839-adversarial-7f8c2b71
+Reviewer: /root/sol_adversarial; model gpt-6.1-sol explicitly selected by orchestration override. No independent provider telemetry claimed.
+Required because semif rejected the actual complete diff+plan at 12551 tokens vs 4096, hence invalid judgment defaults to yes; concurrency rubric matches.
+One short read-only in-session adversarial review; no tests, edits or further agents.
+Blocking findings: none.
+Nothing found: default-executor isolation; native/legacy RPC dispatch; ContextVars and actor preservation; queued-work cancellation; compression/summary shutdown fencing and late-worker DB protection.
+Nothing found: instrumentation retains Python's default cap and measures queue delay separately.
+Inspected complete diff, production callsites, verification receipt and real-path driver.
+Dynamically unverified: Windows, dedicated-pool exhaustion and hung-worker shutdown. Full-suite success and CI green remain unestablished; verdict does not override those gates.

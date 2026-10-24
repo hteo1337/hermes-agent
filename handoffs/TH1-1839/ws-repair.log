@@ -1,0 +1,20 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.paseo/worktrees/15xx6i9l/9e388d8001dc/.venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 2 test files (~19 tests) under ['tests/tui_gateway/test_ws_concurrent_reads.py', 'tests/tui_gateway/test_tui_gateway_ws.py']; running with -j 2
+[ 78.9% |    15/~19 | ✓16 | ✗ 0] ✓ tests/tui_gateway/test_tui_gateway_ws.py (16✓, 1.3s)
+[100.0% |    19/~19 | ✓20 | ✗ 0] ✓ tests/tui_gateway/test_ws_concurrent_reads.py (4✓, 6.9s)
+
+=== Summary: 2 files, 20 tests passed, 0 failed (100% complete) in 7.0s (2 workers) ===
+  Durations cached to test_durations.json (2 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   2
+  Total subprocess CPU-wall: 8.3s  (runner wall: 7.0s, parallelism: 2x)
+  P50: 6.92s  P90: 6.92s  P95: 6.92s  P99: 6.92s  Max: 6.92s
+  <1s: 0 files (0%)  <2s: 1 files (50%)
+  Top 10 slowest:
+      6.92s  tests/tui_gateway/test_ws_concurrent_reads.py
+      1.33s  tests/tui_gateway/test_tui_gateway_ws.py

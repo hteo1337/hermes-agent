@@ -1,0 +1,7 @@
+config migration skipped: This config predates version 12 (~2 years old) and can no longer be auto-migrated. Back up /var/folders/v1/0zwnbkfs6w58sbc5z5ppr_kc0000gn/T/gateway-starvation-uo_bpj6l/state/config.yaml and run `hermes setup` to regenerate, or manually set _config_version: 12 after reviewing the changelog.
+2026-10-24 19:29:50,641 WARNING gateway.run: No messaging platforms enabled.
+2026-10-24 19:29:50,927 WARNING agent.model_metadata: Could not determine context length for model 'local-probe' (base_url=http://127.0.0.1:1/v1) — falling back to 256,000 tokens. Set model.context_length in config.yaml to override.
+2026-10-24 19:29:51,460 WARNING hermes_cli.source_releases: Could not resolve the stable source release: HTTP Error 403: rate limit exceeded
+2026-10-24 19:29:52,311 WARNING gateway.executor_pools: Default executor queue wait=1.353s active=31 max_workers=32
+2026-10-24 19:29:52,311 WARNING gateway.executor_pools: Default executor queue wait=1.353s active=31 max_workers=32
+2026-10-24 19:29:52,351 WARNING gateway.run: Shutdown context: signal=SIGINT under_systemd=no parent_pid=40939 parent_name=? loadavg_1m=4.14

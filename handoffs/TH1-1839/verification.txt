@@ -18,4 +18,7 @@ Driver first aborted before startup due to inherited argv; corrected fixture arg
 Real-path result: normal gateway main, isolated HOME/HERMES_HOME/HERMES_RUNTIME_DIR, all 32 actual default workers blocked; mint 1.03ms, WS ready 172.03ms, native ping 9.96ms, legacy gateway.capabilities passed, invalid instance/purpose refused; context preserved in all workload pools; queue warning 1.353s active=31/max=32; exit 0.
 Live install/service/credentials untouched; ticket values never printed or saved.
 
-Full-suite raw log sha256: 58642d8bfdec924a097f5c6f8cfd781fd61c70e3f70b3344bea6199ce125f7bc (raw log retained temporarily outside checkout; concise results above are the durable receipt).
+Full-suite raw log sha256: 58642d8bfdec924a097f5c6f8cfd781fd61c70e3f70b3344bea6199ce125f7bc (raw log condensed into suite-results.txt and discarded during cleanup; concise results above are the durable receipt).
+
+Normal and adversarial reviews: CONFIRMED exact source head a95a4dc47e (both latest Sol explicitly selected in orchestration); separate read-only reviewer checkouts; artifacts review.txt/adversarial-review.txt; no extra tests or edits.
+Semif complete-diff decision invalid (12551 input tokens >4096, no truncation); required default yes applied.
