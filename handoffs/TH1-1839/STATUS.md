@@ -5,5 +5,5 @@
 - Verification: continuation re-fetched fork/main (exit 0): still b6322901664; git ls-tree again returned no required paths (exit 0). Linear has no corrective instruction; receipts in base-validation.txt.
 - Not run: regression, existing suites, real-path ticket mint, Sol reviews; CI checks auto-queued, result unverified; there is no ticket-mint path on the mandated base and no implementation is PR-ready.
 - decided: preserve base and stop at the source blocker — importing the newer platform would exceed this executor fix; live install/service untouched.
-- Next: lead updates fork/main with the intended gateway source or authorizes the correct base; resume this branch, implement pools, run capped verification and exact-head reviews; never merge as worker.
-- Open question: which corrected source base should supply the desktop/control-socket implementation? draft PR https://github.com/hteo1337/hermes-agent/pull/2 linked in Linear; no ready/merge claim.
+- decided (lead, 2026-10-24): base is bf0203a794a, the commit installed in ~/.hermes/hermes-agent and an ancestor of upstream main; fork/main (b6322901664) was a stale lead mistake. Merged into this branch; PR #2 now targets fork branch base/th1-1839-install-bf0203a.
+- Next: implement fixes 1-4 from the issue on this branch, run the regression (fail on bf0203a794a, pass here), suites and real-path controls; open PR ready-for-review against base/th1-1839-install-bf0203a; never merge.
