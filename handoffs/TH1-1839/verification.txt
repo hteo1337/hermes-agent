@@ -1,0 +1,26 @@
+TH1-1839 verification
+Source base: upstream main 4dcef215cfe41bd2d02c2d1dad6e257a18101216, merged d602d0a437.
+Command: HERMES_PYTHON="$PWD/.venv/bin/python" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/test_executor_starvation.py -j 1
+Unmodified-source result: 1 failed in 5.82s, TimeoutError (22 acknowledged blocking workers).
+Implementation result: 1 passed, runner wall 0.7s; default-pool probe remained queued through mint and RPC ping.
+Command: .venv/bin/python scripts/check
+Result: 12 checks, ok; health 0 blocking / 0 advisory.
+Command (single full run at cf1d443774): HERMES_PYTHON="$PWD/.venv/bin/python" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/ tests/tui_gateway/ -j 6
+Result: 1970 files, 11488 passed, 2252 failed, 342 skipped, 785.4s; 545 files with failures, 7 nonzero-exit files despite passing tests, 129 files with no tests (collection/import/timeouts). No full-suite pass claimed. No concurrent extra test processes; pgrep after completion: 0.
+Common failure: HomeIOGuard rejects git metadata under live install. One unchanged-upstream baseline in detached worktree, same interpreter:
+HERMES_PYTHON=<writer>/.venv/bin/python HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/test_gateway_mcp_oauth_unattended.py -k test_gateway_startup_discovery_suppresses_interactive_oauth -j 1
+Baseline result: 1 failed, 1 deselected in 0.23s; identical HomeIOGuard class/path suffix hermes-update-pull (no guard bypass). Missing optional aiohttp also observed. Not every unrelated failure classified.
+Own failure found/fixed: RPC helper omitted kwargs, breaking disconnect teardown. Added functools.partial forwarding.
+Repair command: HERMES_PYTHON="$PWD/.venv/bin/python" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/tui_gateway/test_ws_concurrent_reads.py tests/tui_gateway/test_tui_gateway_ws.py -j 2
+Repair result: 20 passed, 0 failed, 7.0s. Full suite not repeated under operator cap.
+Real-path command: .venv/bin/python handoffs/TH1-1839/real_path_check.py
+Driver first aborted before startup due to inherited argv; corrected fixture argv before the one successful normal gateway run.
+Real-path result: normal gateway main, isolated HOME/HERMES_HOME/HERMES_RUNTIME_DIR, all 32 actual default workers blocked; mint 1.03ms, WS ready 172.03ms, native ping 9.96ms, legacy gateway.capabilities passed, invalid instance/purpose refused; context preserved in all workload pools; queue warning 1.353s active=31/max=32; exit 0.
+Live install/service/credentials untouched; ticket values never printed or saved.
+
+Full-suite raw log sha256: 58642d8bfdec924a097f5c6f8cfd781fd61c70e3f70b3344bea6199ce125f7bc (raw log condensed into suite-results.txt and discarded during cleanup; concise results above are the durable receipt).
+
+Normal and adversarial reviews: CONFIRMED exact source head a95a4dc47e (both latest Sol explicitly selected in orchestration); separate read-only reviewer checkouts; artifacts review.txt/adversarial-review.txt; no extra tests or edits.
+Semif complete-diff decision invalid (12551 input tokens >4096, no truncation); required default yes applied.
+
+Delivery: PR #2 ready (OPEN, isDraft=false); Linear In Review/Agent Fleet; source and review receipts pushed. Receipt log trailing whitespace normalized; no source changes after a95a4dc47e.

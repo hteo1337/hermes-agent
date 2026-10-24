@@ -1,0 +1,261 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.paseo/worktrees/15xx6i9l/9e388d8001dc/.venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 1 test files (~1 tests) under ['tests/gateway/test_executor_starvation.py']; running with -j 1
+[100.0% |     1/~1 | ✓0 | ✗1] ✗ tests/gateway/test_executor_starvation.py (1✗, 6.4s)
+
+  ╔╍ Failed: tests/gateway/test_executor_starvation.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ self = <Timeout [expired]>
+  ║ exc_type = <class 'asyncio.exceptions.CancelledError'>
+  ║ exc_val = CancelledError(), exc_tb = <traceback object at 0x10f3213c0>
+  ║
+  ║     async def __aexit__(
+  ║         self,
+  ║         exc_type: type[BaseException] | None,
+  ║         exc_val: BaseException | None,
+  ║         exc_tb: TracebackType | None,
+  ║     ) -> bool | None:
+  ║         assert self._state in (_State.ENTERED, _State.EXPIRING)
+  ║
+  ║         if self._timeout_handler is not None:
+  ║             self._timeout_handler.cancel()
+  ║             self._timeout_handler = None
+  ║
+  ║         if self._state is _State.EXPIRING:
+  ║             self._state = _State.EXPIRED
+  ║
+  ║             if self._task.uncancel() <= self._cancelling and exc_type is not None:
+  ║                 # Since there are no new cancel requests, we're
+  ║                 # handling this.
+  ║                 if issubclass(exc_type, exceptions.CancelledError):
+  ║ >                   raise TimeoutError from exc_val
+  ║ E                   TimeoutError
+  ║
+  ║ /Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/timeouts.py:115: TimeoutError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_executor_starvation.py::test_ticket_and_rpc_ping_survive_default_executor_saturation
+  ║ ============================== 1 failed in 5.82s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_executor_starvation.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+
+=== Summary: 1 files, 0 tests passed, 1 failed (100% complete) in 6.5s (1 workers) ===
+
+=== Per-file subprocess time distribution ===
+  Files:   1
+  Total subprocess CPU-wall: 6.4s  (runner wall: 6.5s, parallelism: 1x)
+  P50: 6.35s  P90: 6.35s  P95: 6.35s  P99: 6.35s  Max: 6.35s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+      6.35s  tests/gateway/test_executor_starvation.py
+
+=== Failure output ===
+
+--- tests/gateway/test_executor_starvation.py ---
+============================= test session starts ==============================
+platform darwin -- Python 3.14.9, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/hteo/.paseo/worktrees/15xx6i9l/9e388d8001dc
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+tests/gateway/test_executor_starvation.py F                              [100%]
+
+=================================== FAILURES ===================================
+_________ test_ticket_and_rpc_ping_survive_default_executor_saturation _________
+
+fut = <_GatheringFuture finished exception=CancelledError()>, timeout = 5
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels fut and raises TimeoutError.  To prevent fut from being
+        cancelled, wrap it in shield().
+
+        If the wait is cancelled, fut is also cancelled.
+
+        If fut suppresses the cancellation and returns a value instead,
+        that value is returned.
+
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+
+
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+
+            if fut.done():
+                return fut.result()
+
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/tasks.py:486:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tui_gateway/ws.py:375: in _dispatch_request
+    return await asyncio.to_thread(server.dispatch, req, transport)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+func = <function dispatch at 0x10ef212d0>
+args = ({'jsonrpc': '2.0', 'id': 2, 'method': 'ping', 'params': {}}, namespace(desktop_local=True))
+kwargs = {}
+
+    async def to_thread(func, /, *args, **kwargs):
+        """Asynchronously run function *func* in a separate thread.
+
+        Any *args and **kwargs supplied for this function are directly passed
+        to *func*. Also, the current :class:`contextvars.Context` is propagated,
+        allowing context variables from the main thread to be accessed in the
+        separate thread.
+
+        Return a coroutine that can be awaited to get the eventual result of
+        *func*.
+        """
+        loop = events.get_running_loop()
+        ctx = contextvars.copy_context()
+        func_call = functools.partial(ctx.run, func, *args, **kwargs)
+>       return await loop.run_in_executor(None, func_call)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       asyncio.exceptions.CancelledError
+
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/threads.py:26: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-va4ywcdm/pytest-of-hteo/pytest-0/test_ticket_and_rpc_ping_survi0')
+
+    @pytest.mark.platforms("posix")
+    def test_ticket_and_rpc_ping_survive_default_executor_saturation(tmp_path):
+        async def scenario():
+            home = tmp_path / "home"
+            home.mkdir(mode=0o700)
+            profile = str(home.resolve())
+            control = GatewayControlServer(home)
+            control.ticket_store = TicketStore("saturation-instance", frozenset({profile}))
+            assert await control.start()
+            loop = asyncio.get_running_loop()
+            loop.set_default_executor(ThreadPoolExecutor(max_workers=22))
+            release = threading.Event()
+            started = [asyncio.Event() for _ in range(22)]
+
+            def hold(event):
+                loop.call_soon_threadsafe(event.set)
+                release.wait()
+
+            holders = [loop.run_in_executor(None, hold, event) for event in started]
+
+            async def mint():
+                reader, writer = await asyncio.open_unix_connection(str(resolve_client_socket_path(home)))
+                try:
+                    writer.write(json.dumps({"protocol": 1, "id": 1, "verb": "session-ticket", "params": {
+                        "profile_id": profile, "instance_id": "saturation-instance", "purpose": "interactive",
+                    }}).encode() + b"\n")
+                    await writer.drain()
+                    reply = json.loads(await reader.readline())
+                    assert reply["ok"] is True
+                    grant = control.ticket_store.redeem(reply["result"]["ticket"], profile_id=profile,
+                                                       purpose="interactive")
+                    assert grant["profile_id"] == profile
+                finally:
+                    writer.close()
+                    await writer.wait_closed()
+
+            try:
+                await asyncio.wait_for(asyncio.gather(*(event.wait() for event in started)), 5)
+                # All 22 workers have entered hold(). This probe must remain queued throughout
+                # the treatment: replacing/enlarging the default executor would invalidate it.
+                probe = loop.run_in_executor(None, lambda: "released")
+                ping = {"jsonrpc": "2.0", "id": 2, "method": "ping", "params": {}}
+                _, reply = await asyncio.wait_for(asyncio.gather(
+                    mint(), _dispatch_request(None, ping, "ping", SimpleNamespace(desktop_local=True)),
+                ), 5)
+                assert reply == {"jsonrpc": "2.0", "id": 2, "result": {"pong": True}}
+                assert not probe.done(), "default pool was not actually saturated"
+            finally:
+                release.set()
+                await asyncio.gather(*holders)
+                await control.stop()
+
+>       asyncio.run(scenario())
+
+tests/gateway/test_executor_starvation.py:68:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/runners.py:205: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/runners.py:128: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/base_events.py:720: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/gateway/test_executor_starvation.py:58: in scenario
+    _, reply = await asyncio.wait_for(asyncio.gather(
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/tasks.py:485: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10f3213c0>
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is not None:
+                # Since there are no new cancel requests, we're
+                # handling this.
+                if issubclass(exc_type, exceptions.CancelledError):
+>                   raise TimeoutError from exc_val
+E                   TimeoutError
+
+/Users/hteo/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/gateway/test_executor_starvation.py::test_ticket_and_rpc_ping_survive_default_executor_saturation
+============================== 1 failed in 5.82s ===============================
+
+=== 1 file with test failures (1 test failed) ===
+  tests/gateway/test_executor_starvation.py  (1 test failed)

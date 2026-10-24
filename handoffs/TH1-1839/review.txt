@@ -1,0 +1,12 @@
+Verdict: CONFIRMED
+Issue: TH1-1839, project Agent Fleet; PR hteo1337/hermes-agent#2.
+Reviewed head: a95a4dc47e256870053ab4badf10d27452fd42e8
+Base: 4dcef215cfe41bd2d02c2d1dad6e257a18101216
+Separate detached reviewer checkout: /Users/hteo/.paseo/worktrees/th1-1839-review-7f8c2b71
+Reviewer: /root/sol_review, short read-only in-session subagent.
+Model: gpt-6.1-sol selected explicitly by orchestration model override (not inferred from a self-label). The subagent cannot independently expose provider/model metadata.
+Dispatch route: same-issue durable dispatch rejected with continuity_conflict (active writer). Used the standing short read-only in-session exception; no durable worker lane, edits, tests or further subagents.
+Blocking findings: none.
+Nothing found in profile-context propagation across control/RPC/MCP/compression/summary dispatch; RPC positional/keyword forwarding or legacy actor handling; shielded compression tracking/cancellation; runner shutdown inclusion of new pools before SessionDB close.
+Inspected complete diff, dispatch/shutdown callsites, regression, real-path driver and verification receipt. No tests run by reviewer; no files changed by reviewer.
+Unverified: Windows execution, live provider/MCP behavior, exhaustive canonical RPC responsiveness and all unrelated full-suite failures. Full-suite receipt: 11488 passed / 2252 failed / 342 skipped; CI passing not established.
