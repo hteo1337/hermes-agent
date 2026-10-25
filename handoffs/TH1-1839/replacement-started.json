@@ -1,0 +1,8 @@
+{
+  "utc": "2026-10-25T01:44:48.968803+00:00",
+  "head": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+  "cwd": "/Users/hteo/.paseo/worktrees/th1-1839-replacement-9f8ecdef",
+  "command": "HERMES_PYTHON=/Users/hteo/.paseo/worktrees/th1-1839-replacement-env-9f8ecdef/venv/bin/python HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/ tests/tui_gateway/ -j 6",
+  "authorized_invocation": 1,
+  "further_reruns_allowed": false
+}

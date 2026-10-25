@@ -1,1 +1,1 @@
-Once-only full-suite cap spent on aborted metadata-contaminated attempt; structured question requests one replacement in standalone checkout. Base 37/40 vs head 38/40 reproduces the same refusal assertion; no product/test edits.
+No active blocker: lead explicitly approved exactly one standalone replacement suite at221080c47f; invalid metadata-contaminated attempt excluded from cap. No code changes or further reruns.

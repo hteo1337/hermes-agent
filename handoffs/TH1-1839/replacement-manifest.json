@@ -1,0 +1,22 @@
+{
+  "head": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+  "git_dir": "/Users/hteo/.paseo/worktrees/th1-1839-replacement-9f8ecdef/.git",
+  "common_dir": "/Users/hteo/.paseo/worktrees/th1-1839-replacement-9f8ecdef/.git",
+  "tree": "1c0175729d2225d05140137d9f056789465fb2de",
+  "status": "",
+  "all_git_metadata_inside_paseo": true,
+  "alternates": false,
+  "reference_clone": false,
+  "file_hashes": {
+    "CLAUDE.md": "345cc78ac405c9c951da1166dee87266344d9d7047fa2fa61fdb4b918bed2c1e",
+    "AGENTS.md": "a8948f7bf162528ec9f2a9ca5f007e77f0c5f0901a428c92d0f77ef1185cfb38",
+    "pyproject.toml": "019ffb66aeb36787d0053657bd55d424c24e656d2d184a302061a4e09a3cba15",
+    "uv.lock": "bad16d76da35fa9433181ac77089b8638f1390c36054336cf4a8bf04a2f4983b",
+    "scripts/run_tests.sh": "20c955e19e440bffb2abbc7bc645cc7c4d77a3fcdcd82434facf8b8ac9684467",
+    "scripts/run_tests_parallel.py": "3e18e138e66931a6e9ebacadfa430998d0c995d25dfbf43672594c6473c8e307",
+    "gateway/status.py": "e3763e9f6e93b37e57ee1f198a4a4de9f3fd0e8fbbdccb690742ba8def345496",
+    "tests/gateway/test_replace_ownership_guard.py": "6df440782782e127e0526dc5b945748416ad93e5414b2df9d669acd2121c1c5f",
+    "tests/gateway/test_executor_starvation.py": "ee41732ddf5f99a874db308212cf1647b74e9bf41a7a4272fefa11de64ae8a26"
+  },
+  "authority": "Lead explicitly approved one replacement; prior invalid attempt excluded; no code changes/further reruns."
+}
