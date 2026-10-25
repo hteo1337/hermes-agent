@@ -451,6 +451,7 @@ def _csv_list(value: Optional[str]) -> list[str]:
 
 
 @sessions_router.get("/api/profiles/sessions")
+@functools.partial(coalesced_read, thread_runner=lambda func: run_in_threadpool(func))
 def get_profiles_sessions(
     # ``le=500`` caps the page size — this endpoint fans out across EVERY profile's state.db.
     # 500 (not 100) because desktop callers use limit=200 and the electron remote-merge
