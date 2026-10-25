@@ -1,0 +1,12 @@
+{
+  "removed": [
+    "/Users/hteo/.paseo/worktrees/th1-1839-standalone-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-base-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef"
+  ],
+  "all_absent": true,
+  "current_evidence_worktree_preserved": "/Users/hteo/.paseo/worktrees/15xx6i9l/9e388d8001dc",
+  "source_branch_retained_unmerged": "th1-1839-gateway-executor-starvation",
+  "cleanup_only_source_head": "221080c47f67347f821773fdcf67a7f7fcb133d5"
+}

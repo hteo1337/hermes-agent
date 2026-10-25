@@ -7,7 +7,7 @@ import subprocess
 import time
 
 ROOT = Path(__file__).resolve().parent
-TREE = Path('/Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef')
+TREE = Path('/Users/hteo/.paseo/worktrees/th1-1839-standalone-9f8ecdef')
 PYTHON = '/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python'
 BASELINE = Path('/Users/hteo/.paseo/worktrees/15xx6i9l/a98676de0c32/handoffs/TH1-1839/comparison.json')
 
@@ -21,6 +21,9 @@ if before:
     raise RuntimeError('Competing test processes present; suite not started')
 cmd = ['scripts/run_tests.sh', 'tests/gateway/', 'tests/tui_gateway/', '-j', '6']
 env = {**os.environ, 'HERMES_PYTHON': PYTHON, 'HERMES_TEST_FILE_RETRIES': '0'}
+common = subprocess.check_output(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], cwd=TREE, text=True).strip()
+if str(Path(common).resolve()).startswith(str(Path.home() / '.hermes')):
+    raise RuntimeError('Git metadata is under real Hermes home; refusing suite')
 sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=TREE, text=True).strip()
 started = time.monotonic()
 with (ROOT / 'final-suite.log').open('w') as log:

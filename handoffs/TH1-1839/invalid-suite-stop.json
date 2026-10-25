@@ -1,0 +1,45 @@
+{
+  "reason": "Shared Git metadata below real Hermes home causes HomeIOGuard refusals; invalid suite aborted. Replacement requires once-only-cap exception.",
+  "owned_processes": [
+    {
+      "pid": 44830,
+      "ppid": 60521,
+      "command": "/opt/homebrew/Cellar/python@3.15/3.15.0_1/Frameworks/Python.framework/Versions/3.15/Resources/Python.app/Contents/MacOS/Python handoffs/TH1-1839/final_suite.py"
+    },
+    {
+      "pid": 44865,
+      "ppid": 44830,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/scripts/run_tests_parallel.py tests/gateway/ tests/tui_gateway/ -j 6"
+    },
+    {
+      "pid": 48163,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_adversarial_responses_eviction.py"
+    },
+    {
+      "pid": 48244,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_adversarial_responses_pending.py"
+    },
+    {
+      "pid": 49416,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_api_admission_off_loop.py"
+    },
+    {
+      "pid": 51549,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_api_canonical_projection.py"
+    },
+    {
+      "pid": 51618,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_api_chat_run_owner.py"
+    },
+    {
+      "pid": 52119,
+      "ppid": 44865,
+      "command": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python -m pytest /Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef/tests/gateway/test_api_compressed_receipt_history.py"
+    }
+  ]
+}

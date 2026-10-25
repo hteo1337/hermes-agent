@@ -1,1 +1,1 @@
-No operator decision required; final suite/failure-set comparison and delivery in progress. No product or test fix because unchanged base reproduces the same refusal-stamp failure.
+Once-only full-suite cap spent on aborted metadata-contaminated attempt; structured question asks one replacement in standalone checkout. Refusal race evidence remains base37/40 vs head38/40; no product/test edits.

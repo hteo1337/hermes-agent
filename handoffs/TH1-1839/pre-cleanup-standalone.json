@@ -1,0 +1,34 @@
+{
+  "standalone": {
+    "path": "/Users/hteo/.paseo/worktrees/th1-1839-standalone-9f8ecdef",
+    "head": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+    "status": "",
+    "ignored_paths_read": [
+      "!! .ruff_cache/.gitignore",
+      "!! .ruff_cache/0.15.22/",
+      "!! .ruff_cache/CACHEDIR.TAG",
+      "!! __pycache__/",
+      "!! gateway/__pycache__/",
+      "!! hermes_agent.egg-info/",
+      "!! hermes_cli/__pycache__/",
+      "!! hermes_platform/__pycache__/",
+      "!! hermes_platform/host/__pycache__/",
+      "!! pm/__pycache__/",
+      "!! scripts/code_health/__pycache__/"
+    ]
+  },
+  "environment_root": "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef",
+  "environment_entries": [
+    "cache",
+    "data",
+    "runtime",
+    "trace-base",
+    "trace-base.py",
+    "trace-head",
+    "trace-head.py",
+    "venv"
+  ],
+  "active_test_processes": [],
+  "linked_base_exists": false,
+  "linked_head_exists": false
+}

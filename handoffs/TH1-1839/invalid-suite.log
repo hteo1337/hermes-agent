@@ -1,0 +1,956 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 1970 test files (~12165 tests) under ['tests/gateway', 'tests/tui_gateway']; running with -j 6
+[  0.0% |     2/~12165 | ✓2 | ✗0] ✓ tests/gateway/relay/test_descriptor.py (2✓, 0.7s)
+[  0.0% |     4/~12165 | ✓4 | ✗0] ✓ tests/gateway/relay/test_auth.py (2✓, 0.7s)
+[  0.1% |     7/~12165 | ✓7 | ✗0] ✓ tests/gateway/relay/test_channel_context_consume.py (3✓, 0.7s)
+[  0.1% |    12/~12165 | ✓12 | ✗ 0] ✓ tests/gateway/platforms/test_yuanbao_state_cleanup.py (5✓, 0.8s)
+[  0.1% |    13/~12165 | ✓12 | ✗ 1] ✗ tests/gateway/platforms/test_yuanbao_recall_db_only.py (1✗, 0.9s)
+
+  ╔╍ Failed: tests/gateway/platforms/test_yuanbao_recall_db_only.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║         store._db.create_session(session_id=sid, source="yuanbao:group:G")
+  ║         store.append_to_transcript(sid, {
+  ║             "role": "user",
+  ║             "content": "sensitive content",
+  ║             "timestamp": 1.0,
+  ║             "message_id": "platform-msg-abc",
+  ║         })
+  ║         store.append_to_transcript(sid, {
+  ║             "role": "assistant",
+  ║             "content": "ack",
+  ║             "timestamp": 2.0,
+  ║         })
+  ║     
+  ║         history = store.load_transcript(sid)
+  ║         # The user row must carry its platform id back so the recall guard can
+  ║         # match by exact id; the assistant row had no platform id so it should
+  ║         # not gain one spuriously.
+  ║ >       user_msg = next(m for m in history if m["role"] == "user")
+  ║                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ║ E       StopIteration
+  ║ 
+  ║ tests/gateway/platforms/test_yuanbao_recall_db_only.py:47: StopIteration
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ WARNING  gateway.session:session_transcript.py:367 Session DB transcript append failed for test-yuanbao-recall-a1 (failure_count=1, pending=1); will retry: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ WARNING  gateway.session:session_transcript.py:367 Session DB transcript append failed for test-yuanbao-recall-a1 (failure_count=2, pending=2); will retry: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/platforms/test_yuanbao_recall_db_only.py::test_recall_branch_a1_exact_id_match_round_trips_through_db
+  ║ ============================== 1 failed in 0.48s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/platforms/test_yuanbao_recall_db_only.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  0.1% |    15/~12165 | ✓14 | ✗ 1] ✓ tests/gateway/relay/test_handoff_relay_aliasing.py (2✓, 0.6s)
+[  0.1% |    17/~12165 | ✓16 | ✗ 1] ✓ tests/gateway/relay/test_live_cards_flow_trace.py (2✓, 0.6s)
+[  0.2% |    22/~12165 | ✓21 | ✗ 1] ✓ tests/gateway/relay/test_relay_ack_ambiguity.py (5✓, 0.7s)
+[  0.2% |    30/~12165 | ✓29 | ✗ 1] ✓ tests/gateway/relay/test_relay_adapter.py (8✓, 0.7s)
+[  0.3% |    36/~12165 | ✓29 | ✗ 1] ✗ tests/gateway/relay/test_provision_secret_optional.py (10e, 1.5s)
+
+  ╔╍ Failed: tests/gateway/relay/test_provision_secret_optional.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_secretless_provision_response_is_not_an_error
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_malformed_response_still_raises[no-discriminator-pre-f004]
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_malformed_response_still_raises[issued-true-but-absent]
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_malformed_response_still_raises[string-false]
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_malformed_response_still_raises[falsy-non-bool]
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_malformed_response_still_raises[explicit-null]
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_multiplatform_boot_survives_a_secretless_second_platform
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_a_secretless_first_platform_does_not_write_empty_creds
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_a_withheld_response_never_overwrites_credentials_in_hand
+  ║ ERROR tests/gateway/relay/test_provision_secret_optional.py::test_all_platforms_withheld_warns_with_the_recovery_path
+  ║ ============================== 10 errors in 1.26s ==============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_provision_secret_optional.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  0.3% |    37/~12165 | ✓30 | ✗ 1] ✓ tests/gateway/relay/test_relay_follow_up.py (1✓, 0.6s)
+[  0.4% |    50/~12165 | ✓30 | ✗ 1] ✗ tests/gateway/relay/test_identity_token_resolver.py (18e, 2.3s)
+
+  ╔╍ Failed: tests/gateway/relay/test_identity_token_resolver.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_client_credentials_via_env
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_raises_when_no_access_token_in_response
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_get_when_no_client_credentials
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_accepts_json_envelope
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope0]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope1]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope2]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope3]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope4]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_string_envelope_values[envelope5]
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_non_token_body
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_empty_body
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_rejects_short_plaintext_error_words
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_accepts_long_opaque_token
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_client_credentials_still_selected_when_creds_present
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_partial_credentials_client_id_only_raises_without_get
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_partial_credentials_client_secret_only_raises_without_get
+  ║ ERROR tests/gateway/relay/test_identity_token_resolver.py::test_ambient_via_config_yaml
+  ║ ============================== 18 errors in 1.99s ==============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_identity_token_resolver.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  0.4% |    51/~12165 | ✓36 | ✗ 1] ✓ tests/gateway/relay/test_cold_opt_out.py (6✓, 3.3s)
+[  0.7% |    82/~12165 | ✓65 | ✗ 6] ✗ tests/gateway/relay/test_relay_egress_declines.py (29✓ 5✗, 1.7s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_egress_declines.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/relay/test_relay_egress_declines.py::test_relay_plane_attests_the_union_of_fronted_platforms
+  ║ FAILED tests/gateway/relay/test_relay_egress_declines.py::test_telegram_username_defers_to_the_connector
+  ║ FAILED tests/gateway/relay/test_relay_egress_declines.py::test_numeric_telegram_target_is_still_guarded
+  ║ FAILED tests/gateway/relay/test_relay_egress_declines.py::test_attested_handle_takes_the_normal_path
+  ║ FAILED tests/gateway/relay/test_relay_egress_declines.py::test_code_only_prompt_decline_reaches_the_caller_as_a_decline
+  ║ ========================= 5 failed, 29 passed in 1.34s =========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_egress_declines.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  0.8% |    95/~12165 | ✓78 | ✗ 6] ✓ tests/gateway/relay/test_relay_format_hints.py (13✓, 0.8s)
+[  0.9% |   104/~12165 | ✓87 | ✗ 6] ✓ tests/gateway/relay/test_relay_inbound_dedupe.py (9✓, 0.7s)
+[  0.9% |   109/~12165 | ✓100 | ✗  6] ✓ tests/gateway/relay/test_explicit_disable.py (13✓, 3.4s)
+[  0.9% |   115/~12165 | ✓106 | ✗  6] ✓ tests/gateway/relay/test_relay_going_idle.py (6✓, 1.1s)
+[  1.0% |   127/~12165 | ✓118 | ✗  6] ✓ tests/gateway/relay/test_relay_inchannel_continuable.py (12✓, 0.7s)
+[  1.1% |   128/~12165 | ✓119 | ✗  6] ✓ tests/gateway/relay/test_relay_interrupt.py (1✓, 0.4s)
+[  1.1% |   136/~12165 | ✓127 | ✗  6] ✓ tests/gateway/relay/test_relay_media.py (8✓, 0.7s)
+[  1.2% |   149/~12165 | ✓140 | ✗  6] ✓ tests/gateway/relay/test_relay_live_cards.py (13✓, 0.8s)
+[  1.3% |   154/~12165 | ✓145 | ✗  6] ✓ tests/gateway/relay/test_relay_multiplatform_semantics.py (5✓, 0.6s)
+[  1.4% |   170/~12165 | ✓162 | ✗  6] ✓ tests/gateway/relay/test_relay_interactive.py (17✓, 1.2s)
+[  1.4% |   174/~12165 | ✓162 | ✗  6] ✗ tests/gateway/relay/test_relay_multiplatform.py (4e, 0.8s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_multiplatform.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ ERROR tests/gateway/relay/test_relay_multiplatform.py::test_identities_multi_platform_keyed_map
+  ║ ERROR tests/gateway/relay/test_relay_multiplatform.py::test_bot_ids_malformed_json_degrades_to_empty
+  ║ ERROR tests/gateway/relay/test_relay_multiplatform.py::test_self_provision_loops_per_platform
+  ║ ERROR tests/gateway/relay/test_relay_multiplatform.py::test_adapter_stamps_per_frame_platform_from_inbound
+  ║ ============================== 4 errors in 0.61s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_multiplatform.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  1.4% |   176/~12165 | ✓176 | ✗  6] ✓ tests/gateway/relay/test_relay_discord_interaction_labels.py (14✓, 3.3s)
+[  1.5% |   184/~12165 | ✓184 | ✗  6] ✓ tests/gateway/relay/test_relay_passthrough.py (8✓, 0.6s)
+[  1.5% |   186/~12165 | ✓186 | ✗  6] ✓ tests/gateway/relay/test_relay_per_platform_caps.py (2✓, 0.5s)
+[  1.5% |   187/~12165 | ✓186 | ✗  7] ✗ tests/gateway/relay/test_relay_passthrough_authority.py (1✗, 0.6s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_passthrough_authority.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/relay/test_relay_passthrough_authority.py::test_relayed_modal_admitted_only_with_reader_proof
+  ║ ============================== 1 failed in 0.32s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_passthrough_authority.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  1.6% |   191/~12165 | ✓190 | ✗  7] ✓ tests/gateway/relay/test_relay_prompt_ack_stream_isolation.py (4✓, 0.7s)
+[  1.6% |   192/~12165 | ✓191 | ✗  7] ✓ tests/gateway/relay/test_relay_roundtrip.py (1✓, 0.4s)
+[  1.6% |   194/~12165 | ✓193 | ✗  7] ✓ tests/gateway/relay/test_relay_roundtrip_telegram.py (2✓, 0.5s)
+[  1.6% |   199/~12165 | ✓193 | ✗  7] ✗ tests/gateway/relay/test_relay_policy_send.py (5e, 0.9s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_policy_send.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ ERROR tests/gateway/relay/test_relay_policy_send.py::test_projection_maps_require_mention_and_free_response
+  ║ ERROR tests/gateway/relay/test_relay_policy_send.py::test_projection_declares_explicit_require_mention_false
+  ║ ERROR tests/gateway/relay/test_relay_policy_send.py::test_send_posts_projected_policy_with_token
+  ║ ERROR tests/gateway/relay/test_relay_policy_send.py::test_send_skips_when_no_secret
+  ║ ERROR tests/gateway/relay/test_relay_policy_send.py::test_send_fail_soft_on_transport_error
+  ║ ============================== 5 errors in 0.64s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_policy_send.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  1.7% |   203/~12165 | ✓197 | ✗  7] ✓ tests/gateway/relay/test_relay_registration.py (4✓, 0.9s)
+[  1.7% |   204/~12165 | ✓198 | ✗  7] ✓ tests/gateway/relay/test_relay_sheds_crypto.py (1✓, 0.4s)
+[  1.7% |   206/~12165 | ✓200 | ✗  7] ✓ tests/gateway/relay/test_relay_seal_cancellation.py (2✓, 0.6s)
+[  1.7% |   208/~12165 | ✓202 | ✗  7] ✓ tests/gateway/relay/test_relay_state_bounds.py (2✓, 0.6s)
+[  1.8% |   222/~12165 | ✓226 | ✗  7] ✓ tests/gateway/relay/test_relay_slack_dm_streaming.py (24✓, 1.0s)
+[  1.8% |   224/~12165 | ✓228 | ✗  7] ✓ tests/gateway/relay/test_relay_stream_semantics_gating.py (2✓, 0.6s)
+[  1.9% |   226/~12165 | ✓230 | ✗  7] ✓ tests/gateway/relay/test_relay_task_card_failures.py (2✓, 0.5s)
+[  2.1% |   251/~12165 | ✓253 | ✗  9] ✗ tests/gateway/relay/test_relay_slack_prompt_dm_root.py (23✓ 2✗, 1.5s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_slack_prompt_dm_root.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/relay/test_relay_slack_prompt_dm_root.py::test_run_py_suppresses_self_anchor_in_flat_mode
+  ║ FAILED tests/gateway/relay/test_relay_slack_prompt_dm_root.py::test_run_py_keeps_self_anchor_in_thread_mode
+  ║ ========================= 2 failed, 23 passed in 1.23s =========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_slack_prompt_dm_root.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  2.3% |   283/~12165 | ✓285 | ✗  9] ✓ tests/gateway/relay/test_relay_slack_unfurl.py (32✓, 1.3s)
+[  2.4% |   293/~12165 | ✓295 | ✗  9] ✓ tests/gateway/relay/test_relay_turn_keying.py (10✓, 0.7s)
+[  2.4% |   294/~12165 | ✓296 | ✗  9] ✓ tests/gateway/relay/test_relay_native_refusal_ack.py (1✓, 3.1s)
+[  2.4% |   296/~12165 | ✓298 | ✗  9] ✓ tests/gateway/relay/test_wire_user_identity.py (2✓, 0.5s)
+[  2.6% |   314/~12165 | ✓311 | ✗ 14] ✗ tests/gateway/relay/test_relay_threads.py (13✓ 5✗, 1.4s)
+
+  ╔╍ Failed: tests/gateway/relay/test_relay_threads.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/relay/test_relay_threads.py::test_relay_channel_lane_shape_gate
+  ║ FAILED tests/gateway/relay/test_relay_threads.py::test_relay_auto_thread_info_prefers_prospective_thread_id
+  ║ FAILED tests/gateway/relay/test_relay_threads.py::test_sibling_threads_in_one_channel_each_rename_to_own_thread
+  ║ FAILED tests/gateway/relay/test_relay_threads.py::test_title_rename_waits_for_feedback_that_arrives_late
+  ║ FAILED tests/gateway/relay/test_relay_threads.py::test_title_rename_true_miss_noops
+  ║ ========================= 5 failed, 13 passed in 1.10s =========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_relay_threads.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  2.7% |   323/~12165 | ✓320 | ✗ 14] ✓ tests/gateway/relay/test_ws_transport_hardening.py (9✓, 1.0s)
+[  2.8% |   342/~12165 | ✓333 | ✗ 20] ✗ tests/gateway/relay/test_wire_voice_media.py (13✓ 6✗, 1.3s)
+
+  ╔╍ Failed: tests/gateway/relay/test_wire_voice_media.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestSttGate::test_new_connector_voice_event_is_stt_eligible
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestSttGate::test_voice_event_stt_eligible_even_without_media_types
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestSttGate::test_legacy_audio_typed_voice_note_stays_out_of_stt
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestSttGate::test_music_upload_is_never_stt_eligible
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestUrlMimePairingThroughLocalization::test_dropped_first_attachment_does_not_shift_the_second_mime
+  ║ FAILED tests/gateway/relay/test_wire_voice_media.py::TestParallelArrayLengthInvariant::test_merging_an_untyped_event_with_a_typed_one_keeps_mimes_on_their_urls
+  ║ ========================= 6 failed, 13 passed in 1.05s =========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_wire_voice_media.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  2.9% |   355/~12165 | ✓333 | ✗ 20] ✗ tests/gateway/relay/test_self_provision.py (13e, 1.7s)
+
+  ╔╍ Failed: tests/gateway/relay/test_self_provision.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_provision_url_maps_ws_to_http
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_skips_when_relay_not_configured
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_skips_when_secret_already_pinned
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_provisions_and_sets_env_in_process
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_outbound_only_when_no_endpoint
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_post_provision_body_includes_instanceId_only_when_set
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_forwards_wake_url_to_provision
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_no_nas_token_is_non_fatal
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_relay_display_name_suppresses_stock_brand
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_startup_refresh_uses_launch_profile_portal_when_multiplexed
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_startup_refresh_without_override_stays_on_default_portal
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_startup_refresh_single_profile_reads_process_env_override
+  ║ ERROR tests/gateway/relay/test_self_provision.py::test_startup_idp_secret_ref_keeps_launch_env_value_when_multiplexed
+  ║ ============================== 13 errors in 1.42s ==============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/relay/test_self_provision.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.0% |   359/~12165 | ✓342 | ✗ 20] ✓ tests/gateway/test_access_policy_mixin.py (9✓, 0.9s)
+[  3.0% |   364/~12165 | ✓347 | ✗ 20] ✓ tests/gateway/test_active_session_text_merge.py (5✓, 0.8s)
+[  3.0% |   370/~12165 | ✓353 | ✗ 20] ✓ tests/gateway/test_adapter_guard_cache_race.py (6✓, 0.8s)
+[  3.2% |   392/~12165 | ✓375 | ✗ 20] ✓ tests/gateway/test_adapter_connect_classification.py (22✓, 1.5s)
+[  3.2% |   394/~12165 | ✓403 | ✗ 20] ✓ tests/gateway/test_adapter_authz_secret_scope.py (28✓, 1.7s)
+[  3.3% |   404/~12165 | ✓413 | ✗ 20] ✓ tests/gateway/relay/test_ws_transport.py (10✓, 3.2s)
+[  3.3% |   405/~12165 | ✓413 | ✗ 22] ✗ tests/gateway/test_adapter_session_key_seam.py (2✗, 0.8s)
+
+  ╔╍ Failed: tests/gateway/test_adapter_session_key_seam.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_adapter_session_key_seam.py::test_adapter_batch_key_equals_runner_session_key[None]
+  ║ FAILED tests/gateway/test_adapter_session_key_seam.py::test_adapter_batch_key_equals_runner_session_key[acme]
+  ║ ============================== 2 failed in 0.54s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_adapter_session_key_seam.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.5% |   420/~12165 | ✓428 | ✗ 22] ✓ tests/gateway/test_abandoned_turn_process_cleanup.py (15✓, 3.9s)
+[  3.5% |   421/~12165 | ✓429 | ✗ 22] ✓ tests/gateway/test_admission_queue_cap.py (1✓, 0.8s)
+[  3.5% |   422/~12165 | ✓430 | ✗ 22] ✓ tests/gateway/test_admission_queue_cap_notice.py (1✓, 0.6s)
+[  3.6% |   443/~12165 | ✓455 | ✗ 22] ✓ tests/gateway/test_active_turn_recovery.py (25✓, 3.9s)
+[  3.7% |   445/~12165 | ✓455 | ✗ 24] ✗ tests/gateway/test_adversarial_mutation_lifecycle.py (2✗, 0.7s)
+
+  ╔╍ Failed: tests/gateway/test_adversarial_mutation_lifecycle.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_adversarial_mutation_lifecycle.py::test_cancelling_model_request_cannot_strand_next_admission
+  ║ FAILED tests/gateway/test_adversarial_mutation_lifecycle.py::test_profile_retirement_waits_for_mutation_thread
+  ║ ============================== 2 failed in 0.42s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_adversarial_mutation_lifecycle.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.7% |   448/~12165 | ✓475 | ✗ 24] ✓ tests/gateway/test_adapter_settings_profile_parity.py (20✓, 3.0s)
+[  3.7% |   452/~12165 | ✓477 | ✗ 28] ✗ tests/gateway/test_admission_results.py (2✓ 4✗, 1.4s)
+
+  ╔╍ Failed: tests/gateway/test_admission_results.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ ERROR    gateway.session_authority:session_authority.py:99 Session drain task died: AssertionError('TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull\nUse the isolated HERMES_HOME or a temporary fixture instead.')
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_admission_results.py::test_a_turn_that_failed_before_running_settles_failed_on_every_surface[agent-raised]
+  ║ FAILED tests/gateway/test_admission_results.py::test_a_turn_that_failed_before_running_settles_failed_on_every_surface[plain-reply]
+  ║ FAILED tests/gateway/test_admission_results.py::test_a_finite_prompt_answered_without_running_settles_failed[refused-prompt]
+  ║ FAILED tests/gateway/test_admission_results.py::test_a_finite_prompt_answered_without_running_settles_failed[command-answer]
+  ║ ========================= 4 failed, 2 passed in 1.13s ==========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_admission_results.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.8% |   459/~12165 | ✓478 | ✗ 36] ✗ tests/gateway/test_adapter_settings_scoped_precedence.py (1✓ 8✗, 3.5s)
+
+  ╔╍ Failed: tests/gateway/test_adapter_settings_scoped_precedence.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_secondary_reads_own_yaml_and_never_the_launch_env
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_central_allow_bots_gate_honours_a_secondary_yaml_policy
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_matrix_yaml_lists_gate_intake_and_approval
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_yuanbao_secondary_home_channel_is_live_and_reloadable
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_whatsapp_bridge_env_carries_the_secondary_effective_policy
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_whatsapp_reply_prefix_isolated_across_profile_scopes[None]
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_whatsapp_reply_prefix_isolated_across_profile_scopes[Secondary Bot: ]
+  ║ FAILED tests/gateway/test_adapter_settings_scoped_precedence.py::test_whatsapp_reply_prefix_isolated_across_profile_scopes[]
+  ║ ========================= 8 failed, 1 passed in 3.02s ==========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_adapter_settings_scoped_precedence.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.8% |   463/~12165 | ✓534 | ✗ 36] ✓ tests/gateway/test_adapter_startup_secret_scope.py (56✓, 3.4s)
+[  3.9% |   469/~12165 | ✓534 | ✗ 42] ✗ tests/gateway/test_agent_cache_memory_lifecycle.py (6✗, 0.9s)
+
+  ╔╍ Failed: tests/gateway/test_agent_cache_memory_lifecycle.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_release_clients_joins_real_provider_writer_thread
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_release_clients_lets_queued_writes_finish_before_shutdown
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_close_racing_an_in_progress_soft_release_does_not_reextract
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_gateway_soft_evict_commits_memory_before_provider_shutdown
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_eviction_after_timed_out_reset_cleanup_leaves_shutdown_to_it
+  ║ FAILED tests/gateway/test_agent_cache_memory_lifecycle.py::TestAgentCacheMemoryLifecycle::test_eviction_while_reset_cleanup_is_still_flushing_leaves_shutdown_to_it
+  ║ ============================== 6 failed in 0.65s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_agent_cache_memory_lifecycle.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  3.9% |   476/~12165 | ✓547 | ✗ 42] ✓ tests/gateway/test_admission_result_reply_once.py (13✓, 3.6s)
+[  4.0% |   481/~12165 | ✓552 | ✗ 42] ✓ tests/gateway/test_agent_cache_release_profile_scope.py (5✓, 0.7s)
+[  4.0% |   482/~12165 | ✓553 | ✗ 42] ✓ tests/gateway/test_agent_error_reply_401_hint.py (1✓, 0.7s)
+[  4.2% |   511/~12165 | ✓578 | ✗ 54] ✗ tests/gateway/test_agent_cache_pressure.py (25✓ 12✗ 2s, 1.8s)
+
+  ╔╍ Failed: tests/gateway/test_agent_cache_pressure.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestPersistenceGuard::test_unflushed_turn_blocks_eviction_then_flush_unblocks_it
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_no_eviction_below_budget
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_over_budget_sheds_lru_and_frees_the_transcript
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_mid_turn_session_is_never_evicted
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_lagging_persistence_blocks_eviction
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_empty_cache_is_a_no_op
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_all_candidates_skipped_reports_zero_without_raising
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestGatewayPressureSweep::test_disabled_budget_is_a_no_op
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestConfiguredBoundsReachTheCache::test_unset_config_keeps_the_built_in_defaults
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestConfiguredBoundsReachTheCache::test_configured_cap_bounds_the_real_enforcer
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestConfiguredBoundsReachTheCache::test_configured_idle_ttl_drives_the_real_sweep
+  ║ FAILED tests/gateway/test_agent_cache_pressure.py::TestSalvageFollowups::test_config_read_failure_still_resolves_auto_budget
+  ║ =================== 12 failed, 25 passed, 2 skipped in 1.57s ===================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_agent_cache_pressure.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.4% |   541/~12165 | ✓578 | ✗ 86] ✗ tests/gateway/test_agent_cache.py (32✗, 3.1s)
+
+  ╔╍ Failed: tests/gateway/test_agent_cache.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentConfigSignature::test_capability_change_different_signature
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentConfigSignature::test_default_gateway_runtime_forwards_filtered_capabilities
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentConfigSignature::test_compression_threshold_change_busts_cache
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentConfigSignature::test_cache_keys_key_order_does_not_matter
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_missing_keys_yield_the_shipped_default
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_explicit_cap_differs_from_absent
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_legacy_checkpoints_bool_carries_defaults_for_the_other_keys
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_non_dict_section_treated_as_missing
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_none_config_is_safe
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_extract_includes_live_tool_registry_generation
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_provider_identity_signature_enters_under_memory_prefix_and_is_re_read_from_one_instance
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_provider_contributes_nothing_without_a_working_identity_hook[no hook]
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_provider_contributes_nothing_without_a_working_identity_hook[no provider]
+  ║ FAILED tests/gateway/test_agent_cache.py::TestExtractCacheBustingConfig::test_provider_contributes_nothing_without_a_working_identity_hook[raising hook]
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheLifecycle::test_evict_on_session_reset
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheBoundedGrowth::test_cap_commits_memory_before_soft_release
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheActiveSafety::test_cap_skips_active_lru_entry
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheActiveSafety::test_idle_sweep_skips_active_agent
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheSpilloverLive::test_fill_to_cap_then_spillover
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheIdleResume::test_release_clients_does_not_touch_terminal_or_browser
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheIdleResume::test_close_vs_release_full_teardown_difference
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_fresh_turn_resets_idle_clock
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_fresh_turn_resets_provenance
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_interrupt_turn_preserves_idle_clock
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_interrupt_turn_preserves_desc
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_interrupt_turn_preserves_provenance
+  ║ FAILED tests/gateway/test_agent_cache.py::TestCachedAgentInactivityReset::test_fresh_turn_resets_flush_cursor
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheMessageCountRebaseline::test_cross_process_write_still_invalidates
+  ║ FAILED tests/gateway/test_agent_cache.py::TestAgentCacheMessageCountRebaseline::test_in_band_followup_reuses_cached_agent
+  ║ ============================== 32 failed in 2.86s ==============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_agent_cache.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.5% |   545/~12165 | ✓578 | ✗ 90] ✗ tests/gateway/test_agent_loop_stopped_hook.py (4✗, 0.7s)
+
+  ╔╍ Failed: tests/gateway/test_agent_loop_stopped_hook.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_agent_loop_stopped_hook.py::test_interrupt_fires_agent_loop_stopped_hook
+  ║ FAILED tests/gateway/test_agent_loop_stopped_hook.py::test_hook_not_fired_for_pending_sentinel_stop
+  ║ FAILED tests/gateway/test_agent_loop_stopped_hook.py::test_hook_not_fired_when_no_running_agent
+  ║ FAILED tests/gateway/test_agent_loop_stopped_hook.py::test_hook_dispatch_failure_does_not_break_interrupt
+  ║ ============================== 4 failed in 0.51s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_agent_loop_stopped_hook.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.5% |   546/~12165 | ✓578 | ✗ 91] ✗ tests/gateway/test_agents_command_delegations.py (1✗, 0.8s)
+
+  ╔╍ Failed: tests/gateway/test_agents_command_delegations.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ WARNING  tools.async_delegation:async_delegation.py:1156 Async delegation deleg_01845531 made no progress for 0s (in_tool=False) — interrupting; grace window infs
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_agents_command_delegations.py::test_agents_command_marks_stalling_delegation
+  ║ ============================== 1 failed in 0.55s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_agents_command_delegations.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.5% |   548/~12165 | ✓581 | ✗ 93] ✗ tests/gateway/test_allowlist_qualified_ids.py (3✓ 2✗, 0.6s)
+
+  ╔╍ Failed: tests/gateway/test_allowlist_qualified_ids.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_allowlist_qualified_ids.py::test_bare_localpart_entry_admits_no_foreign_domain[Platform.EMAIL-EMAIL_ALLOWED_USERS]
+  ║ FAILED tests/gateway/test_allowlist_qualified_ids.py::test_bare_localpart_entry_admits_no_foreign_domain[Platform.BLUEBUBBLES-GATEWAY_ALLOWED_USERS]
+  ║ ========================= 2 failed, 3 passed in 0.40s ==========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_allowlist_qualified_ids.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.6% |   557/~12165 | ✓590 | ✗ 93] ✓ tests/gateway/test_allowed_channels_widening.py (9✓, 0.9s)
+[  4.6% |   558/~12165 | ✓593 | ✗ 93] ✓ tests/gateway/test_allowlist_warning_platform_gate.py (3✓, 1.0s)
+[  4.6% |   559/~12165 | ✓594 | ✗ 93] ✓ tests/gateway/test_api_authority_continuity.py (1✓, 1.0s)
+[  4.6% |   563/~12165 | ✓595 | ✗ 97] ✗ tests/gateway/test_adversarial_settlement_review.py (1✓ 4✗, 6.2s)
+
+  ╔╍ Failed: tests/gateway/test_adversarial_settlement_review.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ ERROR    gateway.session_authority:session_authority.py:99 Session drain task died: AssertionError('TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull\nUse the isolated HERMES_HOME or a temporary fixture instead.')
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_adversarial_settlement_review.py::test_commit_then_error_still_releases_terminal_native_media
+  ║ FAILED tests/gateway/test_adversarial_settlement_review.py::test_discard_during_recovery_stamp_does_not_replay_head_or_lose_follower
+  ║ FAILED tests/gateway/test_adversarial_settlement_review.py::test_post_commit_cleanup_error_still_publishes_the_committed_completion[cleanup]
+  ║ FAILED tests/gateway/test_adversarial_settlement_review.py::test_post_commit_cleanup_error_still_publishes_the_committed_completion[after_completion]
+  ║ ========================= 4 failed, 1 passed in 5.94s ==========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_adversarial_settlement_review.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.6% |   564/~12165 | ✓596 | ✗ 97] ✓ tests/gateway/test_api_authority_controls.py (1✓, 4.7s)
+[  4.6% |   565/~12165 | ✓597 | ✗ 97] ✓ tests/gateway/test_api_authority_daemon.py (1✓, 4.8s)
+[  4.7% |   566/~12165 | ✓598 | ✗ 97] ✓ tests/gateway/test_api_authority_execution.py (1✓, 3.0s)
+[  4.7% |   567/~12165 | ✓599 | ✗ 97] ✓ tests/gateway/test_api_authority_retry.py (1✓, 3.2s)
+[  4.7% |   569/~12165 | ✓601 | ✗ 97] ✓ tests/gateway/test_api_authority_store.py (2✓, 0.8s)
+[  4.7% |   573/~12165 | ✓604 | ✗ 98] ✗ tests/gateway/test_api_admission_queued_on_drain.py (3✓ 1✗, 11.1s)
+
+  ╔╍ Failed: tests/gateway/test_api_admission_queued_on_drain.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ ERROR    gateway.session_authority:session_authority.py:99 Session drain task died: AssertionError('TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull\nUse the isolated HERMES_HOME or a temporary fixture instead.')
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_api_admission_queued_on_drain.py::test_retirement_tells_a_queued_api_observer_its_input_is_saved
+  ║ ========================= 1 failed, 3 passed in 10.79s =========================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_api_admission_queued_on_drain.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.7% |   574/~12165 | ✓604 | ✗ 99] ✗ tests/gateway/test_api_binding_served_profile.py (1✗, 0.5s)
+
+  ╔╍ Failed: tests/gateway/test_api_binding_served_profile.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  ║ hermes_cli/_early_recovery.py:961: in restore_interrupted_pull
+  ║     if not marker.is_file() and not (Path(root) / ZIP_SWAP_JOURNAL).is_file():
+  ║            ^^^^^^^^^^^^^^^^
+  ║ ../th1-1839-env-9f8ecdef/runtime/python-3.14.9+20261021-darwin-arm64/lib/python3.14/pathlib/__init__.py:691: in is_file
+  ║     return os.path.isfile(self)
+  ║            ^^^^^^^^^^^^^^^^^^^^
+  ║ <frozen genericpath>:39: in isfile
+  ║     ???
+  ║ tests/home_io_guard.py:187: in guarded
+  ║     self.check(value, dir_fd=kwargs.get(descriptor) if descriptor else None, metadata=metadata,
+  ║ tests/home_io_guard.py:127: in check
+  ║     self.refuse(value)
+  ║ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+  ║ 
+  ║ value = PosixPath('/Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull')
+  ║ 
+  ║     @staticmethod
+  ║     def refuse(value):
+  ║ >       raise AssertionError(
+  ║             f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
+  ║             "Use the isolated HERMES_HOME or a temporary fixture instead."
+  ║         )
+  ║ E       AssertionError: TEST BUG: file I/O against the REAL hermes home: /Users/hteo/.hermes/hermes-agent/.git/worktrees/th1-1839-head-9f8ecdef/hermes-update-pull
+  ║ E       Use the isolated HERMES_HOME or a temporary fixture instead.
+  ║ 
+  ║ tests/home_io_guard.py:160: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_api_binding_served_profile.py::test_api_binding_pins_runtime_to_the_admitting_profile
+  ║ ============================== 1 failed in 0.32s ===============================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_api_binding_served_profile.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[  4.7% |   575/~12165 | ✓605 | ✗ 99] ✓ tests/gateway/test_api_authority_runs.py (1✓, 3.4s)
