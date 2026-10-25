@@ -1,0 +1,58 @@
+{
+  "head": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+  "exit": 1,
+  "complete": true,
+  "files": 1970,
+  "passed": 14844,
+  "failed": 11,
+  "skipped": 335,
+  "seconds": 716.9,
+  "workers": 6,
+  "summary": "=== Summary: 1970 files, 14844 tests passed, 11 failed, 335 skipped (100% complete) in 716.9s (6 workers) ===",
+  "failed_ids": [
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[literal]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[named]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[reference]",
+    "tests/gateway/test_config_secret_scope.py::test_a_moved_route_never_sends_its_frozen_key_to_the_new_endpoint[fallback_providers_dict]",
+    "tests/gateway/test_model_confirmation_clients.py::test_acp_set_session_model_asks_through_request_permission",
+    "tests/gateway/test_session_client_env.py::test_configured_toolchain_names_a_local_client_omitted_never_leak_from_the_daemon",
+    "tests/gateway/test_session_client_env.py::test_host_values_apply_only_over_a_gateway_proven_local_attach",
+    "tests/gateway/test_session_edit_policy.py::test_a_branch_of_a_dont_ask_session_starts_at_ask",
+    "tests/gateway/test_session_edit_policy.py::test_edit_policy_is_a_durable_session_setting_every_viewer_reads",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_an_unusable_server_spec_never_echoes_its_values",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_every_create_check_names_the_field_it_read[extra25-editor.mcp_servers]"
+  ],
+  "baseline_failed_ids": [
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[literal]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[named]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[reference]",
+    "tests/gateway/test_config_secret_scope.py::test_a_moved_route_never_sends_its_frozen_key_to_the_new_endpoint[fallback_providers_dict]",
+    "tests/gateway/test_model_confirmation_clients.py::test_acp_set_session_model_asks_through_request_permission",
+    "tests/gateway/test_session_client_env.py::test_configured_toolchain_names_a_local_client_omitted_never_leak_from_the_daemon",
+    "tests/gateway/test_session_client_env.py::test_host_values_apply_only_over_a_gateway_proven_local_attach",
+    "tests/gateway/test_session_edit_policy.py::test_a_branch_of_a_dont_ask_session_starts_at_ask",
+    "tests/gateway/test_session_edit_policy.py::test_edit_policy_is_a_durable_session_setting_every_viewer_reads",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_an_unusable_server_spec_never_echoes_its_values",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_every_create_check_names_the_field_it_read[extra25-editor.mcp_servers]"
+  ],
+  "extra_vs_base": [],
+  "missing_vs_base": [],
+  "extra_except_preexisting_refusal": [],
+  "equals_base_11": true,
+  "refusal_failure_present": false,
+  "refusal_passed": true,
+  "refusal_file_evidence": [
+    "[ 48.9% |  5951/~12165 | \u27137564 | \u2717   5] \u2713 tests/gateway/test_replace_ownership_guard.py (15\u2713, 7.2s)"
+  ],
+  "executor_starvation_passed": true,
+  "executor_file_evidence": [
+    "[ 22.9% |  2783/~12165 | \u27133668 | \u2717   4] \u2713 tests/gateway/test_executor_starvation.py (1\u2713, 0.9s)"
+  ],
+  "error_ids": [],
+  "home_guard_violations": 0,
+  "test_processes_after": [],
+  "completed_utc": "2026-10-25T01:57:18.591818+00:00",
+  "command": "HERMES_PYTHON=/Users/hteo/.paseo/worktrees/th1-1839-replacement-env-9f8ecdef/venv/bin/python HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/ tests/tui_gateway/ -j 6",
+  "replacement_invocations": 1,
+  "reruns": 0
+}

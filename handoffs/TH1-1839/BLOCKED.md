@@ -1,1 +1,1 @@
-No active blocker: lead explicitly approved exactly one standalone replacement suite at221080c47f; invalid metadata-contaminated attempt excluded from cap. No code changes or further reruns.
+No active worker blocker: approved single replacement complete; failure IDs exactly baseline11 (no extra/missing); executor-starvation and refusal target passed; cleanup done. Lead retains CI/review/merge gates.
