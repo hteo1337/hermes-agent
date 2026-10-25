@@ -1,1 +1,0 @@
-{"context_preserved": true, "exit_code": 0, "holders": 32, "invalid_ticket_bindings": "refused", "legacy_fallback": "passed", "ping_ms": 9.96, "queue_warning": true, "ready_ms": 172.03, "ticket_ms": 1.03, "workers": 32}
