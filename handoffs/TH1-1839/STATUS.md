@@ -1,9 +1,9 @@
-TH1-1839 — investigate refusal-stamp differential for Hermes PR #2; Agent Fleet, In Review.
-Issue: https://linear.app/th1337/issue/TH1-1839 ; PR https://github.com/hteo1337/hermes-agent/pull/2 ; no merge/install/live gateway access.
-Source verified: c1f9fcc309 vs upstream 4dcef215cf; actual PR branch th1-1839-gateway-executor-starvation (requested dispatch/TH1-1839 does not exist).
-Done: inspected paired-baseline artifacts (base11/head12), created fresh Paseo base/head worktrees and isolated PM dev/test/messaging venv; unchanged PM/lock/test/status source verified.
-Verification: 20 unchanged runs/tree, alternating order, retries0, -j1: base20/20 pass, head19/20 pass (round4 exit1, identical line486 assertion); exact logs and exits in repeat-results.json.
-Next: complete fixed extension to40 unchanged runs/tree (first20 base20/head19); successful traces show0 observed-executor submissions and29.9us observer before refusal; product fix only with demonstrated PR causality; final suites exactly once -j6 and compare baseline11.
-Delivery: strip handoffs from PR source, keep evidence on review/TH1-1839-regression-9f8ecdef; one regression comment; clean created worktrees/environment.
-Open: causality unresolved; no pass rate or final-suite claim yet. Prior normal/adversarial Sol reviews already completed; no duplicate full-review lanes.
-decided: use existing actual PR branch and separate review evidence branch — preserve one PR and respect handoff-free source requirement; task prefix names checklist because PASEO_AGENT_ID unset.
+TH1-1839 — Regression: PRE-EXISTING; Hermes PR #2, project Agent Fleet, In Review.
+Issue: https://linear.app/th1337/issue/TH1-1839 ; PR https://github.com/hteo1337/hermes-agent/pull/2 ; actual PR branch th1-1839-gateway-executor-starvation (dispatch/TH1-1839 absent).
+Done: 40 unchanged target runs per pin: base4dcef215cf37/40 pass (92.5%), headc1f9fcc30938/40 (95%); all5 failures same line486 running!=startup_failed. First20 were20/20 vs19/20; fixed extension ended40 each.
+Trace: unchanged refusal/status/test sources; independent writer sleeps5s, caller waits5s; no default-executor submissions; observer29.9us before refusal; head adds post-refusal executor shutdown. Both traced children persisted; timing-boundary explanation inferred, no failing-child wait-return trace.
+Done: no product code/test modifications. Cleanup-only source221080c47f removes22 handoff files; outside-handoffs diff vs c1f9fcc309 empty, no handoffs in PR diff. Original handoffs retained on this review branch.
+Verification in progress: exactly one final suite at221080c47f, HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh tests/gateway/ tests/tui_gateway/ -j6, shared PM dev/test/messaging interpreter; compare exact failure set with baseline11.
+Next: inspect final suite and executor regression, push source, one PRE-EXISTING PR comment with commands/exits/counts, update Linear, remove created base/head worktrees and environment.
+Open: suite result/CI not green or claimed yet; no merge/install/live gateway changes. Prior normal+adversarial Sol artifacts inspected; no new full review, final-head lead gate remains.
+decided: keep source unchanged — same assertion occurs without any PR code and head has no observed failure-rate increase; rates3/40 vs2/40 are comparable, not exactly equal or statistical proof of independence.

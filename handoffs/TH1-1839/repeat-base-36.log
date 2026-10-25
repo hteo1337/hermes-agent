@@ -1,0 +1,103 @@
+▶ not activated — using HERMES_PYTHON: /Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 1 test files (~15 tests) under ['tests/gateway/test_replace_ownership_guard.py']; running with -j 1
+[100.0% |    15/~15 | ✓0 | ✗1] ✗ tests/gateway/test_replace_ownership_guard.py (1✗, 6.2s)
+
+  ╔╍ Failed: tests/gateway/test_replace_ownership_guard.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║ self = <tests.gateway.test_replace_ownership_guard.TestStampDurability object at 0x107dd2c10>
+  ║ tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-5_fihgl1/pytest-of-hteo/pytest-0/test_refusal_stamp_reaches_dis0')
+  ║ 
+  ║     def test_refusal_stamp_reaches_disk_before_the_hard_exit(self, tmp_path):
+  ║         home = tmp_path / "scratch-home"
+  ║         home.mkdir()
+  ║         (home / "gateway_state.json").write_text(
+  ║             json.dumps({"gateway_state": "running", "pid": 424242}), encoding="utf-8")
+  ║         repo_root = str(Path(__file__).resolve().parents[2])
+  ║         child = tmp_path / "refusal_child.py"
+  ║         child.write_text(_CHILD_SCRIPT.replace("@@REPO@@", repo_root), encoding="utf-8")
+  ║         env = {**os.environ, "HERMES_HOME": str(home)}
+  ║     
+  ║         proc = subprocess.run(
+  ║             [sys.executable, str(child)],
+  ║             env=env, capture_output=True, text=True, timeout=120, check=False,
+  ║         )
+  ║     
+  ║         assert proc.returncode == 1, f"child stderr: {proc.stderr[-2000:]}"
+  ║         stamped = json.loads((home / "gateway_state.json").read_text(encoding="utf-8"))
+  ║ >       assert stamped.get("gateway_state") == "startup_failed"
+  ║ E       AssertionError: assert 'running' == 'startup_failed'
+  ║ E         
+  ║ E         - startup_failed
+  ║ E         + running
+  ║ 
+  ║ tests/gateway/test_replace_ownership_guard.py:486: AssertionError
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_replace_ownership_guard.py::TestStampDurability::test_refusal_stamp_reaches_disk_before_the_hard_exit
+  ║ ======================= 1 failed, 14 deselected in 5.99s =======================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_replace_ownership_guard.py -k test_refusal_stamp_reaches_disk_before_the_hard_exit
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+
+=== Summary: 1 files, 0 tests passed, 1 failed (100% complete) in 6.2s (1 workers) ===
+
+=== Per-file subprocess time distribution ===
+  Files:   1
+  Total subprocess CPU-wall: 6.2s  (runner wall: 6.2s, parallelism: 1x)
+  P50: 6.17s  P90: 6.17s  P95: 6.17s  P99: 6.17s  Max: 6.17s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+      6.17s  tests/gateway/test_replace_ownership_guard.py
+
+=== Failure output ===
+
+--- tests/gateway/test_replace_ownership_guard.py ---
+============================= test session starts ==============================
+platform darwin -- Python 3.14.9, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/hteo/.paseo/worktrees/th1-1839-base-9f8ecdef
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 15 items / 14 deselected / 1 selected
+
+tests/gateway/test_replace_ownership_guard.py F                          [100%]
+
+=================================== FAILURES ===================================
+___ TestStampDurability.test_refusal_stamp_reaches_disk_before_the_hard_exit ___
+
+self = <tests.gateway.test_replace_ownership_guard.TestStampDurability object at 0x107dd2c10>
+tmp_path = PosixPath('/private/var/tmp/hermes-pytest-501/r-5_fihgl1/pytest-of-hteo/pytest-0/test_refusal_stamp_reaches_dis0')
+
+    def test_refusal_stamp_reaches_disk_before_the_hard_exit(self, tmp_path):
+        home = tmp_path / "scratch-home"
+        home.mkdir()
+        (home / "gateway_state.json").write_text(
+            json.dumps({"gateway_state": "running", "pid": 424242}), encoding="utf-8")
+        repo_root = str(Path(__file__).resolve().parents[2])
+        child = tmp_path / "refusal_child.py"
+        child.write_text(_CHILD_SCRIPT.replace("@@REPO@@", repo_root), encoding="utf-8")
+        env = {**os.environ, "HERMES_HOME": str(home)}
+    
+        proc = subprocess.run(
+            [sys.executable, str(child)],
+            env=env, capture_output=True, text=True, timeout=120, check=False,
+        )
+    
+        assert proc.returncode == 1, f"child stderr: {proc.stderr[-2000:]}"
+        stamped = json.loads((home / "gateway_state.json").read_text(encoding="utf-8"))
+>       assert stamped.get("gateway_state") == "startup_failed"
+E       AssertionError: assert 'running' == 'startup_failed'
+E         
+E         - startup_failed
+E         + running
+
+tests/gateway/test_replace_ownership_guard.py:486: AssertionError
+=========================== short test summary info ============================
+FAILED tests/gateway/test_replace_ownership_guard.py::TestStampDurability::test_refusal_stamp_reaches_disk_before_the_hard_exit
+======================= 1 failed, 14 deselected in 5.99s =======================
+
+=== 1 file with test failures (1 test failed) ===
+  tests/gateway/test_replace_ownership_guard.py  (1 test failed)

@@ -1,0 +1,1282 @@
+[
+  {
+    "label": "base",
+    "round": 1,
+    "exit": 0,
+    "seconds": 16.802,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-01.log"
+  },
+  {
+    "label": "head",
+    "round": 1,
+    "exit": 0,
+    "seconds": 17.323,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-01.log"
+  },
+  {
+    "label": "head",
+    "round": 2,
+    "exit": 0,
+    "seconds": 6.794,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-02.log"
+  },
+  {
+    "label": "base",
+    "round": 2,
+    "exit": 0,
+    "seconds": 6.965,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-02.log"
+  },
+  {
+    "label": "base",
+    "round": 3,
+    "exit": 0,
+    "seconds": 6.634,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-03.log"
+  },
+  {
+    "label": "head",
+    "round": 3,
+    "exit": 0,
+    "seconds": 6.738,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-03.log"
+  },
+  {
+    "label": "head",
+    "round": 4,
+    "exit": 1,
+    "seconds": 6.668,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-04.log"
+  },
+  {
+    "label": "base",
+    "round": 4,
+    "exit": 0,
+    "seconds": 6.431,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-04.log"
+  },
+  {
+    "label": "base",
+    "round": 5,
+    "exit": 0,
+    "seconds": 6.406,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-05.log"
+  },
+  {
+    "label": "head",
+    "round": 5,
+    "exit": 0,
+    "seconds": 6.799,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-05.log"
+  },
+  {
+    "label": "head",
+    "round": 6,
+    "exit": 0,
+    "seconds": 6.75,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-06.log"
+  },
+  {
+    "label": "base",
+    "round": 6,
+    "exit": 0,
+    "seconds": 6.86,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-06.log"
+  },
+  {
+    "label": "base",
+    "round": 7,
+    "exit": 0,
+    "seconds": 7.127,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-07.log"
+  },
+  {
+    "label": "head",
+    "round": 7,
+    "exit": 0,
+    "seconds": 7.563,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-07.log"
+  },
+  {
+    "label": "head",
+    "round": 8,
+    "exit": 0,
+    "seconds": 6.8,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-08.log"
+  },
+  {
+    "label": "base",
+    "round": 8,
+    "exit": 0,
+    "seconds": 6.435,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-08.log"
+  },
+  {
+    "label": "base",
+    "round": 9,
+    "exit": 0,
+    "seconds": 6.432,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-09.log"
+  },
+  {
+    "label": "head",
+    "round": 9,
+    "exit": 0,
+    "seconds": 6.721,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-09.log"
+  },
+  {
+    "label": "head",
+    "round": 10,
+    "exit": 0,
+    "seconds": 6.86,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-10.log"
+  },
+  {
+    "label": "base",
+    "round": 10,
+    "exit": 0,
+    "seconds": 7.821,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-10.log"
+  },
+  {
+    "label": "base",
+    "round": 11,
+    "exit": 0,
+    "seconds": 7.917,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-11.log"
+  },
+  {
+    "label": "head",
+    "round": 11,
+    "exit": 0,
+    "seconds": 8.519,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-11.log"
+  },
+  {
+    "label": "head",
+    "round": 12,
+    "exit": 0,
+    "seconds": 6.836,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-12.log"
+  },
+  {
+    "label": "base",
+    "round": 12,
+    "exit": 0,
+    "seconds": 7.729,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-12.log"
+  },
+  {
+    "label": "base",
+    "round": 13,
+    "exit": 0,
+    "seconds": 7.291,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-13.log"
+  },
+  {
+    "label": "head",
+    "round": 13,
+    "exit": 0,
+    "seconds": 8.76,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-13.log"
+  },
+  {
+    "label": "head",
+    "round": 14,
+    "exit": 0,
+    "seconds": 6.887,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-14.log"
+  },
+  {
+    "label": "base",
+    "round": 14,
+    "exit": 0,
+    "seconds": 7.782,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-14.log"
+  },
+  {
+    "label": "base",
+    "round": 15,
+    "exit": 0,
+    "seconds": 6.428,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-15.log"
+  },
+  {
+    "label": "head",
+    "round": 15,
+    "exit": 0,
+    "seconds": 8.511,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-15.log"
+  },
+  {
+    "label": "head",
+    "round": 16,
+    "exit": 0,
+    "seconds": 6.771,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-16.log"
+  },
+  {
+    "label": "base",
+    "round": 16,
+    "exit": 0,
+    "seconds": 6.492,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-16.log"
+  },
+  {
+    "label": "base",
+    "round": 17,
+    "exit": 0,
+    "seconds": 7.66,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-17.log"
+  },
+  {
+    "label": "head",
+    "round": 17,
+    "exit": 0,
+    "seconds": 8.737,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-17.log"
+  },
+  {
+    "label": "head",
+    "round": 18,
+    "exit": 0,
+    "seconds": 6.826,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-18.log"
+  },
+  {
+    "label": "base",
+    "round": 18,
+    "exit": 0,
+    "seconds": 6.444,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-18.log"
+  },
+  {
+    "label": "base",
+    "round": 19,
+    "exit": 0,
+    "seconds": 6.529,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-19.log"
+  },
+  {
+    "label": "head",
+    "round": 19,
+    "exit": 0,
+    "seconds": 7.068,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-19.log"
+  },
+  {
+    "label": "head",
+    "round": 20,
+    "exit": 0,
+    "seconds": 6.738,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-20.log"
+  },
+  {
+    "label": "base",
+    "round": 20,
+    "exit": 0,
+    "seconds": 6.474,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-20.log"
+  },
+  {
+    "label": "base",
+    "round": 21,
+    "exit": 0,
+    "seconds": 7.574,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-21.log"
+  },
+  {
+    "label": "head",
+    "round": 21,
+    "exit": 0,
+    "seconds": 8.197,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-21.log"
+  },
+  {
+    "label": "head",
+    "round": 22,
+    "exit": 0,
+    "seconds": 6.753,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-22.log"
+  },
+  {
+    "label": "base",
+    "round": 22,
+    "exit": 0,
+    "seconds": 6.616,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-22.log"
+  },
+  {
+    "label": "base",
+    "round": 23,
+    "exit": 0,
+    "seconds": 6.437,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-23.log"
+  },
+  {
+    "label": "head",
+    "round": 23,
+    "exit": 0,
+    "seconds": 6.801,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-23.log"
+  },
+  {
+    "label": "head",
+    "round": 24,
+    "exit": 0,
+    "seconds": 7.002,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-24.log"
+  },
+  {
+    "label": "base",
+    "round": 24,
+    "exit": 0,
+    "seconds": 7.855,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-24.log"
+  },
+  {
+    "label": "base",
+    "round": 25,
+    "exit": 0,
+    "seconds": 6.533,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-25.log"
+  },
+  {
+    "label": "head",
+    "round": 25,
+    "exit": 0,
+    "seconds": 7.823,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-25.log"
+  },
+  {
+    "label": "head",
+    "round": 26,
+    "exit": 0,
+    "seconds": 6.819,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-26.log"
+  },
+  {
+    "label": "base",
+    "round": 26,
+    "exit": 0,
+    "seconds": 6.413,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-26.log"
+  },
+  {
+    "label": "base",
+    "round": 27,
+    "exit": 0,
+    "seconds": 6.448,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-27.log"
+  },
+  {
+    "label": "head",
+    "round": 27,
+    "exit": 0,
+    "seconds": 6.724,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-27.log"
+  },
+  {
+    "label": "head",
+    "round": 28,
+    "exit": 0,
+    "seconds": 6.974,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-28.log"
+  },
+  {
+    "label": "base",
+    "round": 28,
+    "exit": 0,
+    "seconds": 8.278,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-28.log"
+  },
+  {
+    "label": "base",
+    "round": 29,
+    "exit": 0,
+    "seconds": 7.935,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-29.log"
+  },
+  {
+    "label": "head",
+    "round": 29,
+    "exit": 0,
+    "seconds": 8.978,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-29.log"
+  },
+  {
+    "label": "head",
+    "round": 30,
+    "exit": 0,
+    "seconds": 6.762,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-30.log"
+  },
+  {
+    "label": "base",
+    "round": 30,
+    "exit": 0,
+    "seconds": 7.752,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-30.log"
+  },
+  {
+    "label": "base",
+    "round": 31,
+    "exit": 0,
+    "seconds": 6.446,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-31.log"
+  },
+  {
+    "label": "head",
+    "round": 31,
+    "exit": 0,
+    "seconds": 8.456,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-31.log"
+  },
+  {
+    "label": "head",
+    "round": 32,
+    "exit": 0,
+    "seconds": 6.742,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-32.log"
+  },
+  {
+    "label": "base",
+    "round": 32,
+    "exit": 0,
+    "seconds": 6.421,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-32.log"
+  },
+  {
+    "label": "base",
+    "round": 33,
+    "exit": 0,
+    "seconds": 6.545,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-33.log"
+  },
+  {
+    "label": "head",
+    "round": 33,
+    "exit": 0,
+    "seconds": 6.963,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-33.log"
+  },
+  {
+    "label": "head",
+    "round": 34,
+    "exit": 0,
+    "seconds": 6.911,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-34.log"
+  },
+  {
+    "label": "base",
+    "round": 34,
+    "exit": 0,
+    "seconds": 6.561,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-34.log"
+  },
+  {
+    "label": "base",
+    "round": 35,
+    "exit": 0,
+    "seconds": 6.486,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-35.log"
+  },
+  {
+    "label": "head",
+    "round": 35,
+    "exit": 0,
+    "seconds": 7.926,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-35.log"
+  },
+  {
+    "label": "head",
+    "round": 36,
+    "exit": 0,
+    "seconds": 7.471,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-36.log"
+  },
+  {
+    "label": "base",
+    "round": 36,
+    "exit": 1,
+    "seconds": 7.549,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-36.log"
+  },
+  {
+    "label": "base",
+    "round": 37,
+    "exit": 1,
+    "seconds": 6.459,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-37.log"
+  },
+  {
+    "label": "head",
+    "round": 37,
+    "exit": 1,
+    "seconds": 6.912,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-37.log"
+  },
+  {
+    "label": "head",
+    "round": 38,
+    "exit": 0,
+    "seconds": 6.868,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-38.log"
+  },
+  {
+    "label": "base",
+    "round": 38,
+    "exit": 0,
+    "seconds": 6.463,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-38.log"
+  },
+  {
+    "label": "base",
+    "round": 39,
+    "exit": 1,
+    "seconds": 6.427,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-39.log"
+  },
+  {
+    "label": "head",
+    "round": 39,
+    "exit": 0,
+    "seconds": 6.923,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-39.log"
+  },
+  {
+    "label": "head",
+    "round": 40,
+    "exit": 0,
+    "seconds": 6.939,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "log": "repeat-head-40.log"
+  },
+  {
+    "label": "base",
+    "round": 40,
+    "exit": 0,
+    "seconds": 6.537,
+    "command": [
+      "scripts/run_tests.sh",
+      "tests/gateway/test_replace_ownership_guard.py",
+      "-k",
+      "test_refusal_stamp_reaches_disk_before_the_hard_exit",
+      "-j",
+      "1"
+    ],
+    "sha": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "log": "repeat-base-40.log"
+  }
+]

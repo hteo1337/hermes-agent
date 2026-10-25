@@ -1,0 +1,61 @@
+{
+  "classification": "PRE-EXISTING",
+  "evidence": {
+    "repeated_runs": "repeat-results.json",
+    "summary": "repeat-summary.json",
+    "all_failure_signatures": [
+      {
+        "label": "head",
+        "round": 4,
+        "exit": 1,
+        "same_assertion": true,
+        "same_line": true,
+        "same_target": true
+      },
+      {
+        "label": "base",
+        "round": 36,
+        "exit": 1,
+        "same_assertion": true,
+        "same_line": true,
+        "same_target": true
+      },
+      {
+        "label": "base",
+        "round": 37,
+        "exit": 1,
+        "same_assertion": true,
+        "same_line": true,
+        "same_target": true
+      },
+      {
+        "label": "head",
+        "round": 37,
+        "exit": 1,
+        "same_assertion": true,
+        "same_line": true,
+        "same_target": true
+      },
+      {
+        "label": "base",
+        "round": 39,
+        "exit": 1,
+        "same_assertion": true,
+        "same_line": true,
+        "same_target": true
+      }
+    ],
+    "untouched_pins": {
+      "base": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+      "head": "c1f9fcc309daea44a59e6212921d8da9f4a1884f"
+    },
+    "controls_differ": "Base contains no executor_pools.py or observation call; head trace confirms observe_default_executor invoked and asyncio executor-shutdown thread added. Same PM interpreter, dependency versions and original target source.",
+    "source_scope": "regression-manifest.json and refusal-function-comparison.json",
+    "trace": "trace-summary.json"
+  },
+  "interpretation": "The identical assertion is reproducible without PR2, so PR2 is not necessary for the failure. Sample failure rates base3/40 and head2/40 show no observed head increase. No claim of statistically proven independence or exactly equal rates.",
+  "write_path": "status._RuntimeStatusWriter daemon thread writes independently of asyncio; write_runtime_status submits, emits transition, then waits<=5.0s. Refusal ignores false return; start_gateway returnsFalse; asyncio.run shuts down; real os._exit kills any unfinished daemon writer. Test slow writer sleeps5.0s plus actual atomic write time.",
+  "observer": "Observed successful head child: observer29.9us before refusal, zero default executor submits, status writer/wait identical ordering; unused executor adds a shutdown helper after refusal. Other PR dispatch/runner shutdown changes are beyond the early refusal return.",
+  "limits": "Both instrumented child runs passed. Missing stamp mechanism is inferred from unchanged bounded-wait/hard-exit code plus exact symptom; no timestamped failing-child waitFalse is claimed. Small samples cannot exclude a small indirect scheduling effect.",
+  "decision": "No product code changes and no test edits/skips/retiming; final suite once at cleanup-only head221080c47f."
+}
