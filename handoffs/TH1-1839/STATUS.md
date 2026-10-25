@@ -1,9 +1,9 @@
-# TH1-1839 — gateway executor starvation
-- Issue: https://linear.app/th1337/issue/TH1-1839 (Agent Fleet); branch th1-1839-gateway-executor-starvation; PR https://github.com/hteo1337/hermes-agent/pull/2 is ready and unmerged; Linear In Review; worker never merges or changes live install/service.
-- Done: source a95a4dc47e isolates control(4)/RPC(8)/MCP(4)/compression(4)/summary(2), preserves ContextVars, drains runner pools, logs default queue/activity. Upstream base 4dcef215cf pinned at base/th1-1839-upstream-4dcef215cf.
-- Verification: one 22-worker regression red on unchanged source and green on fix; real normal gateway with all 32 default workers blocked: mint 1.03ms / ready 172.03ms / ping 9.96ms, legacy/invalid-binding/context/log controls pass, exit0. Checker12 OK.
-- Verification: full suites once 11488 passed /2252 failed /342 skipped, plus129 no-test files; representative HomeIOGuard failure reproduced unchanged upstream; missing optional deps/unclassified failures remain. Own kwargs bug repaired, 20 affected WS tests pass. See verification.txt and suite-results.txt.
-- Reviews: normal and adversarial latest Sol CONFIRMED source a95a4dc47e in separate short read-only in-session checkouts; artifacts review.txt/adversarial-review.txt and PR comments. Durable same-issue launch rejected while writer active; used explicit in-session exception.
-- decided: adversarial required — semif rejected actual complete diff+plan (12551 tokens >4096), invalid defaults yes; concurrency category matches. Exactly one completed, no blocking findings.
-- Next: final receipt-only head confirmation is requested in PR; lead owns CI/suite limitation and removal of handoff files before any merge, then janitor retires this current worktree after worker stops.
-- Open: CI queued, not green; full-suite pass unestablished. Never bypass guards, rerun full suite under cap, merge or install from this worker. Nonblocking second-loop/cron provenance remains outside scope.
+TH1-1839 — investigate refusal-stamp differential for Hermes PR #2; Agent Fleet, In Review.
+Issue: https://linear.app/th1337/issue/TH1-1839 ; PR https://github.com/hteo1337/hermes-agent/pull/2 ; no merge/install/live gateway access.
+Source verified: c1f9fcc309 vs upstream 4dcef215cf; actual PR branch th1-1839-gateway-executor-starvation (requested dispatch/TH1-1839 does not exist).
+Done: inspected paired-baseline artifacts (base11/head12), created fresh Paseo base/head worktrees and isolated PM dev/test/messaging venv; unchanged PM/lock/test/status source verified.
+Verification in progress: alternating 20 unchanged target runs per tree, retries0, -j1; exact invocations/exits/logs in repeat-results.json and repeat-*.log.
+Next: finish paired repetitions; observe refusal writer/wait/hard-exit ordering; product fix only with demonstrated PR causality; final suites exactly once -j6 and compare baseline11.
+Delivery: strip handoffs from PR source, keep evidence on review/TH1-1839-regression-9f8ecdef; one regression comment; clean created worktrees/environment.
+Open: causality unresolved; no pass rate or final-suite claim yet. Prior normal/adversarial Sol reviews already completed; no duplicate full-review lanes.
+decided: use existing actual PR branch and separate review evidence branch — preserve one PR and respect handoff-free source requirement; task prefix names checklist because PASEO_AGENT_ID unset.
