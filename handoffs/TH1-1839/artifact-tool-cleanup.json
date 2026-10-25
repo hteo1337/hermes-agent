@@ -1,0 +1,18 @@
+{
+  "lint_entries": [
+    "cache",
+    "data",
+    "runtime",
+    "venv"
+  ],
+  "lint_root_absent": true,
+  "ruff_cache_birth": 1792891187.915042,
+  "checklist_birth": 1792891012.585467,
+  "owned_current_ruff_cache_files": [
+    ".ruff_cache/CACHEDIR.TAG",
+    ".ruff_cache/.gitignore",
+    ".ruff_cache/0.15.22/8120858311274220692",
+    ".ruff_cache/0.15.10/15473793991819178193"
+  ],
+  "owned_current_ruff_cache_removed": true
+}

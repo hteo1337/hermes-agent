@@ -1,0 +1,124 @@
+{
+  "new_nonzero_file_exits": {
+    "tests/gateway/test_replace_ownership_guard.py": {
+      "base": 0,
+      "head": 1
+    }
+  },
+  "regressions": [
+    "tests/gateway/test_replace_ownership_guard.py::TestStampDurability::test_refusal_stamp_reaches_disk_before_the_hard_exit"
+  ],
+  "improvements": [],
+  "shared_bad": [
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[literal]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[named]",
+    "tests/gateway/test_config_policy_recovery.py::test_a_changed_fallback_secret_removes_that_fallback[reference]",
+    "tests/gateway/test_config_secret_scope.py::test_a_moved_route_never_sends_its_frozen_key_to_the_new_endpoint[fallback_providers_dict]",
+    "tests/gateway/test_model_confirmation_clients.py::test_acp_set_session_model_asks_through_request_permission",
+    "tests/gateway/test_session_client_env.py::test_configured_toolchain_names_a_local_client_omitted_never_leak_from_the_daemon",
+    "tests/gateway/test_session_client_env.py::test_host_values_apply_only_over_a_gateway_proven_local_attach",
+    "tests/gateway/test_session_edit_policy.py::test_a_branch_of_a_dont_ask_session_starts_at_ask",
+    "tests/gateway/test_session_edit_policy.py::test_edit_policy_is_a_durable_session_setting_every_viewer_reads",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_an_unusable_server_spec_never_echoes_its_values",
+    "tests/gateway/test_session_policy_refusal_fields.py::test_every_create_check_names_the_field_it_read[extra25-editor.mcp_servers]"
+  ],
+  "head_only": {
+    "tests/gateway/test_executor_starvation.py::test_ticket_and_rpc_ping_survive_default_executor_saturation": "passed"
+  },
+  "head_bad_without_base_pass": {},
+  "base_only": {},
+  "other_status_changes": {},
+  "runs": {
+    "base": {
+      "counts": {
+        "passed": 14843,
+        "skipped": 333,
+        "failed": 11,
+        "xfailed": 1
+      },
+      "runner_summary": {
+        "files": 1969,
+        "passed": 14843,
+        "failed": 11,
+        "skipped": 335,
+        "wall_seconds": 713.7,
+        "workers": 6
+      },
+      "runner_summary_line": "=== Summary: 1969 files, 14843 tests passed, 11 failed, 335 skipped (100% complete) in 713.7s (6 workers) ===",
+      "pytest_report_counts": {
+        "passed": 14843,
+        "skipped": 333,
+        "failed": 11,
+        "xfailed": 1
+      },
+      "total_nodes": 15188,
+      "files": 1969,
+      "unfinished_sessions": [],
+      "file_exit_counts": {
+        "0": 1961,
+        "1": 6,
+        "5": 2
+      },
+      "collection_errors": [],
+      "import_origins": {
+        "gateway.run": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-baseline-9d69f1fe/gateway/run.py"
+        ],
+        "tui_gateway.ws": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-baseline-9d69f1fe/tui_gateway/ws.py"
+        ],
+        "gateway.control_socket": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-baseline-9d69f1fe/gateway/control_socket.py"
+        ]
+      },
+      "suite_exit": 1
+    },
+    "head": {
+      "counts": {
+        "passed": 14843,
+        "skipped": 333,
+        "failed": 12,
+        "xfailed": 1
+      },
+      "runner_summary": {
+        "files": 1970,
+        "passed": 14843,
+        "failed": 12,
+        "skipped": 335,
+        "wall_seconds": 719.9,
+        "workers": 6
+      },
+      "runner_summary_line": "=== Summary: 1970 files, 14843 tests passed, 12 failed, 335 skipped (100% complete) in 719.9s (6 workers) ===",
+      "pytest_report_counts": {
+        "passed": 14843,
+        "skipped": 333,
+        "failed": 12,
+        "xfailed": 1
+      },
+      "total_nodes": 15189,
+      "files": 1970,
+      "unfinished_sessions": [],
+      "file_exit_counts": {
+        "0": 1961,
+        "1": 7,
+        "5": 2
+      },
+      "collection_errors": [],
+      "import_origins": {
+        "gateway.run": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-head-9d69f1fe/gateway/run.py"
+        ],
+        "tui_gateway.ws": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-head-9d69f1fe/tui_gateway/ws.py"
+        ],
+        "gateway.executor_pools": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-head-9d69f1fe/gateway/executor_pools.py"
+        ],
+        "gateway.control_socket": [
+          "/Users/hteo/.paseo/worktrees/th1-1839-head-9d69f1fe/gateway/control_socket.py"
+        ]
+      },
+      "suite_exit": 1
+    }
+  }
+}

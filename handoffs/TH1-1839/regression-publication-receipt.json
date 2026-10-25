@@ -1,0 +1,23 @@
+{
+  "source_head": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+  "source_branch": "th1-1839-gateway-executor-starvation",
+  "evidence_branch": "review/TH1-1839-regression-9f8ecdef",
+  "comment_url": "https://github.com/hteo1337/hermes-agent/pull/2#issuecomment-6392017008",
+  "comment_id": 6392017008,
+  "comment_body_verified": true,
+  "handoff_paths_in_pr_diff": 0,
+  "all_owned_test_and_lint_paths_absent": [
+    "/Users/hteo/.paseo/worktrees/th1-1839-base-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-head-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-standalone-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef",
+    "/Users/hteo/.paseo/worktrees/th1-1839-lint-9f8ecdef"
+  ],
+  "final_suite_complete": false,
+  "final_gate": "blocked: explicit once-only-cap exception needed; structured question pending",
+  "remaining_test_criterion": "one replacement gateway/tui suite on final source head; exact failure set baseline11; executor-starvation pass",
+  "linear_issue": "TH1-1839",
+  "linear_project": "Agent Fleet",
+  "linear_status": "In Review",
+  "merge_install_or_running_gateway_changes": false
+}
