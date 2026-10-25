@@ -1,0 +1,30 @@
+{
+  "trees": {
+    "base": "4dcef215cfe41bd2d02c2d1dad6e257a18101216",
+    "head": "c1f9fcc309daea44a59e6212921d8da9f4a1884f"
+  },
+  "file_sha256": {
+    "base": {
+      "pyproject.toml": "019ffb66aeb36787d0053657bd55d424c24e656d2d184a302061a4e09a3cba15",
+      "uv.lock": "bad16d76da35fa9433181ac77089b8638f1390c36054336cf4a8bf04a2f4983b",
+      "pm/lock.json": "40b06778980ff8c50dcd97c0d9b39ba3eb4a7a242ea62eaeaaa9a90d68ea1a85",
+      "scripts/run_tests.sh": "20c955e19e440bffb2abbc7bc645cc7c4d77a3fcdcd82434facf8b8ac9684467",
+      "scripts/run_tests_parallel.py": "3e18e138e66931a6e9ebacadfa430998d0c995d25dfbf43672594c6473c8e307",
+      "tests/gateway/test_replace_ownership_guard.py": "6df440782782e127e0526dc5b945748416ad93e5414b2df9d669acd2121c1c5f",
+      "gateway/status.py": "e3763e9f6e93b37e57ee1f198a4a4de9f3fd0e8fbbdccb690742ba8def345496"
+    },
+    "head": {
+      "pyproject.toml": "019ffb66aeb36787d0053657bd55d424c24e656d2d184a302061a4e09a3cba15",
+      "uv.lock": "bad16d76da35fa9433181ac77089b8638f1390c36054336cf4a8bf04a2f4983b",
+      "pm/lock.json": "40b06778980ff8c50dcd97c0d9b39ba3eb4a7a242ea62eaeaaa9a90d68ea1a85",
+      "scripts/run_tests.sh": "20c955e19e440bffb2abbc7bc645cc7c4d77a3fcdcd82434facf8b8ac9684467",
+      "scripts/run_tests_parallel.py": "3e18e138e66931a6e9ebacadfa430998d0c995d25dfbf43672594c6473c8e307",
+      "tests/gateway/test_replace_ownership_guard.py": "6df440782782e127e0526dc5b945748416ad93e5414b2df9d669acd2121c1c5f",
+      "gateway/status.py": "e3763e9f6e93b37e57ee1f198a4a4de9f3fd0e8fbbdccb690742ba8def345496"
+    }
+  },
+  "baseline_evidence": "review/TH1-1839-6350225a2a5d@ef1c9fa42c",
+  "pm_build": "python -m pm.build_env --source . --out /Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv --cache /Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/cache --group dev --group test --extra messaging",
+  "branch_correction": "PR actual headRefName th1-1839-gateway-executor-starvation; dispatch/TH1-1839 absent on remote",
+  "PASEO_AGENT_ID": "unset; checklist uses task 9f8ecdef prefix"
+}

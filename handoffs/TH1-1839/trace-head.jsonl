@@ -1,0 +1,45 @@
+{"seconds": 0.9690424159998656, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 0.9692936659994302, "thread": "MainThread", "module": "gateway.executor_pools", "function": "observe_default_executor", "event": "call"}
+{"seconds": 0.9693235830054618, "thread": "MainThread", "module": "gateway.executor_pools", "function": "observe_default_executor", "event": "return", "returned": null}
+{"seconds": 1.2238200830033747, "thread": "MainThread", "module": "gateway.run_bootstrap", "function": "_start_gateway_replace_existing_instance", "event": "call"}
+{"seconds": 1.2240060410040314, "thread": "MainThread", "module": "gateway.status", "function": "write_runtime_status", "event": "call"}
+{"seconds": 1.2248130410007434, "thread": "MainThread", "module": "gateway.status", "function": "submit", "event": "call"}
+{"seconds": 1.2249056250002468, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_run", "event": "call"}
+{"seconds": 1.2249180830040132, "thread": "MainThread", "module": "gateway.status", "function": "submit", "event": "return", "returned": 1}
+{"seconds": 1.2249404579997645, "thread": "MainThread", "module": "gateway.status", "function": "_emit_runtime_status_transition", "event": "call"}
+{"seconds": 1.2250482080053189, "thread": "gateway-runtime-status-writer", "module": "__main__", "function": "_slow_write", "event": "call"}
+{"seconds": 1.2303237080050167, "thread": "MainThread", "module": "gateway.status", "function": "_emit_runtime_status_transition", "event": "return", "returned": null}
+{"seconds": 1.230346374999499, "thread": "MainThread", "module": "gateway.status", "function": "wait", "event": "call"}
+{"seconds": 6.235228165998706, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_write_json_file", "event": "call"}
+{"seconds": 6.237529124999128, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_write_json_file", "event": "return", "returned": null}
+{"seconds": 6.237573333004548, "thread": "gateway-runtime-status-writer", "module": "__main__", "function": "_slow_write", "event": "return", "returned": null}
+{"seconds": 6.237708125001518, "thread": "MainThread", "module": "gateway.status", "function": "wait", "event": "return", "returned": true}
+{"seconds": 6.237731541004905, "thread": "MainThread", "module": "gateway.status", "function": "write_runtime_status", "event": "return", "returned": true}
+{"seconds": 6.237767083002836, "thread": "MainThread", "module": "gateway.run_bootstrap", "function": "_start_gateway_replace_existing_instance", "event": "return", "returned": false}
+{"seconds": 6.237975625001127, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.23808804100554, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.238143750000745, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.238468499999726, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.238538875004451, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.238594250004098, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.238641957999789, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.23874508299923, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.2387671250035055, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "call"}
+{"seconds": 6.239021375004086, "thread": "Thread-3 (_do_shutdown)", "module": "asyncio.base_events", "function": "_do_shutdown", "event": "call"}
+{"seconds": 6.239160000004631, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "return"}
+{"seconds": 6.239295416002278, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.2393152500008, "thread": "Thread-3 (_do_shutdown)", "module": "asyncio.base_events", "function": "_do_shutdown", "event": "return", "returned": null}
+{"seconds": 6.239398249999795, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.239437458003522, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.239467791005154, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.2394797500019195, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.2394935410047765, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.239558166002098, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.239591666002525, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.239602250003372, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "call"}
+{"seconds": 6.23965783300082, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "return", "returned": null}
+{"seconds": 6.239682625004207, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.239718000004359, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 6.239733291004086, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 6.240068874998542, "thread": "MainThread", "module": "gateway.run", "function": "_exit_after_graceful_shutdown", "event": "call"}
+{"seconds": 6.247459541002172, "thread": "MainThread", "module": "gateway.run", "function": "_exit_after_graceful_shutdown", "event": "hard_exit"}

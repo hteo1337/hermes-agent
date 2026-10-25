@@ -1,0 +1,18 @@
+{
+  "label": "head",
+  "exit": 1,
+  "state": {
+    "gateway_state": "startup_failed",
+    "pid": 91966,
+    "platforms": {},
+    "kind": "hermes-gateway",
+    "argv": [
+      "/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/trace-head.py"
+    ],
+    "start_time": 179289137689,
+    "updated_at": "2026-10-25T01:22:58.132792+00:00",
+    "code_sha": "c1f9fcc309daea44a59e6212921d8da9f4a1884f",
+    "code_version": "0.22.5",
+    "exit_reason": "gateway_replace_ownership_unproven"
+  }
+}

@@ -1,4 +1,5 @@
 """Alternate the unchanged refusal durability test on exact base/head worktrees."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -9,8 +10,12 @@ ROOT = Path(__file__).resolve().parent
 PYTHON = '/Users/hteo/.paseo/worktrees/th1-1839-env-9f8ecdef/venv/bin/python'
 TREES = {label: Path(f'/Users/hteo/.paseo/worktrees/th1-1839-{label}-9f8ecdef') for label in ('base', 'head')}
 TARGET = 'test_refusal_stamp_reaches_disk_before_the_hard_exit'
-results = []
-for round_number in range(1, 21):
+parser = argparse.ArgumentParser()
+parser.add_argument('--start', type=int, default=1)
+parser.add_argument('--stop', type=int, default=20)
+args = parser.parse_args()
+results = json.loads((ROOT / 'repeat-results.json').read_text()) if args.start > 1 else []
+for round_number in range(args.start, args.stop + 1):
     for label in (('base', 'head') if round_number % 2 else ('head', 'base')):
         cwd = TREES[label]
         cmd = ['scripts/run_tests.sh', 'tests/gateway/test_replace_ownership_guard.py', '-k', TARGET, '-j', '1']

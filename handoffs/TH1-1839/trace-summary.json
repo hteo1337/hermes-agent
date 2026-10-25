@@ -1,0 +1,59 @@
+{
+  "base": {
+    "slow_write_starts": 0.9053435409950907,
+    "wait_starts": 0.9102161249975325,
+    "sleep_versus_wait_head_start_ms": 4.872584002441727,
+    "wait_returns": [
+      {
+        "seconds": 5.916297499999928,
+        "thread": "MainThread",
+        "module": "gateway.status",
+        "function": "wait",
+        "event": "return",
+        "returned": true
+      }
+    ],
+    "hard_exit": 5.918494207995536,
+    "observed_executor_submissions": 0,
+    "observer": [],
+    "executor_shutdown_thread": [],
+    "state": "startup_failed"
+  },
+  "head": {
+    "slow_write_starts": 1.2250482080053189,
+    "wait_starts": 1.230346374999499,
+    "sleep_versus_wait_head_start_ms": 5.298166994180065,
+    "wait_returns": [
+      {
+        "seconds": 6.237708125001518,
+        "thread": "MainThread",
+        "module": "gateway.status",
+        "function": "wait",
+        "event": "return",
+        "returned": true
+      }
+    ],
+    "hard_exit": 6.247459541002172,
+    "observed_executor_submissions": 0,
+    "observer": [
+      {
+        "seconds": 0.9692936659994302,
+        "thread": "MainThread",
+        "module": "gateway.executor_pools",
+        "function": "observe_default_executor",
+        "event": "call"
+      }
+    ],
+    "executor_shutdown_thread": [
+      {
+        "seconds": 6.239021375004086,
+        "thread": "Thread-3 (_do_shutdown)",
+        "module": "asyncio.base_events",
+        "function": "_do_shutdown",
+        "event": "call"
+      }
+    ],
+    "state": "startup_failed",
+    "observer_duration_ms": 0.02991700603161007
+  }
+}

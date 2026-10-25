@@ -1,0 +1,31 @@
+{"seconds": 0.6485109579953132, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 0.9042150409950409, "thread": "MainThread", "module": "gateway.run_bootstrap", "function": "_start_gateway_replace_existing_instance", "event": "call"}
+{"seconds": 0.9043982910006889, "thread": "MainThread", "module": "gateway.status", "function": "write_runtime_status", "event": "call"}
+{"seconds": 0.905110166000668, "thread": "MainThread", "module": "gateway.status", "function": "submit", "event": "call"}
+{"seconds": 0.9051977499984787, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_run", "event": "call"}
+{"seconds": 0.9052097499952652, "thread": "MainThread", "module": "gateway.status", "function": "submit", "event": "return", "returned": 1}
+{"seconds": 0.9052313329957542, "thread": "MainThread", "module": "gateway.status", "function": "_emit_runtime_status_transition", "event": "call"}
+{"seconds": 0.9053435409950907, "thread": "gateway-runtime-status-writer", "module": "__main__", "function": "_slow_write", "event": "call"}
+{"seconds": 0.9101945829970646, "thread": "MainThread", "module": "gateway.status", "function": "_emit_runtime_status_transition", "event": "return", "returned": null}
+{"seconds": 0.9102161249975325, "thread": "MainThread", "module": "gateway.status", "function": "wait", "event": "call"}
+{"seconds": 5.915421290999802, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_write_json_file", "event": "call"}
+{"seconds": 5.916206999994756, "thread": "gateway-runtime-status-writer", "module": "gateway.status", "function": "_write_json_file", "event": "return", "returned": null}
+{"seconds": 5.916221207997296, "thread": "gateway-runtime-status-writer", "module": "__main__", "function": "_slow_write", "event": "return", "returned": null}
+{"seconds": 5.916297499999928, "thread": "MainThread", "module": "gateway.status", "function": "wait", "event": "return", "returned": true}
+{"seconds": 5.916323290999571, "thread": "MainThread", "module": "gateway.status", "function": "write_runtime_status", "event": "return", "returned": true}
+{"seconds": 5.916340208001202, "thread": "MainThread", "module": "gateway.run_bootstrap", "function": "_start_gateway_replace_existing_instance", "event": "return", "returned": false}
+{"seconds": 5.916440290995524, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.916498250000586, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 5.916523957996105, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.916666332996101, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 5.916683290997753, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.916704999996, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 5.91671312499966, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.916746165996301, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 5.9167525000011665, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "call"}
+{"seconds": 5.916758457999094, "thread": "MainThread", "module": "asyncio.base_events", "function": "shutdown_default_executor", "event": "return", "returned": null}
+{"seconds": 5.916764832996705, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.9167843329996685, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "call"}
+{"seconds": 5.916790625000431, "thread": "MainThread", "module": "asyncio.events", "function": "_run", "event": "return", "returned": null}
+{"seconds": 5.916934624998248, "thread": "MainThread", "module": "gateway.run", "function": "_exit_after_graceful_shutdown", "event": "call"}
+{"seconds": 5.918494207995536, "thread": "MainThread", "module": "gateway.run", "function": "_exit_after_graceful_shutdown", "event": "hard_exit"}
