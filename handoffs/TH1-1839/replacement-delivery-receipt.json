@@ -1,0 +1,24 @@
+{
+  "comment_id": 6392017008,
+  "url": "https://github.com/hteo1337/hermes-agent/pull/2#issuecomment-6392017008",
+  "body_sha256": "d937c0eecdc4c5991fc4f53ae4284dc05f2af1155df41253decdd75694ea4cab",
+  "addendum_count": 1,
+  "updated_existing_comment": true,
+  "new_comment_created": false,
+  "head_tested": "221080c47f67347f821773fdcf67a7f7fcb133d5",
+  "counts": {
+    "passed": 14844,
+    "failed": 11,
+    "skipped": 335,
+    "files": 1970
+  },
+  "exit": 1,
+  "added_failing_ids": [],
+  "missing_baseline_failing_ids": [],
+  "executor_starvation_passed": true,
+  "refusal_passed": true,
+  "cleanup_verified": true,
+  "linear_updated": true,
+  "source_branch_untouched_in_replacement_task": true,
+  "no_further_reruns": true
+}

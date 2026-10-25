@@ -5,4 +5,4 @@
 - [x] Verified standalone clone at221080c47f, own .git/no alternates under Paseo; PM dev/test/messaging built; Python and package versions match.
 - [x] One replacement at221080c47f:1970 files,14844 passed/11 failed/335 skipped,exit1; exact baseline11, no extra/missing IDs; executor-starvation and refusal passed.
 - [x] Delivered handoff-free PR head221080c47f, pushed review evidence, posted/verified one PRE-EXISTING comment; recorded suite-cap blocker and removed created trees/env/runtime/cache.
-- [ ] In progress: add verified addendum to existing PR comment; update/push issue handoff and remove replacement clone, PM environment and generated artifacts.
+- [x] Existing PR comment addendum posted and independently verified; evidence pushed; replacement clone/PM environment/runtime/cache removed; final issue/status delivery being committed.
