@@ -1,1 +1,1 @@
-Once-only full-suite cap spent on aborted metadata-contaminated attempt; structured question asks one replacement in standalone checkout. Refusal race evidence remains base37/40 vs head38/40; no product/test edits.
+Once-only full-suite cap spent on aborted metadata-contaminated attempt; structured question requests one replacement in standalone checkout. Base 37/40 vs head 38/40 reproduces the same refusal assertion; no product/test edits.

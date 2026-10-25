@@ -1,0 +1,79 @@
+[
+  {
+    "path": "__pycache__",
+    "birthtime": 1792892105.3697689,
+    "task_start": 1792891012.585467,
+    "files_read": [
+      "hermes_constants.cpython-314.pyc"
+    ],
+    "removed_owned_generated_cache": true
+  },
+  {
+    "path": "hermes_cli/__pycache__",
+    "birthtime": 1792892105.3397992,
+    "task_start": 1792891012.585467,
+    "files_read": [
+      "runtime_state.cpython-314.pyc",
+      "update_receipt.cpython-314.pyc",
+      "macos_signing.cpython-314.pyc",
+      "__init__.cpython-314.pyc"
+    ],
+    "removed_owned_generated_cache": true
+  },
+  {
+    "path": "hermes_platform/__pycache__",
+    "birthtime": 1792892105.3933525,
+    "task_start": 1792891012.585467,
+    "files_read": [
+      "__init__.cpython-314.pyc"
+    ],
+    "removed_owned_generated_cache": true
+  },
+  {
+    "path": "hermes_platform/host/__pycache__",
+    "birthtime": 1792892105.3937247,
+    "task_start": 1792891012.585467,
+    "files_read": [
+      "__init__.cpython-314.pyc",
+      "facts.cpython-314.pyc",
+      "darwin_pci.cpython-314.pyc"
+    ],
+    "removed_owned_generated_cache": true
+  },
+  {
+    "path": "pm/__pycache__",
+    "birthtime": 1792892105.310787,
+    "task_start": 1792891012.585467,
+    "files_read": [
+      "runtime.cpython-314.pyc",
+      "build_env.cpython-314.pyc",
+      "environments.cpython-314.pyc",
+      "progress.cpython-314.pyc",
+      "client.cpython-314.pyc",
+      "environment.cpython-314.pyc",
+      "filesystem.cpython-314.pyc",
+      "_uv.cpython-314.pyc",
+      "registry.cpython-314.pyc",
+      "update.cpython-314.pyc",
+      "receipt.cpython-314.pyc",
+      "downloader.cpython-314.pyc",
+      "worker_operations.cpython-314.pyc",
+      "user_facing.cpython-314.pyc",
+      "runtime_stage.cpython-314.pyc",
+      "packages.cpython-314.pyc",
+      "artifact_mirror.cpython-314.pyc",
+      "package.cpython-314.pyc",
+      "security_packages.cpython-314.pyc",
+      "install.cpython-314.pyc",
+      "plugin_inputs.cpython-314.pyc",
+      "__init__.cpython-314.pyc",
+      "download_state.cpython-314.pyc",
+      "lock.cpython-314.pyc",
+      "network.cpython-314.pyc",
+      "paths.cpython-314.pyc",
+      "index_config.cpython-314.pyc",
+      "store.cpython-314.pyc"
+    ],
+    "removed_owned_generated_cache": true
+  }
+]
