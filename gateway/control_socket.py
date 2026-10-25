@@ -10,6 +10,8 @@ Consumers PREFER the socket and fall back to the state-file/scan layer when it d
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 import contextlib
 import errno
 import hashlib
@@ -220,11 +222,14 @@ class GatewayControlServer:
         self._pointer_file: Optional[Path] = None
         self._fallback_root: Optional[Path] = None  # mkdtemp root created for a squatted fallback
         self._file_identities = {}
+        self._request_executor = None
         self._handlers: dict[str, Callable[..., dict[str, Any]]] = {
             "identify": build_identify_payload, "status": build_status_payload, **(verb_handlers or {})}
 
     async def start(self) -> bool:
         """Bind and start serving. Returns True on success, False otherwise."""
+        if self._request_executor is None:
+            self._request_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="gateway-control")
         try:
             return await (self._start_windows() if _IS_WINDOWS else self._start_posix())
         except Exception as exc:
@@ -290,7 +295,7 @@ class GatewayControlServer:
     async def _start_windows(self) -> bool:
         from gateway.runtime_bootstrap_windows import NativeControlServer
         self._pipe_server = NativeControlServer(self._home, self.handle_request_line)
-        await asyncio.to_thread(self._pipe_server.start)
+        await asyncio.get_running_loop().run_in_executor(self._request_executor, self._pipe_server.start)
         return True
     async def stop(self) -> None:
         """Stop serving and remove the socket/pointer files."""
@@ -302,8 +307,11 @@ class GatewayControlServer:
                 await self._server.wait_closed()
         if self._pipe_server is not None:
             with contextlib.suppress(Exception):
-                await asyncio.to_thread(self._pipe_server.close)
+                await asyncio.get_running_loop().run_in_executor(self._request_executor, self._pipe_server.close)
         self._server = self._pipe_server = None
+        if self._request_executor is not None:
+            self._request_executor.shutdown(wait=False, cancel_futures=True)
+            self._request_executor = None
         self.cleanup_files()
 
     def cleanup_files(self) -> None:
@@ -412,13 +420,17 @@ class GatewayControlServer:
 
     async def _handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         try:
+            executor = self._request_executor
+            if executor is None:
+                return
             raw = await asyncio.wait_for(reader.readline(), timeout=_DEFAULT_CLIENT_TIMEOUT)
             if not raw or len(raw) > _MAX_REQUEST_BYTES:
                 return
             # Handlers read disk; keep that off the loop that drives every platform
             # adapter so a fast-polling consumer can't stall heartbeats.
             response = await asyncio.get_running_loop().run_in_executor(
-                None, self.handle_request_line, raw.rstrip(b"\n"), self._posix_peer_subject(writer))
+                executor, copy_context().run, self.handle_request_line,
+                raw.rstrip(b"\n"), self._posix_peer_subject(writer))
             writer.write(response)
             await asyncio.wait_for(writer.drain(), timeout=_DEFAULT_CLIENT_TIMEOUT)
         except (TimeoutError, ConnectionError, OSError):

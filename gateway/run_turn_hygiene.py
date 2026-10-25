@@ -717,13 +717,14 @@ class GatewayTurnHygieneMixin:
             _hyg_agent._end_session_on_close = False
             _hyg_agent._print_fn = lambda *a, **kw: None
 
+            from gateway.executor_pools import workload_executor
             loop = asyncio.get_running_loop()
             _hyg_commit_fence = CompressionCommitFence(total_ceiling_seconds=hs.total_ceiling_seconds)
-            # Default executor (NOT self._get_executor): a hung summary must never occupy an
+            # Dedicated bounded pool: a hung summary must never occupy an
             # agent-work slot. MUST run in the caller's contextvars (multiplex secret scope).
             attempt.commit_fence = _hyg_commit_fence
             attempt.future = loop.run_in_executor(
-                None,
+                workload_executor(self, "compression"),
                 # But it MUST run inside the caller's contextvars: under multiplex_profiles the profile
                 # secret scope / HERMES_HOME override live in ContextVars, and a bare run_in_executor worker
                 # starts with an empty Context — the summary model's get_secret(<PROVIDER>_API_KEY) then
@@ -736,9 +737,7 @@ class GatewayTurnHygieneMixin:
                     task_id=session_entry.session_id or "default", trigger="gateway_hygiene",
                 ),
             )
-            # Register the live worker with shutdown NOW, not only once it is deferred: the default
-            # executor is outside self._executor's quiesce, so an untracked in-flight summary would let
-            # stop() close/checkpoint state.db under its late write (mirrors run_codex_hygiene_compaction).
+            # Keep deferred adoption and agent cleanup tracking even though shutdown also drains the pool.
             self._track_deferred_agent_worker(attempt.future, _hyg_agent)
             attempt.wait_started = time.monotonic()
             try:
