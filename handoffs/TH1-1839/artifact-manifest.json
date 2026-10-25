@@ -1,0 +1,27 @@
+{
+  "base-outcomes.json.gz": {
+    "sha256": "72b241996f59af800f5293563405c6e0a0cbb58d5c2793560f7ea7e95b1bc83e",
+    "original_sha256": "c876e469df8317fabcea59874d03eb66d0e53f63c4e93e0b44eae193ca98d215",
+    "credential_shaped_strings_redacted": 50
+  },
+  "head-outcomes.json.gz": {
+    "sha256": "b58ace1445a2ca20a365d392d867283dea9a3d0e75384779618e6b658392847c",
+    "original_sha256": "682464dbceb1406c0b9d62d57fb85f809a2b7bf5ad9ce176c9526d2c0e5647ae",
+    "credential_shaped_strings_redacted": 50
+  },
+  "base-suite.log.gz": {
+    "sha256": "b2c5d2de076d958adc82da04ae9f5a71fccf333909ef30093bfbad9486221326",
+    "original_sha256": "fbb00b19c3769156b3e48ef495e22fb65eaba2c6d75191382927c42ec0d2a9bd",
+    "credential_shaped_strings_redacted": 20
+  },
+  "head-suite.log.gz": {
+    "sha256": "39f5422dbaeed6ae75ca76f5e71efc5466a1d397efb67cda7f49c65f2c1615c8",
+    "original_sha256": "09cede0404e643d4741b918c2c933e2fe15856b019f25da5d885debe15f51b4c",
+    "credential_shaped_strings_redacted": 20
+  },
+  "pr-source.diff.gz": {
+    "sha256": "f67ba6fdfdd1f76f47cbe64e527b8cbd44f753a003afc8175d884743bd4d56e3",
+    "original_sha256": "b880832ec4329b4380cc46fd59b0d0f586ab17cb1677b947659902f9f524f88c",
+    "note": "verbatim PR source diff; compressed to preserve patch-context whitespace"
+  }
+}

@@ -1,0 +1,1 @@
+Observed head-fail/base-pass: test_replace_ownership_guard.py::TestStampDurability::test_refusal_stamp_reaches_disk_before_the_hard_exit (state running vs startup_failed); no-new-failures merge/install condition is unmet; no fix or rerun authorized.

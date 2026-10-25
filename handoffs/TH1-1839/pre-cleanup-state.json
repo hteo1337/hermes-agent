@@ -1,0 +1,6 @@
+{
+  "base_status_observed": "?? owned/\n",
+  "head_status": "not inspected before cleanup; cleanliness assertion stopped at base untracked output",
+  "note": "The pre-cleanup helper required an empty porcelain status, found owned/ output in the disposable base clone and exited; the following explicit cleanup still removed both user-requested clones and environment. Source cleanliness was not certified by this helper.",
+  "suite_processes": "none at completed after-runs check"
+}

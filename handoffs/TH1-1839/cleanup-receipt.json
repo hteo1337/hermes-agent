@@ -1,0 +1,8 @@
+{
+  "removed": [
+    "/Users/hteo/.paseo/worktrees/th1-1839-baseline-9d69f1fe",
+    "/Users/hteo/.paseo/worktrees/th1-1839-head-9d69f1fe",
+    "/Users/hteo/.paseo/worktrees/th1-1839-env-9d69f1fe"
+  ],
+  "includes": "two fresh clones; shared venv; isolated PM runtime, cache and data home"
+}
