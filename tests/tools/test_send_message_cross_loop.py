@@ -60,7 +60,7 @@ class TestSendViaAdapterCrossLoopDispatch:
                 "hello from worker",
             )
 
-            assert result == {"success": True, "message_id": "cross-ok"}
+            assert result == {"success": True, "platform": "wecom", "chat_id": "wr_group_123", "message_id": "cross-ok"}
             # Verify send() ran on the gateway loop, not our current loop
             assert send_loop_id["loop"] == id(gateway_loop)
         finally:
@@ -98,7 +98,7 @@ class TestSendViaAdapterCrossLoopDispatch:
             "direct send",
         )
 
-        assert result == {"success": True, "message_id": "direct-ok"}
+        assert result == {"success": True, "platform": "wecom", "chat_id": "wr_group_456", "message_id": "direct-ok"}
         assert called_directly["loop"] == id(current_loop)
 
     @pytest.mark.asyncio

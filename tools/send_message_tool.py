@@ -18,7 +18,7 @@ from tools.send_message_senders import (
     _AUDIO_EXTS, _DEFAULT_CAPTION_LIMIT, _IMAGE_EXTS, _NO_DELIVERABLE, _VIDEO_EXTS, _VOICE_EXTS,
     _adapter_media_method, _error, _live_adapter, _media_caption_split, _plugin_standalone_sender,
     _registry_standalone_send, _resolve_slack_user_target, _sanitize_error_text,
-    _send_matrix_via_adapter, _send_telegram)
+    _send_matrix_via_adapter, _send_telegram, _success)
 from tools.registry import tool_error
 
 # A bare Slack user id (session metadata / home-channel config) is opened as a DM; same shape the
@@ -472,7 +472,7 @@ def _maybe_skip_cron_duplicate_send(platform_name: str, chat_id: str, thread_id:
             and (get_session_env("HERMES_CRON_AUTO_DELIVER_THREAD_ID", "").strip() or None) == thread_id):
         return None
     target_label = f"{platform_name}:{chat_id}" + (f":{thread_id}" if thread_id is not None else "")
-    return {"success": True, "skipped": True, "reason": "cron_auto_delivery_duplicate_target", "target": target_label,
+    return {"success": True, "platform": platform_name, "chat_id": chat_id, "skipped": True, "reason": "cron_auto_delivery_duplicate_target", "target": target_label,
         "note": (f"Skipped send_message to {target_label}. This cron job will already auto-deliver "
                  "its final response to that same target. Put the intended user-facing content in "
                  "your final response instead, or use a different target if you want an additional message.")}
@@ -566,9 +566,9 @@ async def _send_via_adapter(platform, pconfig, chat_id, chunk, *, thread_id=None
         except Exception as e:
             return {"error": f"Plugin platform send failed: {_bounded_send_error(e)}"}
         if isinstance(result, dict):
-            return result
+            return {**result, "platform": platform_name, "chat_id": chat_id} if result.get("success") else result
         if result.success:
-            return {"success": True, "message_id": result.message_id}
+            return _success(platform_name, chat_id, message_id=result.message_id)
         return {"error": f"Adapter send failed: {_bounded_send_error(result.error)}"}
     try:
         # Discover first: a fresh process (cron/CLI) has not registered plugin platforms yet.
