@@ -7142,6 +7142,7 @@ class TelegramAdapter(TelegramHeldInboundMixin, TelegramTopicRoutingMixin, BaseP
             text=expand_link_entities(message), message_type=msg_type, source=source, raw_message=message,
             message_id=str(message.message_id), platform_update_id=update_id,
             reply_to_message_id=reply_to_id, reply_to_text=reply_to_text, auto_skill=topic_skill,
+            reply_to_is_own_message=self._is_reply_to_bot(message),
             channel_prompt=group_identity_prompt(self, message, channel_prompt),
             edit_revision=self._edit_revision(message, update_id), timestamp=message.date)
 

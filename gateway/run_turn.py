@@ -174,7 +174,6 @@ from gateway.run_turn_persistence import GatewayTurnPersistenceMixin
 class GatewayTurnMixin(GatewayTurnPrepareMixin, GatewayTurnHygieneMixin, GatewayTurnPersistenceMixin):
     """Agent-turn execution for GatewayRunner (see module docstring)."""
 
-
     def _event_thread_metadata(self, event, source):
         """Thread metadata for a send that replies to ``event`` on ``source``."""
         return self._thread_metadata_for_source(source, self._reply_anchor_for_event(event))
@@ -195,8 +194,6 @@ class GatewayTurnMixin(GatewayTurnPrepareMixin, GatewayTurnHygieneMixin, Gateway
             return is_intentional_silence_agent_result(agent_result, response)
         except Exception:
             return False
-
-
 
 
     async def _hmwa_stop_typing_for_turn(self, event, source):
@@ -244,6 +241,9 @@ class GatewayTurnMixin(GatewayTurnPrepareMixin, GatewayTurnHygieneMixin, Gateway
                 "chat_type": getattr(source, "chat_type", "") or "",
                 "session_id": session_entry.session_id,
                 "message": message_text[:500],
+                "reply_to_message_id": str(event.reply_to_message_id or ""),
+                "reply_to_text": (event.reply_to_text or "")[:2000],
+                "reply_to_is_own_message": bool(event.reply_to_is_own_message),
             }
             await self.hooks.emit("agent:start", hook_ctx)
 
