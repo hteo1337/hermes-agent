@@ -10,6 +10,7 @@ request bodies (feishu/lark) and the message is lost after the retries.
 import asyncio
 import json
 import re
+import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -58,3 +59,13 @@ def test_surrogate_free_message_is_sent_unchanged():
 
     assert result["success"] is True
     assert send_mock.await_args.args[3] == "all clean: 你好 \U0001f44d"
+
+
+class LiveAdapterIdentityTests(unittest.TestCase):
+    def test_live_adapter_success_carries_destination_identity(self):
+        from tools.send_message_tool import _send_via_adapter
+        adapter = SimpleNamespace(send=AsyncMock(return_value=SimpleNamespace(success=True, message_id='123')))
+        with patch('tools.send_message_tool._live_adapter', return_value=(SimpleNamespace(), adapter)):
+            result = asyncio.run(_send_via_adapter(Platform.TELEGRAM, SimpleNamespace(), '-10042', 'hello'))
+        adapter.send.assert_awaited_once_with(chat_id='-10042', content='hello', metadata=None)
+        self.assertEqual(result, dict(success=True, platform='telegram', chat_id='-10042', message_id='123'))
