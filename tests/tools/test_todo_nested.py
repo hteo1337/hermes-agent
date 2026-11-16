@@ -46,6 +46,13 @@ class TestParentValidation:
                 seen.add(node["id"])
                 node = by_id[node["parent"]]
 
+    def test_cycle_break_keeps_parent_of_item_below_the_cycle(self):
+        store = TodoStore()
+        items = store.write([_item("1", parent="2"), _item("2", parent="3"), _item("3", parent="2")])
+        by_id = {i["id"]: i for i in items}
+        assert by_id["1"]["parent"] == "2"
+        assert sum("parent" in by_id[i] for i in ("2", "3")) == 1
+
     def test_empty_parent_omitted(self):
         store = TodoStore()
         items = store.write([_item("a", parent="")])

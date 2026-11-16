@@ -169,7 +169,9 @@ class TodoStore:
             seen, node = {item["id"]}, item
             while node.get("parent"):
                 if node["parent"] in seen:
-                    item.pop("parent", None)
+                    # Only a member of the cycle is cut; an item hanging below one keeps its parent.
+                    if node["parent"] == item["id"]:
+                        item.pop("parent", None)
                     break
                 seen.add(node["parent"])
                 node = by_id[node["parent"]]
