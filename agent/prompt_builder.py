@@ -534,7 +534,7 @@ def execution_guidance_text(valid_tool_names=None) -> str:
 # Gemini/Gemma-specific operational guidance, adapted from OpenCode's gemini.txt.
 # Injected alongside TOOL_USE_ENFORCEMENT_GUIDANCE when the model is Gemini or Gemma.
 GOOGLE_MODEL_OPERATIONAL_GUIDANCE = (
-    "# Google model operational directives\n"
+    "# Model operational directives\n"
     "Follow these operational rules strictly:\n"
     "- **Absolute paths:** Always construct and use absolute file paths for all "
     "file system operations. Combine the project root with relative paths.\n"

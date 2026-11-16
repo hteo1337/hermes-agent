@@ -25,7 +25,7 @@ You MUST use your tools to take action — do not describe what you would do or 
 Keep working until the task is actually complete. Do not stop with a summary of what you plan to do next time. If you have tools available that can accomplish the task, use them instead of telling the user what you would do.
 Every response should either (a) contain tool calls that make progress, or (b) deliver a final result to the user. Responses that only describe intentions without acting are not acceptable.
 
-# Google model operational directives
+# Model operational directives
 Follow these operational rules strictly:
 - **Absolute paths:** Always construct and use absolute file paths for all file system operations. Combine the project root with relative paths.
 - **Verify first:** Use read_file/search_files to check file contents and project structure before making changes. Never guess at file contents.
