@@ -37,14 +37,12 @@ def test_config_kill_switch_overrides_force_from_config_file(monkeypatch, tmp_pa
 
 
 
-def test_gc_collect_runs_even_without_platform_primitive(monkeypatch):
-    # No page-release primitive (macOS, musl): the rate-limited gc.collect() still runs;
-    # only the success flag stays False.
+def test_gc_collect_skips_unsupported_allocator(monkeypatch):
     collect = Mock()
     monkeypatch.setattr(mem_trim.gc, "collect", collect)
 
     assert mem_trim.trim_memory(force=True, reason="test") is False
-    collect.assert_called_once()
+    collect.assert_not_called()
 
 
 def test_collect_memory_snapshot_parses_linux_proc_status(monkeypatch):
@@ -68,14 +66,14 @@ def test_collect_memory_snapshot_parses_linux_proc_status(monkeypatch):
 
 def test_success_collects_then_trims(monkeypatch):
     calls = []
-    monkeypatch.setattr(mem_trim.gc, "collect", lambda: calls.append("gc"))
+    monkeypatch.setattr(mem_trim.gc, "collect", lambda generation: calls.append(("gc", generation)))
     monkeypatch.setattr(
         mem_trim, "_malloc_trim", lambda pad: calls.append(("trim", pad)) or 1
     )
     monkeypatch.setattr(mem_trim.time, "monotonic", lambda: 100.0)
 
     assert mem_trim.trim_memory(reason="turn", cooldown_seconds=60) is True
-    assert calls == ["gc", ("trim", 0)]
+    assert calls == [("gc", 0), ("trim", 0)]
     assert mem_trim._last_trim_monotonic == 100.0
 
 
@@ -131,7 +129,7 @@ def test_libc_failure_is_fail_open_and_rate_limited(monkeypatch):
 def test_force_floor_coalesces_burst_closes(monkeypatch):
     """A delegate batch closes N child agents back-to-back, each forcing a
     trim — the short force floor must coalesce the burst instead of stacking
-    N uncooled full gc.collect() passes in the same process."""
+    N uncooled collections in the same process."""
     collect = Mock()
     trim = Mock(return_value=1)
     monkeypatch.setattr(mem_trim.gc, "collect", collect)
