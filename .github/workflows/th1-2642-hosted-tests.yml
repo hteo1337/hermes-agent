@@ -21,8 +21,6 @@ jobs:
       OPENROUTER_API_KEY: ''
       NOUS_API_KEY: ''
       HERMES_TEST_FILE_RETRIES: '0'
-      HERMES_HOME: ${{ runner.temp }}/th1-2642-home
-      HERMES_RUNTIME_DIR: ${{ runner.temp }}/th1-2642-runtime
     defaults:
       run:
         shell: bash
@@ -34,13 +32,17 @@ jobs:
           ref: d19a727ef8e49bedb757c15b8571c1d365a79815
           persist-credentials: false
           fetch-depth: 1
+      - name: Select isolated temporary state
+        run: |
+          printf 'HERMES_HOME=%s/th1-2642-home\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'HERMES_RUNTIME_DIR=%s/th1-2642-runtime\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Verify exact source and record dependency identities
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = d19a727ef8e49bedb757c15b8571c1d365a79815
           mkdir -p "$HERMES_HOME" "$HERMES_RUNTIME_DIR"
           sha256sum pm/lock.json uv.lock pyproject.toml package-lock.json
-          printf 'Tested source: `%s`\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Tested source: %s\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
       - name: Set up locked PM Python, test environment and Node
         uses: ./.github/actions/setup-pm
         with:
