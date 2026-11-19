@@ -144,6 +144,10 @@ def rearm_persisted_closes(authority, stored):
         if live.subscribers:
             forget_persisted_close(authority, session_id, record)
             continue
+        # Recovery yielded after taking the snapshot. A viewer may have cancelled
+        # this operation and already disconnected, or replaced it with a new close.
+        if authority.db.get_meta(CLOSE_PREFIX + session_id) != record:
+            continue
         authority.pending_closes.setdefault(session_id, _PendingClose.from_record(record))
         armed.append(session_id)
     return armed
