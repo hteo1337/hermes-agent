@@ -42,11 +42,11 @@ async def prune(connection, ref, params):
     return await asyncio.shield(task)
 
 
-async def _apply(authority, filters, never_active):
+async def _apply(authority, filters, never_active, *, sqlite_only=False):
     from hermes_constants import get_hermes_home
     from gateway.session_mutations import retire_live_sessions
     # Same transcript dir the CLI's local prune unlinks under (dispatch runs in the owner's scope).
-    sessions_dir = Path(get_hermes_home()) / 'sessions'
+    sessions_dir = None if sqlite_only else Path(get_hermes_home()) / 'sessions'
     deleted_ids = []
     if filters is None:
         deleted, routing, skipped = await asyncio.to_thread(
@@ -60,7 +60,7 @@ async def _apply(authority, filters, never_active):
             deleted_ids=deleted_ids, **filters)
     finally:
         if deleted_ids:
-            retire_live_sessions(authority, deleted_ids)
+            retire_live_sessions(authority, deleted_ids, strip_mirror=not sqlite_only)
     return {'deleted': deleted}
 
 
@@ -81,5 +81,5 @@ async def prune_ended_cron_sessions(runner):
             cutoff = time.time() - max(days * 86400, RETRY_HORIZON_S)
             task = track_mutation(authority, _apply(authority, {
                 'source': 'cron', 'older_than_days': None, 'ended_before': cutoff, 'batch_size': 256,
-            }, None))
+            }, None, sqlite_only=True))
             await asyncio.shield(task)

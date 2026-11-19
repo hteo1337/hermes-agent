@@ -374,7 +374,7 @@ class SessionMaintenanceMixin:
         ancestor is deleted only together with every continuation after it (``whole_lineages``).
         ``deleted_ids`` (the owning gateway) receives the removed ids, so it can retire their
         in-memory routes and live sessions after the commit. A batch never splits a local lineage
-        and keeps transcript files, whose names can alias imported session IDs.
+        and limits cleanup to SQLite. It leaves standalone files and hooks to explicit cleanup.
         ``ended_before`` gives recently closed sessions a full retention window even if already idle."""
         if filters.get("include_open"):
             # Deletion is not reversible, so the ended-session guard is structural here: the
@@ -382,8 +382,6 @@ class SessionMaintenanceMixin:
             raise ValueError("prune_sessions() never deletes open sessions: include_open is archive-only")
         if batch_size is not None and (type(batch_size) is not int or batch_size < 1):
             raise ValueError("prune batch size must be a positive integer")
-        if batch_size is not None:
-            sessions_dir = None
         if ended_before is not None:
             last_active = filters.get('last_active_before')
             filters['last_active_before'] = ended_before if last_active is None else min(last_active, ended_before)
@@ -415,6 +413,8 @@ class SessionMaintenanceMixin:
         removed_ids = self._execute_write(_do)
         if deleted_ids is not None:
             deleted_ids.extend(removed_ids)
+        if batch_size is not None:
+            return len(removed_ids)
         if removed_ids:
             emit_session_deleted(self, removed_ids, reason="prune", sessions_dir=sessions_dir)
         from hermes_state_media import collect_retired_media

@@ -367,7 +367,7 @@ def _project_committed(authority, ref, operation, result):
         retire_live_sessions(authority, result['deleted_ids'], require_fence=True)
 
 
-def retire_live_sessions(authority, session_ids, *, require_fence=False):
+def retire_live_sessions(authority, session_ids, *, require_fence=False, strip_mirror=True):
     """Drop committed deletions from this owner's memory: routes, launch secrets, live sessions
     and their cached agents. Shared by canonical delete and the owner-run bulk prune.
     ``require_fence``: refuse ``storage_unavailable`` when the shared routing fence could not be
@@ -401,7 +401,7 @@ def retire_live_sessions(authority, session_ids, *, require_fence=False):
         # may not make before a prune's fence ages out; the next start would then import them back.
         # Strip them now, after the fences, whatever write_sessions_json says.
         strip = getattr(store, 'strip_retired_mirror_routes', None)
-        if session_ids and callable(strip):
+        if strip_mirror and session_ids and callable(strip):
             try:
                 strip(session_ids)
             except Exception:
