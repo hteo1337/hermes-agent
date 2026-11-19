@@ -638,26 +638,62 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
 
   if (groupWritable.length) {return mintGroupWritableHome(endpoint, purpose, groupWritable)}
 
-  let socketPath: string
+  const deadline = performance.now() + 5000
+  const backoff = [100, 250]
 
-  try { socketPath = await resolveControlSocket(controlHome) } catch (error) {
-    // `gateway stop` unlinks both the socket and its pointer: the owner is gone,
-    // which the redial must treat as stale rather than as a raw filesystem error.
-    if (isMissingNodeError(error)) {throw new Error('Gateway ticket control socket missing')}
-    throw error
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const socketPath = await resolveControlSocket(controlHome)
+      const remaining = deadline - performance.now()
+
+      if (remaining <= 0) {throw new Error('Gateway ticket deadline')}
+      const attemptBudget = attempt < backoff.length ? Math.min(remaining, 1000 + 500 * attempt) : remaining
+
+      return await requestLocalGatewayTicket(socketPath, endpoint, purpose, attemptBudget)
+    } catch (error) {
+      const missing = isMissingNodeError(error)
+
+      if ((!missing && !(error instanceof TransientTicketError)) ||
+          attempt >= backoff.length || performance.now() + backoff[attempt] >= deadline) {
+        if (missing) {throw new Error('Gateway ticket control socket missing')}
+        throw error
+      }
+
+      await new Promise(resolve => setTimeout(resolve, backoff[attempt]))
+    }
   }
+}
+
+class TransientTicketError extends Error {}
+
+function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose, timeoutMs: number): Promise<string> {
+  const home = endpoint.profile_id
 
   return new Promise((resolve, reject) => {
     const socket = net.createConnection(socketPath)
     let buffer = ''
-    const deadline = setTimeout(() => socket.destroy(new Error('Gateway ticket deadline')), 5000)
-    socket.on('error', () => reject(new Error('Gateway ticket bootstrap failed')))
-    socket.on('close', () => { clearTimeout(deadline); reject(new Error('Gateway ticket connection closed')) })
+
+    const deadline = setTimeout(() => {
+      reject(new TransientTicketError('Gateway ticket deadline'))
+      socket.destroy()
+    }, timeoutMs)
+
+    socket.on('error', (error: NodeJS.ErrnoException) => {
+      const transient = ['ENOENT', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ETIMEDOUT'].includes(error.code ?? '')
+
+      reject(transient ? new TransientTicketError('Gateway ticket bootstrap failed') : new Error('Gateway ticket bootstrap failed'))
+    })
+    socket.on('close', () => { clearTimeout(deadline); reject(new TransientTicketError('Gateway ticket connection closed')) })
     socket.on('connect', () => socket.write(JSON.stringify({ protocol: 1, id: 1, verb: 'session-ticket', params: { profile_id: home, instance_id: endpoint.instance_id, purpose, ...ticketScope(purpose) } }) + '\n'))
     socket.on('data', chunk => {
       buffer += chunk.toString()
 
-      if (buffer.length > 65536) {return socket.destroy(new Error('Oversized gateway ticket response'))}
+      if (buffer.length > 65536) {
+        reject(new Error('Oversized gateway ticket response'))
+        socket.destroy()
+
+        return
+      }
 
       if (!buffer.includes('\n')) {return}
 
