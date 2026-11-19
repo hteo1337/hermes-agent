@@ -1,4 +1,4 @@
-"""Replace a gateway left running by an older Hermes on this install's own home.
+"""Replace an older or startup-stalled gateway on this install's own home.
 
 After an upgrade the old daemon keeps answering the home's control socket, but its ``identify`` has
 no ``runtime_protocol`` (it predates the session-authority runtime). Every client of this version
@@ -19,11 +19,16 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
+from time import monotonic
 from typing import Any
+
+from hermes_startup_watchdog import DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S
 
 # Graceful drain before the guarded force kill; an idle old gateway exits in well under a second.
 _GRACEFUL_STOP_SECONDS = 10.0
 _FORCED_STOP_SECONDS = 5.0
+# Prior builds cannot report progress. Give them the schema watchdog's single-phase runway.
+_LEGACY_STARTUP_SECONDS = 600.0
 
 # One line each, short enough for the TUI's activity row after its "gateway incompatible: " prefix.
 REFUSAL_DETAIL = {
@@ -67,7 +72,27 @@ def _within_install(home: Path, root: Path) -> bool:
     return home == root or (home.parent == root / "profiles")
 
 
-def _verified_owner(control: Path, payload: dict) -> tuple[int, Any] | str:
+def starting_payload(payload: dict) -> bool:
+    protocol = payload.get("runtime_protocol")
+    return payload.get("state") == "starting" and (
+        "runtime_protocol" not in payload or (type(protocol) is int and protocol == 1))
+
+
+def startup_progress_is_fresh(payload: dict) -> bool:
+    stamp = payload.get("startup_progress_at")
+    # A monotonic timestamp is comparable between Python processes on this host. Reading
+    # identify does not advance it. Invalid or absent markers get the legacy process-age bound.
+    if type(stamp) in {float, int} and 0 < stamp <= (now := monotonic()):
+        return now - stamp < DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S
+    pid = payload.get("pid")
+    if type(pid) is not int or pid <= 1:
+        return False
+    from hermes_cli.process_identity import _process_create_time
+    birth = _process_create_time(pid)
+    return birth is not None and 0 <= time.time() - birth < _LEGACY_STARTUP_SECONDS
+
+
+def _verified_owner(control: Path, payload: dict, *, stalled: bool) -> tuple[int, Any] | str:
     from gateway.status import _GATEWAY_KIND, _pid_exists, get_process_start_time, start_time_fingerprints_match
     protocol = payload.get("runtime_protocol")
     if type(protocol) is int and protocol > 1:
@@ -75,7 +100,8 @@ def _verified_owner(control: Path, payload: dict) -> tuple[int, Any] | str:
     if not _within_install(control, _install_root()) or not _same(payload.get("hermes_home"), control):
         return "foreign_install"
     # A different owner can bind between discovery and this identity check.
-    if (type(protocol) is int and protocol == 1) or payload.get("state") == "starting":
+    if not stalled and ((type(protocol) is int and protocol == 1)
+                        or (starting_payload(payload) and startup_progress_is_fresh(payload))):
         return "owner_changed"
     pid, recorded = payload.get("pid"), payload.get("start_time")
     if (payload.get("kind") != _GATEWAY_KIND or type(pid) is not int or pid <= 1
@@ -110,10 +136,10 @@ def _wait_gone(pid: int, seconds: float) -> bool:
     return True
 
 
-def replace_incompatible_owner(home: Path, *, deadline: float) -> str | None:
-    """Stop the older-Hermes gateway answering for *home*; None once it is gone, else a refusal code
+def replace_incompatible_owner(home: Path, *, deadline: float, stalled: bool = False) -> str | None:
+    """Stop the older or startup-stalled gateway for *home*; None once gone, else a refusal code
     (see :data:`REFUSAL_DETAIL`). Never starts anything: the caller's ensure loop does that."""
-    from gateway.status import terminate_pid
+    from gateway.status import get_process_start_time, terminate_pid
     budget = deadline - time.monotonic()
     if budget <= 0:
         return "owner_unreachable"
@@ -124,10 +150,17 @@ def replace_incompatible_owner(home: Path, *, deadline: float) -> str | None:
     if found is None:
         return None  # it is already gone: nothing to replace
     control, payload = found
-    verdict = _verified_owner(control, payload)
+    verdict = _verified_owner(control, payload, stalled=stalled)
     if isinstance(verdict, str):
         return verdict
     pid, start_time = verdict
+    if stalled:
+        # A concurrent ensure may have replaced it, or the original may have resumed booting.
+        from hermes_cli.gateway_runtime import _endpoint
+        if _endpoint(payload, home, control_home=None if control == home else control).reason_code != "startup_stalled":
+            return "owner_changed"
+    if get_process_start_time(pid) != start_time:
+        return "owner_changed"
     _write_planned_stop(control, pid, start_time)
     graceful = min(_GRACEFUL_STOP_SECONDS, max(deadline - time.monotonic() - _FORCED_STOP_SECONDS, 1.0))
     try:

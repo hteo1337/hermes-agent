@@ -34,6 +34,7 @@ import logging
 import os
 import threading
 import time
+from contextvars import ContextVar
 from datetime import datetime, timezone, UTC
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -42,6 +43,21 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S = 300.0
 _MIN_TIMEOUT_S = 30.0
+
+
+class StartupProgress:
+    """Last completed work, shared by the boot task and its SQLite workers."""
+
+    def __init__(self) -> None:
+        self.last_advanced: float | None = time.monotonic()
+
+    def advance(self) -> int:
+        if self.last_advanced is not None:
+            self.last_advanced = time.monotonic()
+        return 0  # A SQLite progress callback must return zero to continue.
+
+
+startup_progress: ContextVar[StartupProgress | None] = ContextVar("startup_progress", default=None)
 
 # Mirrors gateway.restart.GATEWAY_SERVICE_RESTART_EXIT_CODE (parity test in
 # tests/gateway/test_startup_watchdog.py) — this module must not import gateway.
