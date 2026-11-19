@@ -194,3 +194,136 @@ HERMES_PYTHON="$suite_python" HERMES_TEST_PYTHON="$suite_python" \
 Logs and the sanitized environment launcher are in `/private/tmp/th12642-r2.ZW30PU`.
 
 The primary Python invocation completed the original 26-file selection and three added seam files continuously. It reported 576 passes and 17 skips in 503.6 seconds and exited 1 for the optional secondary-profile collection error above. Including that file's successful focused run, total coverage was 592 passes and 17 skips across 30 files, with zero test assertion failures. Both regression tests A and C passed in the primary invocation.
+
+## Round three
+
+Product tree `d94e9ecf6e9bb16e53a90e1ed8b1717c5976779b`. The test fixture follow-up is `e07b61a5c6bd5494d3b5e276a5536c2357ee14af`. The delivery commit adds handoff Markdown only. The reviewed control was `9fe5cf505f9785c7f6dde8f6514aa525f63f3ff3`. The specified PR base remains `57499e996fb`.
+
+### Retention rollback
+
+The original retention implementation and later corrections overlap lazy restore and manual prune changes. Commit `145588bfb55` removes their cumulative product diff in one commit. The watcher, importer, configuration, tests specific to the mirror guard and scheduled sweep, and user guide match the base. In particular, the Slack test imports a rowless route again, and the secondary-route test preserves its base fixture. Scheduled retention is deferred to a separate issue. Manual `hermes sessions prune` remains available. Base housekeeping and general auto-prune options retain their original behavior.
+
+```sh
+git diff --exit-code 57499e996fb..HEAD -- gateway/session_persistence.py gateway/run_watchers.py hermes_cli/config_defaults.py tests/gateway/test_secondary_route_fence_scope.py tests/gateway/test_session.py tests/hermes_state/test_prune_activity_recency.py website/docs/user-guide/sessions.md
+git grep -n -E 'cron_retention_days|prune_ended_cron_sessions|_bounded_prune_ids|test_cron_retention_limits_batches|test_cron_prune_cannot_restore_routes_from_mirror_after_fence_expiry' HEAD -- . ':!handoffs'
+git diff 57499e996fb..HEAD -- gateway/session_persistence.py gateway/session_prune.py
+```
+
+The equality check exited 0. The retention grep produced no matches and exited 1. The requested diff had one hunk.
+
+```diff
+diff --git a/gateway/session_prune.py b/gateway/session_prune.py
+index 5b4c0f8d1e1..a4e39f653b4 100644
+--- a/gateway/session_prune.py
++++ b/gateway/session_prune.py
+@@ -51,11 +51,13 @@ async def _apply(authority, filters, never_active):
+         deleted, routing, skipped = await asyncio.to_thread(
+             authority.db.prune_never_active_keyed_sessions, older_than_days=float(never_active),
+             sessions_dir=sessions_dir, deleted_ids=deleted_ids)
+-        result = {'deleted': deleted, 'routing_deleted': routing, 'skipped': skipped}
+-    else:
++        retire_live_sessions(authority, deleted_ids)
++        return {'deleted': deleted, 'routing_deleted': routing, 'skipped': skipped}
++    try:
+         deleted = await asyncio.to_thread(
+             authority.db.prune_sessions, sessions_dir=sessions_dir, exclude_active_write_guards=True,
+             deleted_ids=deleted_ids, **filters)
+-        result = {'deleted': deleted}
+-    retire_live_sessions(authority, deleted_ids)
+-    return result
++    finally:
++        if deleted_ids:
++            retire_live_sessions(authority, deleted_ids)
++    return {'deleted': deleted}
+```
+
+The never-active branch keeps its existing result and retires live sessions before returning. The explicit prune branch retires committed IDs in `finally` if post-commit cleanup raises. `SessionDB.prune_sessions` supplies those IDs immediately after the transaction commits. The optional deletion hook, media collection and file cleanup run afterward. The SQLite metadata index, local-adapter cache release, and manual transcript path confinement remain in use independently. The explicit branch still applies the base routing and mirror fence behavior. Rolling a store from this revision back to the base cannot encounter a route stranded by the removed SQLite-only sweep, because this revision has no writer that performs that sweep. A store previously modified by an experimental retention build is outside that claim. A paired rollback probe used identical copies of the indexed database produced by the isolated boot, plus a Telegram DM written with the JSON fallback. Both revisions imported the rowless mirror route. Both also allocated a fresh ID on the subsequent DM under the existing missing-row stale-route check in `gateway/session_lifecycle.py`. The first probe assumed continuity of the ID at that later boundary. The paired result establishes base parity there.
+
+### Starting-owner controls
+
+- An owner's last completed startup work is a host-monotonic timestamp in private `identify`. The 300-second inactivity window is the existing startup watchdog default. SQLite schema installation reports progress every 100,000 virtual-machine instructions and each authority open advances the timestamp. The window can extend across client deadlines and across the total run of a multi-minute index build. Lock waits and repeated identify replies do not tick it. A previous build without progress reporting gets 600 seconds of process age, the existing schema phase allowance. An explicitly older protocol takes the normal replacement path immediately.
+- The same test exercised two concurrent clients during simulated progress past the original window, then two further client deadlines with a fixed marker. The reviewed control returned `starting` at the final assertion where replacement should have allowed `ready`. The repaired case passed after the fixture supplied the normal supervisor value in the synthetic ready reply. It also exercises a different, fresh owner appearing during the replacement reread, a fresh protocol-0 reply, and an aged old-format reply. The fixture binds the actual private control socket and intercepts termination and spawning. It verifies the stop target and process fingerprint. Runtime locks still arbitrate simultaneous startup attempts. A named profile that has yet to publish its served descriptor needs a matching live reservation to reach the startup-stalled replacement path.
+- The real boot probe used one disposable gateway child with separate launch and secondary stores cloned from the 1,263,828,992-byte seed. Both indexes were absent at schema entry and present at schema exit. Identify continued to answer `starting` and its timestamp advanced **1.965 s** in the launch schema open and **1.829 s** in the secondary open. The probe held the workers inside their schema calls so completion of the next outer phase could not account for the change. Ready arrived at **7,711.3 ms**. The isolated child was stopped by the probe.
+
+### Commands and environment
+
+Logs and the real boot probe are in `/private/tmp/th12642-r3-writer.VaW3mJ`. Each launcher there clears inherited environment and supplies a separate temporary HOME, HERMES_HOME, HERMES_RUNTIME_DIR, TMPDIR and lock directory. It pins both HERMES_PYTHON and HERMES_TEST_PYTHON to `/private/tmp/hermes-th1-2642.xcDJeO/home/installs/f8c5a4c3d2dab087/test-environment/gen-800ac08a6555459ca821d81d230c1833/venv/bin/python` (Python 3.14.9, aiohttp 3.14.5). AF_UNIX bind, connect, and byte transfer succeeded before the suites.
+
+```sh
+scratch=/private/tmp/th12642-r3-writer.VaW3mJ
+# Archive the reviewed control and copy in only the updated test file.
+git archive 9fe5cf505f9 | tar -xf - -C "$scratch/control"
+cp tests/gateway/test_runtime_bootstrap_lifecycle.py "$scratch/control/tests/gateway/"
+(cd "$scratch/control" && "$scratch/control-env/isolated" scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py -k test_ensure_replaces_only_the_verified_stalled_startup)
+"$scratch/boot-env/isolated" env PYTHONPATH="$PWD" sh -c 'exec "$HERMES_PYTHON" "$1"' probe "$scratch/startup-progress.py"
+"$scratch/final-env/isolated" python scripts/check --only health --base 9fe5cf505f9 --commit d94e9ecf6e9
+git diff --check 57499e996fb..HEAD
+```
+
+Control output recorded one failure and three deselected tests. Code health recorded zero blocking and advisory findings. The whitespace check passed. Semif judged the replacement and rollback diff and delivery plan to require independent adversarial review.
+
+### Focused suites
+
+The first Python invocation ran this selection through the isolated launcher on the product tree. The runner was interrupted after six file results. The continuation started once with the remaining 24 files on one worker. It excluded only the six files with complete results. The only later change to that tree supplies the supervisor field in the synthetic replacement reply. The single corrected regression ran separately on the final test fixture, which was also checked on the reviewed control.
+
+```sh
+PYTHON_CPU_COUNT=1 HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 1 --tb=short \
+  tests/hermes_state/test_hermes_state.py tests/hermes_state/test_prune_activity_recency.py \
+  tests/hermes_state/test_reset_lineage_delete_queued_work.py tests/hermes_state/test_terminal_retirement.py \
+  tests/hermes_state/test_hermes_state_readonly_preflight.py tests/agent/test_deadline.py \
+  tests/agent/test_deadline_fork_race.py tests/hermes_cli/test_mem_trim.py \
+  tests/gateway/test_control_socket.py tests/gateway/test_control_socket_pause.py \
+  tests/gateway/test_control_socket_peer_security.py tests/gateway/test_control_socket_forwarded_subject.py \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py tests/gateway/test_ticket_profile_scope.py \
+  tests/gateway/test_local_session.py tests/gateway/test_local_session_recovery.py \
+  tests/gateway/test_local_session_lineage.py tests/gateway/test_local_receipt_untracked_compression.py \
+  tests/gateway/test_local_receipt_missing_profile.py tests/gateway/test_local_recovery_pre_profile_origin.py \
+  tests/gateway/test_local_yolo_cold_restore.py tests/gateway/test_viewer_close_lifecycle.py \
+  tests/gateway/test_run_runtime_hot_serve_cleanup.py tests/gateway/test_startup_recovery_parks_profile.py \
+  tests/gateway/test_multiplex_hot_serve.py tests/gateway/test_hosted_group_members.py \
+  tests/hermes_cli/test_gateway_runtime_replace_incompatible.py \
+  tests/gateway/test_session.py tests/gateway/test_secondary_route_fence_scope.py \
+  tests/gateway/test_session_db_recovery.py
+```
+
+```sh
+# Continuation. Same pinned environment and no completed file repeated.
+"$scratch/final-env/isolated" scripts/run_tests.sh -j 1 --tb=short \
+  tests/hermes_state/test_hermes_state.py \
+  tests/hermes_state/test_prune_activity_recency.py \
+  tests/hermes_state/test_reset_lineage_delete_queued_work.py \
+  tests/hermes_state/test_terminal_retirement.py \
+  tests/hermes_state/test_hermes_state_readonly_preflight.py \
+  tests/hermes_cli/test_mem_trim.py \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py \
+  tests/gateway/test_ticket_profile_scope.py \
+  tests/gateway/test_local_session.py \
+  tests/gateway/test_local_session_recovery.py \
+  tests/gateway/test_local_session_lineage.py \
+  tests/gateway/test_local_receipt_untracked_compression.py \
+  tests/gateway/test_local_receipt_missing_profile.py \
+  tests/gateway/test_local_recovery_pre_profile_origin.py \
+  tests/gateway/test_local_yolo_cold_restore.py \
+  tests/gateway/test_viewer_close_lifecycle.py \
+  tests/gateway/test_run_runtime_hot_serve_cleanup.py \
+  tests/gateway/test_startup_recovery_parks_profile.py \
+  tests/gateway/test_multiplex_hot_serve.py \
+  tests/gateway/test_hosted_group_members.py \
+  tests/hermes_cli/test_gateway_runtime_replace_incompatible.py \
+  tests/gateway/test_session.py \
+  tests/gateway/test_secondary_route_fence_scope.py \
+  tests/gateway/test_session_db_recovery.py
+"$scratch/final-env/isolated" scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py -k test_ensure_replaces_only_the_verified_stalled_startup
+(cd apps/desktop && "$scratch/desktop-env/isolated" npm test -- --maxWorkers=1 electron/local-gateway)
+(cd apps/desktop && "$scratch/desktop-env/isolated" ../../node_modules/.bin/tsc -p tsconfig.electron.json --noEmit)
+(cd apps/desktop && "$scratch/desktop-env/isolated" node scripts/bundle-electron-main.mjs --dev --out "$scratch/electron-bundle")
+"$scratch/final-env/isolated" python scripts/check --only health --base 57499e996fb --commit e07b61a5c6b
+```
+
+Desktop reported 56 passes and one Windows-only skip across 12 files in 7.83 seconds. Electron typecheck and the development bundle both exited 0. Code health against the PR base exited 0 with zero blocking and advisory findings on the final product and test tree. The final focused regression reported one pass and three deselected in 5.6 seconds. The same final test on the reviewed head reported one failure and three deselected in 7.9 seconds. Its verdict was `starting/deadline` where the assertion expected `ready`.
+
+The initial Python invocation completed six files with 81 passes, 10 skips and zero reported failures. The continuation completed 24 files in 450.2 seconds and reported 509 passes, seven skips and one failure. That failure was the new test's simulated ready reply, which omitted the required `supervisor` field and was correctly refused. Adding `supervisor="none"` changed only the test fixture. The targeted pass above resolved that failure. Final coverage was **591 passes and 17 skips across 30 files**, with no unresolved failures. The full Python command was interrupted and only the unfinished files were resumed. The Desktop selection ran once.
+
+The paired rollback used `rollback.py` and `rollback-env/isolated` in the same scratch directory. It ran the fallback writer on the post-boot SQLite clone, then compared two copies of that same store in the checked-out product tree and an unmodified `git archive 57499e996fb`. Both kept the mirror-only route at import and allocated a new ID at the base's subsequent stale-route check. The initial assertion that the next DM must keep the ID was disproved by the paired control. Separate logs are `rollback.log` and `rollback-pair.log`.
