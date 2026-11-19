@@ -111,3 +111,86 @@ GOMAXPROCS=1 node scripts/bundle-electron-main.mjs --dev --out "$HOME/electron-b
 ```
 
 The new regression failed on the reviewed head with `[6, 1]` versus `[1, 0]` and passed in the full Desktop selection. That selection reported 52 passed, 3 failed, and 1 skipped across 12 files. The linked-profile fixture had expected a resend after submission and was updated for the new contract. The two Python bridge fixtures failed with the same bootstrap error on the reviewed head under the same default Python 3.9.6, which lacks `-P`. All four tests in the three follow-up files passed using the pinned Python 3.14 interpreter, resolving every failure from the complete selection. The combined coverage is 55 passing tests and one platform skip. TypeScript and the Electron development bundle exited 0. Code health found zero blocking and advisory findings. A preliminary targeted Desktop invocation started provisioning tooling in a disposable HOME before interruption. The subsequent runs used the existing interpreter. Live Hermes state, services and the running gateway were outside these probes.
+
+## Round-two blocking repairs
+
+The prior review head was `c6119975e992aff85f711b7d620949e8d7a8d97f`. The product and test head is `c1ad939943dfd68acb57a4cadeab3e583f04825e`. The following handoff commit changes Markdown only.
+
+| Finding | Reviewed-head control | Repaired product and test head |
+| --- | --- | --- |
+| A. Startup and ensure | Real early control listener and normal discovery sent ensure to replacement. A sentinel intercepted the stop path. | Ensure read the early `starting` payload from the bound listener and waited to its deadline without replacing or starting an owner. |
+| B. Control socket rebind | After binding the same UNIX socket to the new instance, the logical dial stopped at `Invalid gateway ticket response`. | The rebind fixture observed `old, old, new` across the initial mint and redial. The dial invalidated the cached descriptor once, called ensure twice, and obtained the new owner's grant. The existing lost-reply fixture still observed one submission and zero invalidations. |
+| C. Route import after expiry | The scheduled sweep removed the old SQLite row and left the mirror byte-identical. After a second sweep past the retry horizon removed the fence, a fresh SessionDB and SessionStore reimported the old route. | With the same expired-fence condition, the fresh store imported the live mirror route and rejected the deleted one. |
+
+The controls used a scratch archive of the reviewed head with only the three regression cases copied in. They each failed at the expected assertion. The startup test on the treatment also records the actual identify payload states. The Python runner reported two failed tests in two files in the control. The Desktop filtered control reported one failed and 32 filtered tests in one file.
+
+```sh
+scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py tests/hermes_state/test_prune_activity_recency.py \
+  -k 'test_ensure_waits_for_the_early_gateway_control_listener or test_cron_prune_cannot_restore_routes_from_mirror_after_fence_expiry'
+cd apps/desktop
+npm test -- --maxWorkers=1 electron/local-gateway.test.ts -t 'a rebound control socket'
+```
+
+### Final checks
+
+Both suites used sanitized, separate temporary homes and runtimes. `HERMES_PYTHON` and `HERMES_TEST_PYTHON` both pointed to `/private/tmp/hermes-th1-2642.xcDJeO/venv/bin/python` (3.14.9). An AF_UNIX bind, connect, and data transfer succeeded. Both suites used one worker.
+
+```sh
+PYTHON_CPU_COUNT=1 HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 1 --tb=short \
+  tests/hermes_state/test_hermes_state.py tests/hermes_state/test_prune_activity_recency.py \
+  tests/hermes_state/test_reset_lineage_delete_queued_work.py tests/hermes_state/test_terminal_retirement.py \
+  tests/hermes_state/test_hermes_state_readonly_preflight.py tests/agent/test_deadline.py \
+  tests/agent/test_deadline_fork_race.py tests/hermes_cli/test_mem_trim.py \
+  tests/gateway/test_control_socket.py tests/gateway/test_control_socket_pause.py \
+  tests/gateway/test_control_socket_peer_security.py tests/gateway/test_control_socket_forwarded_subject.py \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py tests/gateway/test_ticket_profile_scope.py \
+  tests/gateway/test_local_session.py tests/gateway/test_local_session_recovery.py \
+  tests/gateway/test_local_session_lineage.py tests/gateway/test_local_receipt_untracked_compression.py \
+  tests/gateway/test_local_receipt_missing_profile.py tests/gateway/test_local_recovery_pre_profile_origin.py \
+  tests/gateway/test_local_yolo_cold_restore.py tests/gateway/test_viewer_close_lifecycle.py \
+  tests/gateway/test_run_runtime_hot_serve_cleanup.py tests/gateway/test_startup_recovery_parks_profile.py \
+  tests/gateway/test_multiplex_hot_serve.py tests/gateway/test_hosted_group_members.py \
+  tests/hermes_cli/test_gateway_runtime_replace_incompatible.py \
+  tests/gateway/test_session.py tests/gateway/test_secondary_route_fence_scope.py \
+  tests/gateway/test_session_db_recovery.py
+```
+
+Run the Desktop commands from `apps/desktop`.
+
+```sh
+npm test -- --maxWorkers=1 electron/local-gateway
+../../node_modules/.bin/tsc -p tsconfig.electron.json --noEmit
+GOMAXPROCS=1 node scripts/bundle-electron-main.mjs --dev --out /private/tmp/th12642-r2.ZW30PU/electron-bundle
+```
+
+Desktop reported 56 passed, one Windows-only skip, 12 files, 8.42 seconds. Electron typecheck and the development bundle exited zero. The first typecheck command looked for `tsc` in the Desktop package's bin directory. The actual workspace binary at the root passed.
+
+```sh
+python scripts/check --only health --base 57499e996fb --commit c1ad939943dfd68acb57a4cadeab3e583f04825e
+git diff --check c6119975e99..c1ad939943dfd68acb57a4cadeab3e583f04825e
+```
+
+Code health reported zero blocking and advisory findings. The whitespace check exited zero. Commit lint ran with the pinned environment on PATH. Ruff passed and Desktop ESLint reported only padding warnings.
+
+### Adversarial pass
+
+- The early identify reply announces protocol 1 and carries no attachable endpoint. An early older-format `starting` reply is accepted only when the reported owner home matches its verified control route. Named profiles without a published match fall through to the existing multiplexer reservation logic. An incompatible ready reply still takes the upgrade path. The replacement-time identify check also protects a current or starting owner that appears after the first probe.
+- A retry requires the matching request ID, protocol and complete stale refusal with no result. The server emits that refusal before reaching the mint call. An incomplete response or any other complete refusal remains final after submission. The Python bridge maps only specific pre-submission discovery errors and the stale-instance refusal to redial. Main's scoped HTTP retry keeps its request routing options, so a pooled mutation invalidates that same pool entry and reuses the profile route. Windows native pipe execution was skipped on macOS.
+- The import checks the profile that owns the routing key. A secondary cannot borrow the launch DB's same-ID row. Existing SQLite routes keep precedence, valid mirror-only rows still import, and the existing DB-unavailable JSON fallback remains. The scheduled job stays SQLite-only.
+- Semif evaluated the product diff and delivery plan and returned `required` for the independent adversarial review. Same-reviewer confirmation, the security audit, and GitHub CI are downstream of this handoff.
+
+### Secondary-profile suite environment
+
+The additional `test_secondary_route_fence_scope.py` collected zero tests with the first disposable interpreter because it lacks `aiohttp`. The reviewed head reproduced that collection error with the same interpreter and command. The file then ran once with the existing isolated 3.14.9 test environment that already had `aiohttp` 3.14.5. Its 16 tests passed in 27.8 seconds. No test from the other 29 files was repeated.
+
+```sh
+suite_python=/private/tmp/hermes-th1-2642.xcDJeO/home/installs/f8c5a4c3d2dab087/test-environment/gen-800ac08a6555459ca821d81d230c1833/venv/bin/python
+HERMES_PYTHON="$suite_python" HERMES_TEST_PYTHON="$suite_python" \
+  PYTHON_CPU_COUNT=1 HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_secondary_route_fence_scope.py
+```
+
+Logs and the sanitized environment launcher are in `/private/tmp/th12642-r2.ZW30PU`.
+
+The primary Python invocation completed the original 26-file selection and three added seam files continuously. It reported 576 passes and 17 skips in 503.6 seconds and exited 1 for the optional secondary-profile collection error above. Including that file's successful focused run, total coverage was 592 passes and 17 skips across 30 files, with zero test assertion failures. Both regression tests A and C passed in the primary invocation.
