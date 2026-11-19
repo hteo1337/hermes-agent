@@ -293,6 +293,36 @@ test('a dial that keeps failing after one re-ensure surfaces the error instead o
   expect(forgets).toBe(1)
 })
 
+test.skipIf(process.platform === 'win32')('a lost mint reply stops the dial after one submission', async () => {
+  const fs = await import('node:fs/promises')
+  const net = await import('node:net')
+  const { mintLocalGatewayTicket, redialLocalGateway } = await import('./local-gateway')
+  const home = await shortSocketTmpDir('desktop-lost-mint-')
+  const socketPath = path.join(home, 'gateway.sock')
+  const endpoint = { profile_id: home, instance_id: 'owner', authority_epoch: 1, runtime_protocol: 1, api_origin: 'http://127.0.0.1:1234', capabilities: [], supervisor: 'none' }
+  let submissions = 0
+  let forgets = 0
+  const server = net.createServer(socket => socket.once('data', () => {
+    submissions += 1
+    socket.end()
+  }))
+
+  await new Promise<void>(resolve => server.listen(socketPath, resolve))
+  await fs.chmod(socketPath, 0o600)
+
+  try {
+    await expect(redialLocalGateway({
+      ensure: async () => endpoint,
+      forget: () => { forgets += 1 },
+      use: mintLocalGatewayTicket
+    })).rejects.toThrow('Gateway ticket connection closed')
+    expect([submissions, forgets]).toEqual([1, 0])
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve()))
+    await fs.rm(home, { recursive: true, force: true })
+  }
+})
+
 test.skipIf(process.platform === 'win32')('a stopped gateway that unlinked its control socket is a stale owner, not a raw filesystem error', async () => {
   const fs = await import('node:fs/promises')
   const path = await import('node:path')

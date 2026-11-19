@@ -261,7 +261,12 @@ export async function ensureLocalGateway(
 // Unsafe path permissions or types require repair, not another ensure of the same home.
 const STALE_CONTROL_ERRORS = new Set(['Invalid gateway ticket response', 'Invalid gateway control pointer', 'Noncanonical gateway profile'])
 
+// Once a mint may have reached the owner, neither the socket retry nor the
+// outer ensure/redial may submit it again. A received refusal is final too.
+class SubmittedTicketError extends Error {}
+
 export function isStaleLocalGatewayError(error: unknown): boolean {
+  if (error instanceof SubmittedTicketError) {return false}
   const message = error instanceof Error ? error.message : String(error ?? '')
 
   return message.startsWith('Gateway ticket') || STALE_CONTROL_ERRORS.has(message)
@@ -649,7 +654,7 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
       if (remaining <= 0) {throw new Error('Gateway ticket deadline')}
       const attemptBudget = attempt < backoff.length ? Math.min(remaining, 1000 + 500 * attempt) : remaining
 
-      return await requestLocalGatewayTicket(socketPath, endpoint, purpose, attemptBudget)
+      return await requestLocalGatewayTicket(socketPath, endpoint, purpose, attemptBudget, deadline)
     } catch (error) {
       const missing = isMissingNodeError(error)
 
@@ -666,25 +671,36 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
 
 class TransientTicketError extends Error {}
 
-function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose, timeoutMs: number): Promise<string> {
+function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose, connectBudget: number, expiresAt: number): Promise<string> {
   const home = endpoint.profile_id
 
   return new Promise((resolve, reject) => {
     const socket = net.createConnection(socketPath)
     let buffer = ''
+    let submitted = false
+    const transportError = (message: string) => submitted ? new SubmittedTicketError(message) : new TransientTicketError(message)
 
-    const deadline = setTimeout(() => {
-      reject(new TransientTicketError('Gateway ticket deadline'))
+    const expire = () => {
+      reject(transportError('Gateway ticket deadline'))
       socket.destroy()
-    }, timeoutMs)
+    }
+    let deadline = setTimeout(expire, connectBudget)
 
     socket.on('error', (error: NodeJS.ErrnoException) => {
       const transient = ['ENOENT', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ETIMEDOUT'].includes(error.code ?? '')
 
-      reject(transient ? new TransientTicketError('Gateway ticket bootstrap failed') : new Error('Gateway ticket bootstrap failed'))
+      reject(submitted || transient ? transportError('Gateway ticket bootstrap failed') : new Error('Gateway ticket bootstrap failed'))
     })
-    socket.on('close', () => { clearTimeout(deadline); reject(new TransientTicketError('Gateway ticket connection closed')) })
-    socket.on('connect', () => socket.write(JSON.stringify({ protocol: 1, id: 1, verb: 'session-ticket', params: { profile_id: home, instance_id: endpoint.instance_id, purpose, ...ticketScope(purpose) } }) + '\n'))
+    socket.on('close', () => { clearTimeout(deadline); reject(transportError('Gateway ticket connection closed')) })
+    socket.on('connect', () => {
+      const remaining = expiresAt - performance.now()
+
+      if (remaining <= 0) {expire(); return}
+      clearTimeout(deadline)
+      submitted = true
+      deadline = setTimeout(expire, remaining)
+      socket.write(JSON.stringify({ protocol: 1, id: 1, verb: 'session-ticket', params: { profile_id: home, instance_id: endpoint.instance_id, purpose, ...ticketScope(purpose) } }) + '\n')
+    })
     socket.on('data', chunk => {
       buffer += chunk.toString()
 
@@ -703,7 +719,7 @@ function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint
 
         if (!reply.ok || reply.protocol !== 1 || reply.id !== 1 || grant?.instance_id !== endpoint.instance_id || grant?.profile_id !== home || typeof grant?.ticket !== 'string') {throw new Error('Invalid gateway ticket')}
         resolve(grant.ticket)
-      } catch { reject(new Error('Invalid gateway ticket response')) }
+      } catch { reject(new SubmittedTicketError('Invalid gateway ticket response')) }
 
       socket.destroy()
     })
