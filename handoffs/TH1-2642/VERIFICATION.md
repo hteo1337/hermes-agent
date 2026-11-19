@@ -52,3 +52,62 @@ Release-port dry runs used `git merge-tree --write-tree --merge-base=4dcef215cfe
 The final artifact-ownership follow-up reran the same targeted retention case with one worker. It passed in 3.4 s. It checked removal of correctly named cron files and preservation of differently spelled, nested, reserved, and unrelated dump files. Older dump names that lack the writer's timestamp shape are retained by the scheduled sweep. Code health reported zero findings after the follow-up.
 
 The final defense changed scheduled batches to SQLite-only cleanup because standalone diagnostic names do not reliably encode ownership. The same targeted retention case passed in 2.7 s on that code. It removes eligible ended rows and their receipts, preserves whole-lineage and active-work guards, and leaves all standalone fixture files untouched. The separate manual cleanup path retains its existing behavior for valid transcript basenames.
+
+## Blocking review follow-up
+
+Control `d19a727ef8e49bedb757c15b8571c1d365a79815`. Product and test head `94522fee5707e1f07a0425281439830d64b77eeb`. The first Python and Desktop suite invocations used `f6d2924c7cbd74a2495794ffdc41336980754db2`. The only subsequent code-tree change was to the Desktop linked-profile test fixture, which now expects one successful mint while exercising the same profile identity checks.
+
+### Controls
+
+| Finding | Reviewed head | Repaired head |
+| --- | --- | --- |
+| 1. Cancelled viewer close | Recovery armed the snapshotted close after compare-and-delete | Recovery skipped the cancelled record and still armed a current record |
+| 2. First store open | No identify reply during either schema open. First identify 4,905.40 ms, ready 9,648.39 ms, RSS 208 MiB | Identify replied during both launch and secondary schema opens. First identify 1,150.22 ms, ready 5,957.15 ms, RSS 194 MiB |
+| 5. Lost ticket reply | Six submitted requests, one endpoint forget | One submitted request, zero endpoint forgets |
+| 6a. Retry floor | A one-day setting deleted the two-day-old session | The two-day-old session survived and the eight-day-old session was deleted |
+| 6b. Sweep artifacts | Last-reference spill archive was removed and sessions.json changed | Spill archive and sessions.json survived. The committed SQLite route and the live route were retired |
+| 7. Cleanup failure | The injected post-commit SQLite exception left the live session mounted | The operator still received the exception and the owner retired the committed session |
+
+Both boot runs used the real gateway entry point in separate, synthetic homes. Each launch and secondary DB was cloned from the same 1,263,828,992-byte fixture. The probe verified that neither DB had the expression index at schema entry and both had it at readiness. A gate at each schema entry held the open until identify answered or 1.5 seconds elapsed. The timings include this gate and measure the controlled runs. The gateway children had no external adapters and were the only processes stopped by the probe.
+
+The SQLite fixture used real SessionDB writes and owner retirement. It set up a present then cancelled durable close, two ended cron sessions, a spill file referenced by the older session, a populated SQLite route and mirror, and a separate ended CLI session for the injected failure. The injected failure occurred at explicit prune's media collection after transaction commit. The scheduled sweep records retirement candidates in SQLite for subsequent artifact cleanup. It skips file cleanup, the legacy mirror writer and the deletion hook.
+
+### Commands and counts
+
+Scratch logs and paired probes are under `/private/tmp/hermes-th1-2642.review-fix.YokSFh`. The tested shell had an empty inherited environment except for explicitly supplied paths, a temporary HOME, HERMES_HOME and HERMES_RUNTIME_DIR, and the existing disposable Python 3.14 interpreter at `/private/tmp/hermes-th1-2642.xcDJeO/venv/bin/python`. The socket capability check bound, connected and transferred bytes over AF_UNIX before the suites.
+
+```sh
+scratch=/private/tmp/hermes-th1-2642.review-fix.YokSFh
+bash "$scratch/state_pair.sh" "$scratch"
+bash "$scratch/boot_pair.sh" "$scratch"
+python scripts/check --only health --base 57499e996fb --commit 94522fee5707e1f07a0425281439830d64b77eeb
+git diff --check 57499e996fb...HEAD
+```
+
+The Python command and all 26 file arguments are in **Commands** above. It completed 21 files with 162 passes, 13 skips and zero reported failures before the dispatcher interruption stopped the runner during `test_hermes_state.py`. The continuation ran only the five files without a result. No completed Python test file was repeated.
+
+```sh
+PYTHON_CPU_COUNT=1 HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 1 --tb=short \
+  tests/hermes_state/test_hermes_state.py tests/hermes_state/test_prune_activity_recency.py \
+  tests/hermes_state/test_reset_lineage_delete_queued_work.py tests/hermes_state/test_terminal_retirement.py \
+  tests/hermes_state/test_hermes_state_readonly_preflight.py
+```
+
+The continuation reported 340 passed and zero failed in 178.2 seconds on one worker. Combined with the completed files from the interrupted invocation, the focused Python selection covered 26 files with 502 passes, zero failures and 13 platform skips.
+
+Run from `apps/desktop`. The archived reviewed head received only the new lost-reply test for its control. Existing dependencies were available through the checkout. Set both `HERMES_PYTHON` and `HERMES_TEST_PYTHON` to the existing 3.14 interpreter when using a host whose default `python3` is 3.9. The exact initial invocations omitted the latter variable.
+
+```sh
+# Reviewed head. Expected red.
+npm test -- --maxWorkers=1 electron/local-gateway.test.ts -t 'a lost mint reply stops the dial after one submission'
+npm test -- --maxWorkers=1 electron/local-gateway-python.test.ts electron/local-gateway-python-bundled.test.ts
+
+# Repaired head. The complete selection ran once.
+npm test -- --maxWorkers=1 electron/local-gateway
+# Follow-up for the three failed files, with both Python variables set.
+npm test -- --maxWorkers=1 electron/local-gateway-python.test.ts electron/local-gateway-python-bundled.test.ts electron/local-gateway-ticket-identity.test.ts
+tsc -p tsconfig.electron.json --noEmit
+GOMAXPROCS=1 node scripts/bundle-electron-main.mjs --dev --out "$HOME/electron-bundle"
+```
+
+The new regression failed on the reviewed head with `[6, 1]` versus `[1, 0]` and passed in the full Desktop selection. That selection reported 52 passed, 3 failed, and 1 skipped across 12 files. The linked-profile fixture had expected a resend after submission and was updated for the new contract. The two Python bridge fixtures failed with the same bootstrap error on the reviewed head under the same default Python 3.9.6, which lacks `-P`. All four tests in the three follow-up files passed using the pinned Python 3.14 interpreter, resolving every failure from the complete selection. The combined coverage is 55 passing tests and one platform skip. TypeScript and the Electron development bundle exited 0. Code health found zero blocking and advisory findings. A preliminary targeted Desktop invocation started provisioning tooling in a disposable HOME before interruption. The subsequent runs used the existing interpreter. Live Hermes state, services and the running gateway were outside these probes.
