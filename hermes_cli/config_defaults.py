@@ -2261,10 +2261,8 @@ DEFAULT_CONFIG = {
     # Automatic cleanup of ~/.hermes/state.db, which otherwise grows without bound and slows FTS5
     # inserts, /resume listing, and insights queries.
     "sessions": {
-        # Prune ENDED sessions inactive for retention_days (activity = freshest of live activity /
-        # latest message / creation) about once per min_interval_hours at CLI/gateway/cron startup.
-        # Open, pinned, or mid-turn sessions are never deleted; stale automation sessions whose
-        # process died are *closed*, then get a full retention window before removal.
+        # Prune ended sessions inactive for retention_days at CLI/gateway/cron startup.
+        # Open, pinned and mid-turn sessions stay. Stale automation gets closed before it ages out.
         # Off by default (deleting history is opt-in). While the user's config.yaml has no
         # auto_prune key, every surface asks once the disk holding state.db runs low
         # (hermes_cli/prune_advisor.py); either answer writes the key and ends the question.
