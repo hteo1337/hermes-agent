@@ -52,14 +52,16 @@ async def _apply(authority, filters, never_active):
         deleted, routing, skipped = await asyncio.to_thread(
             authority.db.prune_never_active_keyed_sessions, older_than_days=float(never_active),
             sessions_dir=sessions_dir, deleted_ids=deleted_ids)
-        result = {'deleted': deleted, 'routing_deleted': routing, 'skipped': skipped}
-    else:
+        retire_live_sessions(authority, deleted_ids)
+        return {'deleted': deleted, 'routing_deleted': routing, 'skipped': skipped}
+    try:
         deleted = await asyncio.to_thread(
             authority.db.prune_sessions, sessions_dir=sessions_dir, exclude_active_write_guards=True,
             deleted_ids=deleted_ids, **filters)
-        result = {'deleted': deleted}
-    retire_live_sessions(authority, deleted_ids)
-    return result
+    finally:
+        if deleted_ids:
+            retire_live_sessions(authority, deleted_ids)
+    return {'deleted': deleted}
 
 
 async def prune_ended_cron_sessions(runner):
