@@ -262,11 +262,14 @@ export async function ensureLocalGateway(
 const STALE_CONTROL_ERRORS = new Set(['Invalid gateway ticket response', 'Invalid gateway control pointer', 'Noncanonical gateway profile'])
 
 // Once a mint may have reached the owner, neither the socket retry nor the
-// outer ensure/redial may submit it again. A received refusal is final too.
+// outer ensure/redial may submit it again. Only the owner's pre-mint stale
+// instance refusal proves that rediscovering and submitting again is safe.
 class SubmittedTicketError extends Error {}
+class StaleTicketInstanceError extends Error {}
 
 export function isStaleLocalGatewayError(error: unknown): boolean {
   if (error instanceof SubmittedTicketError) {return false}
+  if (error instanceof StaleTicketInstanceError) {return true}
   const message = error instanceof Error ? error.message : String(error ?? '')
 
   return message.startsWith('Gateway ticket') || STALE_CONTROL_ERRORS.has(message)
@@ -532,7 +535,7 @@ async function mintGroupWritableHome(endpoint: GatewayEndpoint, purpose: Gateway
   if (!pythonTicketClient) {throw new Error(`Unsafe gateway control path: profile home is group-writable and this Desktop cannot verify the group is private: run chmod g-w ${homes.map(shellQuote).join(' ')}`)}
 
   try {
-    return await pythonTicketClient(endpoint, purpose)
+    return await mintWithPython(pythonTicketClient, endpoint, purpose)
   } catch (error) {
     if ((error as { reason?: string })?.reason !== 'unsafe_control_permissions') {throw error}
     const quoted = homes.map(shellQuote).join(' ')
@@ -545,6 +548,19 @@ function isMissingNodeError(error: unknown): boolean {
   const code = (error as NodeJS.ErrnoException)?.code
 
   return code === 'ENOENT' || code === 'ENOTDIR'
+}
+
+async function mintWithPython(client: NonNullable<typeof pythonTicketClient>, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose): Promise<string> {
+  try {
+    return await client(endpoint, purpose)
+  } catch (error) {
+    const reason = (error as { reason?: string })?.reason
+
+    if (reason === 'stale_runtime_instance') {throw new StaleTicketInstanceError('Gateway ticket runtime instance changed')}
+    if (reason === 'control_unavailable') {throw new Error('Gateway ticket control endpoint unavailable')}
+    if (reason === 'unsafe_control_permissions') {throw error}
+    throw new SubmittedTicketError('Gateway ticket bootstrap failed')
+  }
 }
 
 /** Python's `posixpath.realpath`: each ordinary component keeps the spelling it was given, and a
@@ -623,7 +639,7 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
   if (process.platform === 'win32') {
     if (!pythonTicketClient) {throw new Error('Gateway ticket client is not configured')}
 
-    return pythonTicketClient(endpoint, purpose)
+    return mintWithPython(pythonTicketClient, endpoint, purpose)
   }
 
   const home = endpoint.profile_id
@@ -717,8 +733,15 @@ function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint
         const reply = JSON.parse(buffer.split('\n')[0])
         const grant = reply.result
 
-        if (!reply.ok || reply.protocol !== 1 || reply.id !== 1 || grant?.instance_id !== endpoint.instance_id || grant?.profile_id !== home || typeof grant?.ticket !== 'string') {throw new Error('Invalid gateway ticket')}
-        resolve(grant.ticket)
+        if (reply.protocol === 1 && reply.id === 1 && reply.ok === false &&
+            reply.error === 'PermissionError: stale runtime instance' && !Object.hasOwn(reply, 'result')) {
+          reject(new StaleTicketInstanceError('Gateway ticket runtime instance changed'))
+        } else if (reply.ok === true && reply.protocol === 1 && reply.id === 1 &&
+            grant?.instance_id === endpoint.instance_id && grant?.profile_id === home && typeof grant?.ticket === 'string') {
+          resolve(grant.ticket)
+        } else {
+          reject(new SubmittedTicketError('Invalid gateway ticket response'))
+        }
       } catch { reject(new SubmittedTicketError('Invalid gateway ticket response')) }
 
       socket.destroy()

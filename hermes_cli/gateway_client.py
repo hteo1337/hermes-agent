@@ -250,7 +250,7 @@ def _session_ticket(home: Path, endpoint, *, purpose="interactive", scope=None, 
                 if not chunk or len(data) + len(chunk) > 65536:
                     raise GatewayClientError("Invalid gateway bootstrap response")
                 data.extend(chunk)
-    grant = _identify_response(bytes(data))
+    grant = _identify_response(bytes(data), ticket=True)
     if any(grant.get(k) != v for k, v in {
         "profile_id": endpoint.profile_id, "instance_id": endpoint.instance_id, "runtime_protocol": 1,
     }.items()) or not isinstance(grant.get("ticket"), str) or not grant["ticket"]:

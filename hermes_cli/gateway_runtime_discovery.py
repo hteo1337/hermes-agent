@@ -200,8 +200,13 @@ def query_identify(home: Path, *, timeout: float) -> dict:
     return _identify_response(bytes(data))
 
 
-def _identify_response(data: bytes) -> dict:
+def _identify_response(data: bytes, *, ticket: bool = False) -> dict:
     response = json.loads(data.split(b"\n", 1)[0])
+    if (ticket and b"\n" in data and isinstance(response, dict) and response.get("ok") is False
+            and type(response.get("protocol")) is int and response["protocol"] == 1
+            and type(response.get("id")) is int and response["id"] == 1
+            and response.get("error") == "PermissionError: stale runtime instance" and "result" not in response):
+        raise DiscoveryError("stale_runtime_instance")
     if (not isinstance(response, dict) or response.get("ok") is not True
             or response.get("protocol") != 1 or response.get("id") != 1
             or not isinstance(response.get("result"), dict)):
