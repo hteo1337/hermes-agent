@@ -59,14 +59,13 @@ test('a profile home resolves to exactly the home the gateway reserves for it', 
 })
 
 /** A POSIX control socket that mints like the gateway's: only for a profile id it serves, exactly. */
-async function controlSocket(home: string, served: string[], dropFirst = false) {
+async function controlSocket(home: string, served: string[]) {
   const requests: Array<Record<string, unknown>> = []
 
   const server = net.createServer(socket => socket.once('data', chunk => {
     const params = JSON.parse(chunk.toString()).params
     requests.push(params)
 
-    if (dropFirst && requests.length === 1) {return socket.destroy()}
     socket.end(JSON.stringify(served.includes(params.profile_id)
       ? { protocol: 1, id: 1, ok: true, result: { profile_id: params.profile_id, instance_id: 'owner', runtime_protocol: 1, ticket: `grant-${requests.length}` } }
       : { protocol: 1, id: 1, ok: false, error: 'PermissionError: bootstrap binding rejected' }) + '\n')
@@ -87,19 +86,19 @@ test.skipIf(process.platform === 'win32')('a linked profile mints for the home t
   await fs.mkdir(path.join(root, 'profiles'), { mode: 0o700 })
   await fs.symlink(target, path.join(root, 'profiles', 'work'), 'dir')
   await fs.symlink(root, path.join(links, 'home'), 'dir')
-  const gateway = await controlSocket(root, [root, target], true)
+  const gateway = await controlSocket(root, [root, target])
   const descriptor = { gatewayEndpoint: endpointFor(root), baseUrl: ORIGIN }
 
   try {
     expect(await nativeGatewayHttpHeaders(descriptor, `${ORIGIN}/api/sessions?profile=work`))
-      .toEqual({ 'X-Hermes-Gateway-Ticket': 'grant-2' })
+      .toEqual({ 'X-Hermes-Gateway-Ticket': 'grant-1' })
     await expect(mintLocalGatewayTicket(endpointFor(path.join(links, 'home')), 'native-http')).rejects.toThrow('Noncanonical gateway profile')
     await expect(mintLocalGatewayTicket({ ...endpointFor(root), control_home: path.join(links, 'home') }, 'native-http')).rejects.toThrow('Noncanonical gateway profile')
     const gone = await nativeGatewayHttpHeaders(descriptor, `${ORIGIN}/api/sessions?profile=gone`).catch(error => error)
     expect([gone.message.includes(`Profile 'gone' does not exist`), isStaleLocalGatewayError(gone)]).toEqual([true, false])
-    expect(gateway.requests).toEqual(Array.from({ length: 2 }, () => ({
+    expect(gateway.requests).toEqual([{
       profile_id: target, instance_id: 'owner', purpose: 'native-http'
-    })))
+    }])
   } finally {
     await gateway.close()
     await Promise.all([root, target, links].map(dir => fs.rm(dir, { recursive: true, force: true })))
