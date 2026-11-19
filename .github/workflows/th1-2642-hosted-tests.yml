@@ -1,0 +1,96 @@
+name: TH1-2642 exact-head hosted tests (supplemental)
+
+# Explicit-branch/manual, fork-only evidence. Does not replace CI/all-checks-pass or change protection.
+# No inputs: testing a different revision requires an independently reviewed lane change.
+on:
+  push:
+    branches: ['moth/th1-2642-hosted-test-lane']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: th1-2642-hosted-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  exact-head:
+    if: github.repository == 'hteo1337/hermes-agent'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      OPENAI_API_KEY: ''
+      OPENROUTER_API_KEY: ''
+      NOUS_API_KEY: ''
+      HERMES_TEST_FILE_RETRIES: '0'
+      HERMES_HOME: ${{ runner.temp }}/th1-2642-home
+      HERMES_RUNTIME_DIR: ${{ runner.temp }}/th1-2642-runtime
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout the reviewed implementation, not the workflow branch
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1, already pinned in this repository
+        with:
+          repository: hteo1337/hermes-agent
+          ref: d19a727ef8e49bedb757c15b8571c1d365a79815
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify exact source and record dependency identities
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = d19a727ef8e49bedb757c15b8571c1d365a79815
+          mkdir -p "$HERMES_HOME" "$HERMES_RUNTIME_DIR"
+          sha256sum pm/lock.json uv.lock pyproject.toml package-lock.json
+          printf 'Tested source: `%s`\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Set up locked PM Python, test environment and Node
+        uses: ./.github/actions/setup-pm
+        with:
+          toolchain: all
+          extras: '["all", "anthropic", "bedrock", "mistral", "fal", "modal", "daytona", "parallel-web"]'
+          test-environment: 'true'
+          archive-inputs: 'false'
+          cache: 'false'
+          cache-python: 'false'
+          cache-node: 'false'
+          save-tools-cache: 'false'
+          save-python-cache: 'false'
+          save-node-cache: 'false'
+      - name: Run the 26 relevant Python files using the canonical runner
+        run: |
+          set -euo pipefail
+          scripts/run_tests.sh -j 2 --tb=short \
+            tests/hermes_state/test_hermes_state.py \
+            tests/hermes_state/test_prune_activity_recency.py \
+            tests/hermes_state/test_reset_lineage_delete_queued_work.py \
+            tests/hermes_state/test_terminal_retirement.py \
+            tests/hermes_state/test_hermes_state_readonly_preflight.py \
+            tests/agent/test_deadline.py \
+            tests/agent/test_deadline_fork_race.py \
+            tests/hermes_cli/test_mem_trim.py \
+            tests/gateway/test_control_socket.py \
+            tests/gateway/test_control_socket_pause.py \
+            tests/gateway/test_control_socket_peer_security.py \
+            tests/gateway/test_control_socket_forwarded_subject.py \
+            tests/gateway/test_runtime_bootstrap_lifecycle.py \
+            tests/gateway/test_ticket_profile_scope.py \
+            tests/gateway/test_local_session.py \
+            tests/gateway/test_local_session_recovery.py \
+            tests/gateway/test_local_session_lineage.py \
+            tests/gateway/test_local_receipt_untracked_compression.py \
+            tests/gateway/test_local_receipt_missing_profile.py \
+            tests/gateway/test_local_recovery_pre_profile_origin.py \
+            tests/gateway/test_local_yolo_cold_restore.py \
+            tests/gateway/test_viewer_close_lifecycle.py \
+            tests/gateway/test_run_runtime_hot_serve_cleanup.py \
+            tests/gateway/test_startup_recovery_parks_profile.py \
+            tests/gateway/test_multiplex_hot_serve.py \
+            tests/gateway/test_hosted_group_members.py
+      - name: Install exact locked JS dependencies
+        run: npm ci
+      - name: Run Desktop local-gateway contracts and Electron typecheck
+        working-directory: apps/desktop
+        run: |
+          set -euo pipefail
+          npm test -- --maxWorkers=1 electron/local-gateway
+          ../../node_modules/.bin/tsc -p tsconfig.electron.json --noEmit
+      - name: Verify tracked source and locks were not rewritten
+        run: git diff --exit-code HEAD
