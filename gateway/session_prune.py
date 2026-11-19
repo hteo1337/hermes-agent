@@ -69,6 +69,7 @@ async def prune_ended_cron_sessions(runner):
     from gateway.session_authorities import owner_scope, serving_authorities
     from gateway.session_runtime_workers import track_mutation
     from hermes_cli.config import load_config_readonly
+    from hermes_state_mutation_retirement import RETRY_HORIZON_S
 
     for authority in serving_authorities(runner):
         with owner_scope(authority):
@@ -77,7 +78,7 @@ async def prune_ended_cron_sessions(runner):
             if type(days) is not int or days <= 0:
                 continue
             authority._require_admission_open()
-            cutoff = time.time() - days * 86400
+            cutoff = time.time() - max(days * 86400, RETRY_HORIZON_S)
             task = track_mutation(authority, _apply(authority, {
                 'source': 'cron', 'older_than_days': None, 'ended_before': cutoff, 'batch_size': 256,
             }, None))
