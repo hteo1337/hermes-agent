@@ -360,8 +360,7 @@ class SessionPersistenceMixin:
         self._routing_db_loaded = db_load_succeeded
         self._routing_fallback_baseline = None if db_load_succeeded else self._entries_as_dicts()
         if mirror_retired and db_load_succeeded:
-            # Rewrite the mirror while the fences that kept those routes out still hold: a prune's
-            # ages out, and the import would then restore the retired route.
+            # Reconcile the mirror with current retirement fences on startup.
             self._save()
             if not getattr(self, "_write_sessions_json", True):
                 # That save left an existing mirror as it was: strip the routes from it directly,
@@ -401,7 +400,15 @@ class SessionPersistenceMixin:
                             {'session_id': entry_data['session_id']})):
                         retired += 1
                         continue
-                    self._entries[key] = SessionEntry.from_dict(entry_data)
+                    entry = SessionEntry.from_dict(entry_data)
+                    # A scheduled prune leaves the mirror intact and its fence
+                    # expires. Only the owning profile can confirm this route
+                    # still has a session. Keep the DB-less JSON fallback.
+                    if db is not None:
+                        session_db = self._db_for_key(key)
+                        if session_db is None or session_db.get_session_list_row(entry.session_id) is None:
+                            continue
+                    self._entries[key] = entry
                     imported += 1
                 except (ValueError, KeyError, TypeError) as e:
                     logger.warning("Skipping invalid session entry %r: %s", key, e)

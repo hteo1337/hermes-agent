@@ -1,8 +1,66 @@
+import json
 import time
 from contextlib import closing
+from datetime import UTC, datetime
+from types import SimpleNamespace
 import pytest
 from hermes_cli.sessions_cmd import _note_pinned_skipped
 from hermes_state import SessionDB
+
+
+@pytest.mark.asyncio
+async def test_cron_prune_cannot_restore_routes_from_mirror_after_fence_expiry(tmp_path, monkeypatch):
+    from gateway.config import GatewayConfig
+    from gateway.session import SessionEntry, SessionStore
+    from gateway.session_prune import prune_ended_cron_sessions
+    from hermes_state_mutation_retirement import RETIRED_PREFIX, RETRY_HORIZON_S
+    from hermes_state_runtime import begin_runtime_epoch
+
+    config = GatewayConfig()
+    sessions_dir = tmp_path / "sessions"
+    store = SessionStore(sessions_dir, config)
+    sessions_dir.mkdir(exist_ok=True)
+    mirror = sessions_dir / "sessions.json"
+    started_at = time.time() - RETRY_HORIZON_S - 3600
+    stamp = datetime.fromtimestamp(started_at, UTC)
+    retired = SessionEntry("agent:main:cron:old", "old", stamp, stamp)
+    live = SessionEntry("agent:main:cron:live", "live", stamp, stamp)
+    contents = json.dumps({entry.session_key: entry.to_dict() for entry in (retired, live)})
+    mirror.write_text(contents)
+    monkeypatch.setattr("hermes_cli.config.load_config_readonly",
+                        lambda: {"sessions": {"cron_retention_days": 1}})
+
+    db_path = tmp_path / "state.db"
+    with closing(SessionDB(db_path)) as db:
+        store._db = db
+        epoch = begin_runtime_epoch(db, instance_id="retention")
+        db.create_session("old", source="cron")
+        db.create_session("live", source="cron")
+        db._write_sql("UPDATE sessions SET started_at=?, last_activity_at=?, ended_at=?, "
+                      "end_reason='done' WHERE id='old'", (started_at, started_at, started_at))
+        db.save_gateway_routing_entry(retired.session_key, json.dumps(retired.to_dict()))
+        runner = SimpleNamespace(session_store=store, adapters={})
+        runner.session_authority = SimpleNamespace(
+            runner=runner, db=db, epoch=epoch, instance_id="retention",
+            profile_id=str(tmp_path), sessions={}, _require_admission_open=lambda: None,
+        )
+        await prune_ended_cron_sessions(runner)
+        assert db.get_session("old") is None
+        assert db.get_meta(RETIRED_PREFIX + "old") is not None
+        assert retired.session_key not in db.load_gateway_routing_entries()
+        later = time.time() + RETRY_HORIZON_S + 1
+        with monkeypatch.context() as clock:
+            clock.setattr("hermes_state_mutation_retirement.time", SimpleNamespace(time=lambda: later))
+            await prune_ended_cron_sessions(runner)
+        assert db.get_meta(RETIRED_PREFIX + "old") is None
+        assert mirror.read_text() == contents
+
+    with closing(SessionDB(db_path)) as db:
+        restarted = SessionStore(sessions_dir, config)
+        restarted._db = db
+        restarted._ensure_loaded()
+        assert db.get_session("old") is None
+        assert set(restarted._entries) == {live.session_key}
 
 
 def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):

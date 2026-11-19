@@ -782,6 +782,7 @@ class TestSlackWorkspaceSessionKeys:
         store = SessionStore(sessions_dir=tmp_path, config=GatewayConfig())
 
         # When
+        store._db.create_session(legacy_entry.session_id, source="slack")
         routed = store.get_or_create_session(incoming)
 
         # Then
@@ -981,6 +982,7 @@ class TestEnsureLoadedSkipsInvalidEntries:
         }), encoding="utf-8")
 
         store = SessionStore(sessions_dir=tmp_path, config=GatewayConfig())
+        store._db.create_session("good123", source="local")
         store._ensure_loaded()
 
         assert "bad:key" not in store._entries
