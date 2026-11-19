@@ -1,0 +1,6 @@
+TH1-2642 security lane, product diff 57499e996fb..d5186ce10a03f3c69a2ebbf792bffa53a656c0c7
+Ordinary review (gpt-6.1-sol) CONFIRMED.
+Semif adversarial_required, probability 0.977.
+Adversarial review (gpt-6.1-sol) CONFIRMED.
+Read-only security audit required filesystem cleanup confinement. The follow-up limits cleanup to transcript basenames and preserves reserved artifacts. The existing retention regression case was extended and passed. Follow-up exact-head confirmation is tracked in the draft PR.
+Each review inspected the detached worktree. No reviews modified code or ran tests.

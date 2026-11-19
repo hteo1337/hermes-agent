@@ -40,3 +40,11 @@ The Python suite passed 502 and skipped 13 across 26 files. The Desktop suite pa
 - `groups.list` already dispatches room enumeration to a worker. Hosted-room `bindings` runs in the room service's execution path. The direct PID probes audited are in bootstrap/ownership, with control handlers using their dedicated request pool. The synthetic writer-lock convoy does not establish either path as the source of the recorded live freeze.
 - Cron policy receipts contain frozen config, the full job snapshot and its extra prompt. Terminal results carry replay and current-turn data. The fixture used padding to match recorded sizes, so it cannot identify the size contribution of an individual live field.
 - A release port is separate from this base. Stable `3b4215785882` is not an ancestor of `57499e996fb`. The selected base already carries `d9e89386c2b` and `57499e996fb`. The m4 variant `f8108e2e71e` is available on `origin/m4/TH1-2065-reply-port`.
+
+## Final measurements and security follow-up
+
+The pushed-head authority repeat measured list/count at 27.04/7.48 ms, longest concurrent list at 81.08 ms and writer fallback delay at 30.02 ms. Authority initialization took 70.08 ms at 121 MiB RSS with 0 mounted sessions, 9.32 ms maximum init lag, and a 73.15 ms diagnostic full collection. Both explicit GC samples are synthetic.
+
+`python scripts/check --only health --base 57499e996fb --commit HEAD` passed on the reviewed head. The existing retention regression was extended after the audit to verify cleanup confinement and rerun once. It passed against the final code. The two full suites were already complete and were not repeated.
+
+Release-port dry runs used `git merge-tree --write-tree --merge-base=4dcef215cfe 3b4215785882 57499e996fb` and `git merge-tree --write-tree --merge-base=f8108e2e71e^ 3b4215785882 f8108e2e71e`. They found six m5 conflicts and four m4 conflicts. Do not rebase this issue branch onto the stable release base.

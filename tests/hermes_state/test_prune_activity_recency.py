@@ -9,6 +9,15 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
     from hermes_state_local import POLICY_PREFIX
     from hermes_state_runtime import admit_session_input, begin_runtime_epoch
 
+    sessions_dir = tmp_path / "sessions"
+    legacy_dir = sessions_dir / "legacy"
+    legacy_dir.mkdir(parents=True)
+    transcript = sessions_dir / "old.jsonl"
+    nested_artifact = legacy_dir / "fragment.json"
+    routing_mirror = sessions_dir / "sessions.json"
+    for artifact in (transcript, nested_artifact, routing_mirror):
+        artifact.write_text("{}")
+
     with closing(SessionDB(tmp_path / "state.db")) as db:
         epoch = begin_runtime_epoch(db, instance_id="retention")
         for sid in ("chain", "tip", "old", "next", "open", "recent", "pinned", "pending", "other"):
@@ -23,16 +32,23 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
         admit_session_input(db, epoch=epoch, principal_id="fixture", session_id="pending",
                             request_id="queue", payload={"text": "pending"})
 
-        filters = dict(source="cron", ended_before=10, exclude_active_write_guards=True)
+        filters = dict(source="cron", ended_before=10, exclude_active_write_guards=True, sessions_dir=sessions_dir)
         assert db.prune_sessions(batch_size=1, **filters) == 1
         assert db.get_session("next") is None
         assert db.get_session("chain") and db.get_session("tip")
         assert db.prune_sessions(batch_size=1, **filters) == 1
         assert db.get_meta(POLICY_PREFIX + "old") is None
+        assert not transcript.exists()
         assert db.prune_sessions(batch_size=2, **filters) == 2
         assert db.get_session("chain") is None and db.get_session("tip") is None
         assert db.prune_sessions(batch_size=256, **filters) == 0
         assert all(db.get_session(sid) for sid in ("open", "recent", "pinned", "pending", "other"))
+
+        for sid in ("legacy/fragment", "sessions"):
+            db.create_session(sid, source="cron")
+            db._write_sql("UPDATE sessions SET started_at=1, last_activity_at=1, ended_at=2 WHERE id=?", (sid,))
+        assert db.prune_sessions(batch_size=256, **filters) == 2
+        assert nested_artifact.read_text() == routing_mirror.read_text() == "{}"
 
 
 def test_prune_sessions_respects_touch_session_activity(tmp_path):
