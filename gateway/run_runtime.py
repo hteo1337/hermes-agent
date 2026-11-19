@@ -162,7 +162,7 @@ async def initialize_gateway_runtime(runner):
     # Publish this boot's verdict (an empty map clears a previous run's parked set).
     _record_parked_profiles(parked_profile_map(runner))
     runner.session_ticket_store = TicketStore(instance_id, registry.profile_ids())
-    release_unknown_turn_markers(runner)
+    await asyncio.to_thread(release_unknown_turn_markers, runner)
 
 
 def release_unknown_turn_markers(runner):
@@ -403,7 +403,7 @@ async def serve_profile_runtime(runner, name, home):
         with owner_scope(authority):
             _drop_retired_local_adapter(authority)
             await recover_bot_mailbox(authority)
-            recover_local_sessions(authority, schedule=True)
+            await recover_local_sessions(authority, schedule=True)
             await recover_webhook_finalizations(authority)
             _recover_published_api_turns(runner, authority)
         if getattr(runner, 'session_control_server', None) is not None:
@@ -550,7 +550,7 @@ async def recover_gateway_native_sessions(runner):
     results = {}
     for authority in authorities:
         with owner_scope(authority):
-            recover_local_sessions(authority, schedule=True)
+            await recover_local_sessions(authority, schedule=True)
             await recover_webhook_finalizations(authority)
         results.update(await recover_profile_native_sessions(runner, authority))
     return results
@@ -560,11 +560,17 @@ async def recover_profile_native_sessions(runner, authority):
     """Bind one authority's queued native rows to the adapters connected now."""
     from gateway.session_authorities import owner_scope
     with owner_scope(authority):
-        pending = {row['target_session_id'] for row in authority.db._read_all(
-            "SELECT DISTINCT target_session_id FROM session_admissions WHERE status IN ('queued','unknown')")}
-        bindings = [(owner, entry.origin, runner._adapter_for_source(entry.origin))
-                    for entry in runner.session_store.list_sessions() if entry.origin is not None
+        from gateway.config import Platform
+        def pending_entries():
+            pending = {row['target_session_id'] for row in authority.db._read_all(
+                "SELECT DISTINCT target_session_id FROM session_admissions WHERE status IN ('queued','unknown')")}
+            if not pending:
+                return []
+            return [(owner, entry.origin) for entry in runner.session_store.list_sessions()
+                    if entry.origin is not None and entry.origin.platform != Platform.LOCAL
                     for owner in [authority.logical_owner(entry.session_id)] if owner in pending]
+        bindings = [(owner, source, runner._adapter_for_source(source))
+                    for owner, source in await asyncio.to_thread(pending_entries)]
         outcome = await authority.recover_native_sessions(bindings)
     for sid, verdict in outcome.items():
         logger.info('Native session startup recovery %s (%s): %s', sid, authority.profile_id, verdict)
@@ -656,7 +662,7 @@ async def settle_gateway_runtime(runner, budget=None, reason=None):
     from gateway.session_acp_lifecycle import end_idle_acp_sessions
     for authority in _authorities(runner):
         try:
-            end_idle_acp_sessions(authority)
+            await end_idle_acp_sessions(authority)
         except Exception:
             # Best-effort bookkeeping: a store that cannot answer must not abort the stop sequence.
             import logging

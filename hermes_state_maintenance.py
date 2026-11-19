@@ -363,7 +363,8 @@ class SessionMaintenanceMixin:
 
     def prune_sessions(self, older_than_days: Optional[float] = 90, source: str | None = None,
                        sessions_dir: Optional[Path] = None, exclude_active_write_guards: bool = False,
-                       deleted_ids: Optional[list] = None, **filters) -> int:
+                       deleted_ids: Optional[list] = None, *, batch_size: int | None = None,
+                       ended_before: float | None = None, **filters) -> int:
         """Delete ended sessions inactive for ``older_than_days`` (an explicit ``started_before`` /
         ``last_active_before`` overrides it; None = no implicit bound) matching the filters.
         Children outside the window are orphaned (parent NULLed), not cascade-deleted.  With
@@ -372,24 +373,36 @@ class SessionMaintenanceMixin:
         or compression lock while expired/dead holders are reclaimed and fenced.  A compression
         ancestor is deleted only together with every continuation after it (``whole_lineages``).
         ``deleted_ids`` (the owning gateway) receives the removed ids, so it can retire their
-        in-memory routes and live sessions after the commit."""
+        in-memory routes and live sessions after the commit. A batch never splits a local lineage.
+        ``ended_before`` gives recently closed sessions a full retention window even if already idle."""
         if filters.get("include_open"):
             # Deletion is not reversible, so the ended-session guard is structural here: the
             # archive-only escape hatch (#139597) must never reach the delete path.
             raise ValueError("prune_sessions() never deletes open sessions: include_open is archive-only")
+        if batch_size is not None and (type(batch_size) is not int or batch_size < 1):
+            raise ValueError("prune batch size must be a positive integer")
+        if ended_before is not None:
+            last_active = filters.get('last_active_before')
+            filters['last_active_before'] = ended_before if last_active is None else min(last_active, ended_before)
         where, where_params = self._prune_where(older_than_days, source, filters, whole_lineages=True)
+        if ended_before is not None:
+            where += ' AND s.ended_at < ?'
+            where_params.append(ended_before)
         removed_ids: list[str] = []
         def _do(conn):
-            cursor = conn.execute(f"SELECT s.id FROM sessions s WHERE {where}", where_params)
-            session_ids = {row["id"] for row in cursor.fetchall()}
-            if exclude_active_write_guards:
-                session_ids -= self._guarded_ids(conn, session_ids)
+            order = "s.ended_at, s.id" if batch_size is not None else "s.id"
+            cursor = conn.execute(f"SELECT s.id FROM sessions s WHERE {where} ORDER BY {order}", where_params)
+            session_ids = [row["id"] for row in cursor]
+            if batch_size is None and exclude_active_write_guards:
+                protected = self._guarded_ids(conn, session_ids)
+                session_ids = [sid for sid in session_ids if sid not in protected]
             from hermes_state_mutation_retirement import prune_retired_tombstones, retire_prunable
-            session_ids = retire_prunable(conn, sorted(session_ids))
+            session_ids = retire_prunable(conn, session_ids, limit=batch_size,
+                                           guarded=self._guarded_ids if exclude_active_write_guards else None)
             prune_retired_tombstones(conn)  # every prune pass also reclaims expired deletion tombstones
             if not session_ids:
                 return 0
-            # Batched: a cron-heavy store prunes tens of thousands of ids in one call.
+            # Chunk SQL arguments for a cron-heavy store.
             for chunk in _id_chunks(session_ids):
                 ph = _placeholders(chunk)
                 conn.execute(f"UPDATE sessions SET parent_session_id = NULL WHERE parent_session_id IN ({ph})", chunk)

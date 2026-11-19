@@ -54,7 +54,6 @@ async def test_local_lineage_transitions_preserve_owner_or_roll_back(tmp_path, m
     compress(ref.session_id, 'compressed')
     second = runner()
     cold = await initialize_session_authority(second, profile_id='fixture', instance_id='second')
-    assert ref.session_id in cold.sessions, 'atomic compression lost the private local owner'
     assert create_local_session(cold, actor, params) == ref
     snapshot = await cold.attach(actor, ref)
     assert [(m['role'], m['content']) for m in snapshot.history] == [(m['role'], m['content']) for m in history]

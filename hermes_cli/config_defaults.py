@@ -2271,6 +2271,8 @@ DEFAULT_CONFIG = {
         "auto_prune": False,
         # Inactive days of ended-session history to keep (= `hermes sessions prune`).
         "retention_days": 90,
+        # Separate gateway housekeeping for ended cron sessions. Null disables it.
+        "cron_retention_days": None,
         # Auto-archive (soft-hide, never delete) sessions with no activity for auto_archive_days,
         # once per min_interval_hours. Pinned sessions are exempt.
         "auto_archive": False,

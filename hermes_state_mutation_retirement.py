@@ -208,15 +208,9 @@ def _local_conversations(conn):
     (policy, FIFO, generation), each receipt lineage segment and the current target), and the ids
     of every derived (Bot Chat, A2A) conversation. One prefix scan, not a lookup per swept id.
     Malformed receipts name nothing."""
-    from hermes_state_local import POLICY_PREFIX
+    from hermes_state_policy_index import policy_summaries
     members, derived = {}, set()
-    for (raw,) in conn.execute('SELECT value FROM state_meta WHERE key GLOB ?', (POLICY_PREFIX + '*',)):
-        try:
-            receipt = json.loads(raw)
-        except (TypeError, ValueError):
-            continue
-        if not isinstance(receipt, dict):
-            continue
+    for _, receipt in policy_summaries(conn):
         entry, lineage = receipt.get('entry'), receipt.get('lineage')
         ids = tuple(x for x in [receipt.get('session_id'), *(lineage if isinstance(lineage, list) else []),
                                 entry.get('session_id') if isinstance(entry, dict) else None] if isinstance(x, str))
@@ -233,7 +227,37 @@ def _derived_api_sessions(conn, session_ids):
         (json.dumps(list(session_ids)),))}
 
 
-def retire_prunable(conn, session_ids):
+def _bounded_prune_ids(conn, session_ids, conversations, limit, guarded):
+    """Keep each connected reset/compression conversation in one transaction."""
+    from hermes_state_maintenance import _CONTINUATION_EDGE_SQL
+    neighbors = {}
+    for parent, child in conn.execute(
+            'SELECT p.id,c.id FROM sessions c JOIN sessions p ON p.id=c.parent_session_id '
+            f'WHERE {_CONTINUATION_EDGE_SQL}'):
+        neighbors.setdefault(parent, []).append(child)
+        neighbors.setdefault(child, []).append(parent)
+    eligible = set(session_ids)
+    quiet, checked = [], set()
+    for sid in session_ids:
+        if sid in checked:
+            continue
+        whole, todo = {sid}, [sid]
+        while todo:
+            member = todo.pop()
+            added = (set(conversations.get(member, ())) | set(neighbors.get(member, ()))) - whole
+            whole.update(added)
+            todo.extend(added)
+        checked.update(whole)
+        if (len(quiet) + len(whole) <= limit and whole <= eligible
+                and not (guarded and guarded(conn, whole))
+                and not any(conn.execute(_LIVE_LEDGER_SQL, (sid, sid)).fetchone() for sid in whole)):
+            quiet.extend(sorted(whole))
+        if len(quiet) == limit:
+            break
+    return quiet
+
+
+def retire_prunable(conn, session_ids, *, limit=None, guarded=None):
     """Sweep variant of :func:`retire_sessions`: fence the idle sessions and return only those ids.
     A session with live or unknown work is skipped, so one busy row cannot abort a whole
     prune/empty-session sweep (explicit deletes still refuse with ``session_busy``). A local
@@ -247,12 +271,15 @@ def retire_prunable(conn, session_ids):
     first unfenced id, so an aged-out marker would send the next turn back to the swept generation.
     A Bot Chat's mailbox receipts also outlive the horizon. A caller-named API id is not derived:
     its marker ages out, so the caller can use that id again, as for any other swept session."""
+    if not session_ids:
+        return []
     swept, (conversations, derived) = set(session_ids), _local_conversations(conn)
 
     def removable(sid):
         whole = conversations.get(sid, (sid,))
         return swept.issuperset(whole) and not any(conn.execute(_LIVE_LEDGER_SQL, (x, x)).fetchone() for x in whole)
-    quiet = [sid for sid in session_ids if removable(sid)]
+    quiet = ([sid for sid in session_ids if removable(sid)] if limit is None else
+             _bounded_prune_ids(conn, session_ids, conversations, limit, guarded))
     derived |= _derived_api_sessions(conn, quiet)
     retire_sessions(conn, quiet, expiring=[sid for sid in quiet if sid not in derived])
     return quiet

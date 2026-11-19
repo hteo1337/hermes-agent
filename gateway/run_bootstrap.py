@@ -273,6 +273,7 @@ async def _start_gateway_start_control_socket(runner):
     from gateway.run import (asyncio, logger, os, threading)
     import atexit
     import concurrent.futures
+    import inspect
     _control_server = None
     try:
         # Started immediately after the PID-file claim: winning that O_EXCL race is the moment this process
@@ -288,9 +289,9 @@ async def _start_gateway_start_control_socket(runner):
         from gateway.run_plugin_rewire import reload_plugins_verb
         from gateway.run_active_work_verb import active_work_verb
         from gateway.drain_control import RESTART_WAIT_REASON
-        descriptor = runner.session_runtime_descriptor
 
         def _identify_runtime():
+            descriptor = getattr(runner, 'session_runtime_descriptor', {'state': 'starting'})
             payload = build_identify_payload()
             payload.update({key: descriptor[key] for key in (
                 "instance_id", "runtime_protocol", "authority_epoch", "state", "api_origin",
@@ -351,8 +352,18 @@ async def _start_gateway_start_control_socket(runner):
                 result = {"pending": True, "served_profiles": runner.served_profile_names()}
             return {"multiplex": bool(getattr(runner.config, "multiplex_profiles", False)), **result}
 
-        _control_server = GatewayControlServer(
-            verb_handlers={"pause-for-update": _pause_for_update_handler, "identify": _identify_runtime,
+        def after_authorities(handler):
+            wants_params = "params" in inspect.signature(handler).parameters
+
+            def invoke(params):
+                if (_control_server.ticket_store is None and
+                        getattr(runner, 'session_runtime_descriptor', {}).get('state') != 'ready'):
+                    raise RuntimeError('gateway runtime starting')
+                return handler(params) if wants_params else handler()
+
+            return invoke
+
+        runtime_handlers = {"pause-for-update": _pause_for_update_handler,
                            "rescan-profiles": _rescan_profiles_handler,
                            "migrate-profile-identity": migrate_profile_identity_verb(runner),
                            "unserve-profile": unserve_profile_verb(runner),
@@ -362,8 +373,12 @@ async def _start_gateway_start_control_socket(runner):
                            "active-work": active_work_verb(runner, _main_loop),
                            # A plugin installed/enabled by another process loads now and re-wires the
                            # live adapters' handlers (#87770); tools/prompt still wait for the next session.
-                           "reload-plugins": reload_plugins_verb(runner, _main_loop)})
-        _control_server.ticket_store = runner.session_ticket_store
+                           "reload-plugins": reload_plugins_verb(runner, _main_loop)}
+        _control_server = GatewayControlServer(verb_handlers={
+            "identify": _identify_runtime,
+            **{verb: after_authorities(handler) for verb, handler in runtime_handlers.items()},
+        })
+        _control_server.ticket_store = getattr(runner, 'session_ticket_store', None)
         if not await _control_server.start():
             _control_server = None
         else:
@@ -812,8 +827,6 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         await asyncio.to_thread(recover_left_core_at_gateway_start)  # before the runner loads platform config
 
         runner = GatewayRunner(resolved_config)
-        from gateway.run_runtime import initialize_gateway_runtime
-        await initialize_gateway_runtime(runner)
         # Multiplex: swap the launch-home file handlers for per-profile routers so each profile's records
         # land in its own logs/. Must run after the runner resolved (possibly None) config and setup_logging.
         # See #82936.
@@ -865,7 +878,14 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         _control_server = await _start_gateway_start_control_socket(runner)
         if _control_server is None:
             raise RuntimeError("gateway session bootstrap control listener unavailable")
-        # Now the attach channel answers: republish the host record with the settled served set.
+        # Identify/status can answer while authorities recover. Tickets remain unavailable until
+        # the owned profile set is complete.
+        from gateway.run_runtime import initialize_gateway_runtime
+        await initialize_gateway_runtime(runner)
+        # Loading the durable routing index may read thousands of ended session rows.
+        await asyncio.to_thread(runner.session_store._ensure_loaded)
+        _control_server.ticket_store = runner.session_ticket_store
+        # Republish the host record with the settled served set.
         _refresh_host_gateway_record(runner)
         _log_standalone_profiles_at_boot(runner)
         from gateway.run_runtime import start_gateway_runtime_api

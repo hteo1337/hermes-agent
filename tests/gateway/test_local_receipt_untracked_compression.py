@@ -97,13 +97,13 @@ async def test_a_session_compacted_by_0_22_2_resumes_on_its_compressed_tip(tmp_p
 
     second, connection = await _owner(tmp_path, monkeypatch, 'second')
     try:
-        assert ref.session_id in second.sessions, 'the receipt was paused on cold recovery'
-        receipt = _receipt(second.db, ref.session_id)
-        assert receipt['lineage'] == [ref.session_id, 'classic-child-1', 'classic-child-2']
-        assert receipt['entry']['session_id'] == 'classic-child-2'
+        assert ref.session_id not in second.sessions
         reply = await connection.dispatch({'id': 1, 'method': 'session.resume',
                                            'params': {'session_id': ref.session_id}})
         assert 'error' not in reply, reply
+        receipt = _receipt(second.db, ref.session_id)
+        assert receipt['lineage'] == [ref.session_id, 'classic-child-1', 'classic-child-2']
+        assert receipt['entry']['session_id'] == 'classic-child-2'
         assert reply['result']['messages'][-1]['content'] == 'after compression into classic-child-2', reply
     finally:
         await connection.close()
@@ -167,7 +167,10 @@ async def test_a_compacted_receipt_with_a_foreign_origin_stays_refused(tmp_path,
 
     second, connection = await _owner(tmp_path, monkeypatch, 'second')
     try:
-        assert ref.session_id not in second.sessions, 'a foreign origin was replaced by the catch-up'
+        reply = await connection.dispatch({'id': 1, 'method': 'session.resume',
+                                           'params': {'session_id': ref.session_id}})
+        assert reply['error']['data']['reason'] == 'storage_unavailable'
+        assert ref.session_id not in second.sessions
         assert _receipt(second.db, ref.session_id) == receipt
     finally:
         await connection.close()
@@ -214,7 +217,11 @@ async def test_a_compacted_secondary_receipt_missing_its_origin_profile_restores
         runners.append(second)
         await initialize_gateway_runtime(second)
         restored = second.session_authorities.for_home(home)
-        assert ref.session_id in restored.sessions, 'the compacted receipt was paused on cold recovery'
+        from gateway.session_local_adoption import adopt_before_restore
+        from gateway.session_local_recovery import restore_local_session
+        with _profile_runtime_scope(home, {}):
+            await adopt_before_restore(restored, ref.session_id)
+            assert restore_local_session(restored, ref.session_id) == ref
         assert restored.sessions[ref.session_id].source.profile == 'alpha'
         after = _receipt(restored.db, ref.session_id)
         assert after['lineage'] == [ref.session_id, 'classic-child']
@@ -250,7 +257,10 @@ async def test_a_compression_chain_longer_than_one_walk_is_adopted_whole(tmp_pat
 
     second, connection = await _owner(tmp_path, monkeypatch, 'second')
     try:
-        assert ref.session_id in second.sessions, 'the long chain was paused on cold recovery'
+        from gateway.session_local_adoption import adopt_before_restore
+        from gateway.session_local_recovery import restore_local_session
+        await adopt_before_restore(second, ref.session_id)
+        assert restore_local_session(second, ref.session_id) == ref
         receipt = _receipt(second.db, ref.session_id)
         assert receipt['lineage'] == [ref.session_id, *children]
         assert receipt['entry']['session_id'] == children[-1]
@@ -285,6 +295,8 @@ async def test_a_chain_that_loops_back_past_one_walk_is_not_adopted(tmp_path, mo
 
     second, connection = await _owner(tmp_path, monkeypatch, 'second')
     try:
+        from gateway.session_local_adoption import adopt_before_restore
+        await adopt_before_restore(second, ref.session_id)
         assert ref.session_id not in second.sessions
         assert _receipt(second.db, ref.session_id) == before
     finally:

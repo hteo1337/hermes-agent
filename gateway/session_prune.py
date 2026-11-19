@@ -7,6 +7,7 @@ the store under a live gateway would be a second writer, so it never does.
 """
 import asyncio
 from pathlib import Path
+import time
 
 from hermes_state_runtime import RuntimeStoreError
 
@@ -41,11 +42,12 @@ async def prune(connection, ref, params):
     return await asyncio.shield(task)
 
 
-async def _apply(authority, filters, never_active):
+async def _apply(authority, filters, never_active, *, sessions_dir=None):
     from hermes_constants import get_hermes_home
     from gateway.session_mutations import retire_live_sessions
     # Same transcript dir the CLI's local prune unlinks under (dispatch runs in the owner's scope).
-    sessions_dir = Path(get_hermes_home()) / 'sessions'
+    if sessions_dir is None:
+        sessions_dir = Path(get_hermes_home()) / 'sessions'
     deleted_ids = []
     if filters is None:
         deleted, routing, skipped = await asyncio.to_thread(
@@ -59,3 +61,25 @@ async def _apply(authority, filters, never_active):
         result = {'deleted': deleted}
     retire_live_sessions(authority, deleted_ids)
     return result
+
+
+async def prune_ended_cron_sessions(runner):
+    """One bounded batch per served profile on the hourly housekeeping tick."""
+    from gateway.run import _launch_sessions_dir, _profile_sessions_dir
+    from gateway.session_authorities import owner_scope, serving_authorities
+    from gateway.session_runtime_workers import track_mutation
+    from hermes_cli.config import load_config_readonly
+
+    launch = _launch_sessions_dir(runner.config)
+    for authority in serving_authorities(runner):
+        with owner_scope(authority):
+            config = await asyncio.to_thread(load_config_readonly)
+            days = (config.get('sessions') or {}).get('cron_retention_days')
+            if type(days) is not int or days <= 0:
+                continue
+            authority._require_admission_open()
+            cutoff = time.time() - days * 86400
+            task = track_mutation(authority, _apply(authority, {
+                'source': 'cron', 'older_than_days': None, 'ended_before': cutoff, 'batch_size': 256,
+            }, None, sessions_dir=_profile_sessions_dir(launch)))
+            await asyncio.shield(task)

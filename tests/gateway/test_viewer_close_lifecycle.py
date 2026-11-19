@@ -338,7 +338,7 @@ async def test_a_close_pending_at_gateway_stop_completes_after_restart(tmp_path,
     cancel_session_input(db, epoch=authority.epoch, admission_id=row['admission_id'])
 
     db2, restarted, calls2 = await _restarted_owner(tmp_path, monkeypatch, db)
-    recover_local_sessions(restarted, schedule=True)
+    await recover_local_sessions(restarted, schedule=True)
     await async_wait_until(lambda: len(calls2) == 2, timeout=10)
     assert db2.get_session('chat')['end_reason'] == 'cli_close'
     assert [name for name, _ in calls2] == ['commit', 'finalize']
@@ -365,8 +365,8 @@ async def test_a_viewer_reattaching_cancels_the_persisted_close(tmp_path, monkey
     # And after a restart (the turn settled meanwhile) nothing re-arms it.
     cancel_session_input(db, epoch=authority.epoch, admission_id=row['admission_id'])
     db2, restarted, calls2 = await _restarted_owner(tmp_path, monkeypatch, db)
-    recover_local_sessions(restarted, schedule=True)
-    assert restarted.sessions['chat'].task is None  # no queued turn and no close: no drain at all
+    await recover_local_sessions(restarted, schedule=True)
+    assert 'chat' not in restarted.sessions  # no queued turn and no close: leave the receipt on disk
     assert restarted.pending_closes == {} and calls2 == []
     assert db2.get_session('chat')['ended_at'] is None
 
@@ -418,7 +418,7 @@ async def test_a_cancelled_older_close_keeps_the_newer_close_durable(tmp_path, m
     # The old owner's memory is gone; the next authority recovers B and ends the row.
     cancel_session_input(db, epoch=authority.epoch, admission_id=row['admission_id'])
     db2, restarted, calls2 = await _restarted_owner(tmp_path, monkeypatch, db)
-    recover_local_sessions(restarted, schedule=True)
+    await recover_local_sessions(restarted, schedule=True)
     await async_wait_until(lambda: len(calls2) == 2, timeout=10)
     assert db2.get_session('chat')['end_reason'] == 'close_b'
     assert db2.get_session('chat')['ended_at'] is not None
@@ -466,7 +466,7 @@ async def test_a_reattach_during_the_close_write_cancels_it_durably(tmp_path, mo
 
     cancel_session_input(db, epoch=authority.epoch, admission_id=row['admission_id'])
     db2, restarted, calls2 = await _restarted_owner(tmp_path, monkeypatch, db)
-    recover_local_sessions(restarted, schedule=True)
+    await recover_local_sessions(restarted, schedule=True)
     assert restarted.pending_closes == {} and calls2 == []
     assert db2.get_session('chat')['ended_at'] is None
 
@@ -517,7 +517,7 @@ async def test_a_close_stored_before_a_hard_kill_ends_the_row_past_the_unknown_t
     from hermes_state_runtime import get_session_admission
 
     db2, restarted, calls2, row = await _hard_killed_mid_turn(tmp_path, monkeypatch)
-    recover_local_sessions(restarted, schedule=True)
+    await recover_local_sessions(restarted, schedule=True)
     await async_wait_until(lambda: len(calls2) == 2, timeout=10)
     assert db2.get_session('chat')['end_reason'] == 'cli_close'
     assert db2.get_session('chat')['ended_at'] is not None
@@ -531,13 +531,14 @@ async def test_a_viewer_back_before_the_unknown_is_resolved_keeps_the_turn_for_i
     """The owner only resolves an unknown turn for a close nobody cancelled: a viewer that attached
     after the restart cancels the close and decides about the turn itself (Discard)."""
     from hermes_state_runtime import get_session_admission
-    from gateway.session_viewer_close import rearm_persisted_closes
+    from gateway.session_local_recovery import recover_local_sessions
 
     db2, restarted, calls2, row = await _hard_killed_mid_turn(tmp_path, monkeypatch)
     from gateway.session_local_recovery import restore_local_session
     restore_local_session(restarted, 'chat')
     await _call(_viewer(restarted, tmp_path), 'session.resume', session_id='chat')
-    assert rearm_persisted_closes(restarted) == [] and restarted.pending_closes == {}
+    await recover_local_sessions(restarted)
+    assert restarted.pending_closes == {}
     from gateway.session_contract import SessionRef
     restarted._schedule(SessionRef(restarted.profile_id, 'chat'))
     await asyncio.wait_for(restarted.sessions['chat'].task, 10)  # the drain pauses on the unknown turn

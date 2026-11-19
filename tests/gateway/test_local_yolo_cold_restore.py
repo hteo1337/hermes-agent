@@ -31,7 +31,8 @@ async def test_cold_restore_keeps_the_persisted_yolo_toggle_and_untoggled_follow
 
     second = runner()  # idle exit, then `hermes -c`: a fresh owner over the same state.db
     cold = await initialize_session_authority(second, profile_id='fixture', instance_id='second')
-    assert {revoked.session_id, untouched.session_id} <= set(cold.sessions)
+    await cold.resolve(actor, revoked)
+    await cold.resolve(actor, untouched)
     launch = SimpleNamespace(yolo=True)
     try:
         assert second.session_store.lookup_by_session_key(revoked_route).yolo is False

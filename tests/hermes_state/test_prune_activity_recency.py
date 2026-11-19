@@ -5,6 +5,36 @@ from hermes_cli.sessions_cmd import _note_pinned_skipped
 from hermes_state import SessionDB
 
 
+def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
+    from hermes_state_local import POLICY_PREFIX
+    from hermes_state_runtime import admit_session_input, begin_runtime_epoch
+
+    with closing(SessionDB(tmp_path / "state.db")) as db:
+        epoch = begin_runtime_epoch(db, instance_id="retention")
+        for sid in ("chain", "tip", "old", "next", "open", "recent", "pinned", "pending", "other"):
+            db.create_session(sid, source="gui" if sid == "other" else "cron")
+        db._write_sql("UPDATE sessions SET started_at=1, last_activity_at=1")
+        db._write_sql("UPDATE sessions SET ended_at=2, end_reason='done' WHERE id != 'open'")
+        db._write_sql("UPDATE sessions SET end_reason='compression' WHERE id='chain'")
+        db._write_sql("UPDATE sessions SET parent_session_id='chain' WHERE id='tip'")
+        db._write_sql("UPDATE sessions SET ended_at=20 WHERE id='recent'")
+        db._write_sql("UPDATE sessions SET pinned=1 WHERE id='pinned'")
+        db.set_meta(POLICY_PREFIX + "old", '{"session_id":"old","entry":{"session_id":"old"},"policy":{"source":"cron"}}')
+        admit_session_input(db, epoch=epoch, principal_id="fixture", session_id="pending",
+                            request_id="queue", payload={"text": "pending"})
+
+        filters = dict(source="cron", ended_before=10, exclude_active_write_guards=True)
+        assert db.prune_sessions(batch_size=1, **filters) == 1
+        assert db.get_session("next") is None
+        assert db.get_session("chain") and db.get_session("tip")
+        assert db.prune_sessions(batch_size=1, **filters) == 1
+        assert db.get_meta(POLICY_PREFIX + "old") is None
+        assert db.prune_sessions(batch_size=2, **filters) == 2
+        assert db.get_session("chain") is None and db.get_session("tip") is None
+        assert db.prune_sessions(batch_size=256, **filters) == 0
+        assert all(db.get_session(sid) for sid in ("open", "recent", "pinned", "pending", "other"))
+
+
 def test_prune_sessions_respects_touch_session_activity(tmp_path):
     with closing(SessionDB(tmp_path / "state.db")) as db:
         now = time.time()
