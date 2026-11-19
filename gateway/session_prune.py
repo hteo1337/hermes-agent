@@ -7,7 +7,6 @@ the store under a live gateway would be a second writer, so it never does.
 """
 import asyncio
 from pathlib import Path
-import time
 
 from hermes_state_runtime import RuntimeStoreError
 
@@ -42,11 +41,11 @@ async def prune(connection, ref, params):
     return await asyncio.shield(task)
 
 
-async def _apply(authority, filters, never_active, *, sqlite_only=False):
+async def _apply(authority, filters, never_active):
     from hermes_constants import get_hermes_home
     from gateway.session_mutations import retire_live_sessions
     # Same transcript dir the CLI's local prune unlinks under (dispatch runs in the owner's scope).
-    sessions_dir = None if sqlite_only else Path(get_hermes_home()) / 'sessions'
+    sessions_dir = Path(get_hermes_home()) / 'sessions'
     deleted_ids = []
     if filters is None:
         deleted, routing, skipped = await asyncio.to_thread(
@@ -60,26 +59,5 @@ async def _apply(authority, filters, never_active, *, sqlite_only=False):
             deleted_ids=deleted_ids, **filters)
     finally:
         if deleted_ids:
-            retire_live_sessions(authority, deleted_ids, strip_mirror=not sqlite_only)
+            retire_live_sessions(authority, deleted_ids)
     return {'deleted': deleted}
-
-
-async def prune_ended_cron_sessions(runner):
-    """One bounded batch per served profile on the hourly housekeeping tick."""
-    from gateway.session_authorities import owner_scope, serving_authorities
-    from gateway.session_runtime_workers import track_mutation
-    from hermes_cli.config import load_config_readonly
-    from hermes_state_mutation_retirement import RETRY_HORIZON_S
-
-    for authority in serving_authorities(runner):
-        with owner_scope(authority):
-            config = await asyncio.to_thread(load_config_readonly)
-            days = (config.get('sessions') or {}).get('cron_retention_days')
-            if type(days) is not int or days <= 0:
-                continue
-            authority._require_admission_open()
-            cutoff = time.time() - max(days * 86400, RETRY_HORIZON_S)
-            task = track_mutation(authority, _apply(authority, {
-                'source': 'cron', 'older_than_days': None, 'ended_before': cutoff, 'batch_size': 256,
-            }, None, sqlite_only=True))
-            await asyncio.shield(task)

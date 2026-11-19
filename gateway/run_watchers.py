@@ -70,8 +70,6 @@ class GatewaySessionWatchersMixin:
                 max_age = int(getattr(self.config, "session_store_max_age_days", 0) or 0)
                 if max_age > 0 and (n := await self.async_session_store.prune_old_entries(max_age)):
                     logger.info("SessionStore prune: dropped %d stale entries", n)
-                from gateway.session_prune import prune_ended_cron_sessions
-                await prune_ended_cron_sessions(self)
             except Exception as e:
                 logger.debug("SessionStore prune failed: %s", e)
             self._last_session_store_prune_ts = time.time()

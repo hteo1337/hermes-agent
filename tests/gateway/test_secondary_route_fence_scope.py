@@ -428,7 +428,6 @@ async def test_a_malformed_retirement_value_fences_its_route_without_aborting_a_
         launch.set_meta(RETIRED_PREFIX + 'bad-marker', '{not json')
         routes = {'agent:alpha:telegram:1': 'bad-fence', 'agent:alpha:telegram:2': 'bad-marker',
                   'agent:alpha:telegram:3': 'fine'}
-        served.alpha.db.create_session('fine', source='telegram')
         for key, sid in routes.items():
             store._entries[key] = _entry(key, sid)
         with store._lock:
