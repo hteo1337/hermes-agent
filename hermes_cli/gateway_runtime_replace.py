@@ -16,19 +16,18 @@ Refused, never stopped:
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 from pathlib import Path
 from time import monotonic
 from typing import Any
 
-from hermes_startup_watchdog import DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S
+from hermes_startup_watchdog import DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S, STATE_DB_SCHEMA_PHASE_S
 
 # Graceful drain before the guarded force kill; an idle old gateway exits in well under a second.
 _GRACEFUL_STOP_SECONDS = 10.0
 _FORCED_STOP_SECONDS = 5.0
-# Prior builds cannot report progress. Give them the schema watchdog's single-phase runway.
-_LEGACY_STARTUP_SECONDS = 600.0
 
 # One line each, short enough for the TUI's activity row after its "gateway incompatible: " prefix.
 REFUSAL_DETAIL = {
@@ -79,17 +78,19 @@ def starting_payload(payload: dict) -> bool:
 
 
 def startup_progress_is_fresh(payload: dict) -> bool:
+    now = monotonic()
+    phase = payload.get("startup_schema_phase_at")
+    # A SQLite opcode can run for minutes without invoking its VM progress handler.
+    # Cap an open phase even if it continues to invoke the handler.
+    if type(phase) in {float, int} and 0 < phase <= now:
+        return now - phase < STATE_DB_SCHEMA_PHASE_S
     stamp = payload.get("startup_progress_at")
-    # A monotonic timestamp is comparable between Python processes on this host. Reading
-    # identify does not advance it. Invalid or absent markers get the legacy process-age bound.
-    if type(stamp) in {float, int} and 0 < stamp <= (now := monotonic()):
+    if type(stamp) in {float, int} and 0 < stamp <= now:
         return now - stamp < DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S
+    # Legacy owners have no monotonic age evidence. A wall-clock correction must
+    # never turn an unstamped starting reply into permission to stop the process.
     pid = payload.get("pid")
-    if type(pid) is not int or pid <= 1:
-        return False
-    from hermes_cli.process_identity import _process_create_time
-    birth = _process_create_time(pid)
-    return birth is not None and 0 <= time.time() - birth < _LEGACY_STARTUP_SECONDS
+    return type(pid) is int and pid > 1
 
 
 def _verified_owner(control: Path, payload: dict, *, stalled: bool) -> tuple[int, Any] | str:
@@ -139,7 +140,7 @@ def _wait_gone(pid: int, seconds: float) -> bool:
 def replace_incompatible_owner(home: Path, *, deadline: float, stalled: bool = False) -> str | None:
     """Stop the older or startup-stalled gateway for *home*; None once gone, else a refusal code
     (see :data:`REFUSAL_DETAIL`). Never starts anything: the caller's ensure loop does that."""
-    from gateway.status import get_process_start_time, terminate_pid
+    from gateway.status import get_process_start_time
     budget = deadline - time.monotonic()
     if budget <= 0:
         return "owner_unreachable"
@@ -155,12 +156,69 @@ def replace_incompatible_owner(home: Path, *, deadline: float, stalled: bool = F
         return verdict
     pid, start_time = verdict
     if stalled:
-        # A concurrent ensure may have replaced it, or the original may have resumed booting.
-        from hermes_cli.gateway_runtime import _endpoint
-        if _endpoint(payload, home, control_home=None if control == home else control).reason_code != "startup_stalled":
-            return "owner_changed"
+        return _replace_stalled_owner(home, found, verdict, deadline)
     if get_process_start_time(pid) != start_time:
         return "owner_changed"
+    return _stop_owner(control, pid, start_time, deadline)
+
+
+def _replace_stalled_owner(home: Path, found: tuple[Path, dict], owner: tuple[int, Any],
+                           deadline: float) -> str | None:
+    from gateway.runtime_ownership import _LOCK_FLAGS, _open_checked, _still_names
+    from gateway.status import _try_acquire_file_lock, get_process_start_time
+    from hermes_cli.gateway_runtime import _endpoint
+    from hermes_cli.gateway_runtime_service import remaining
+
+    control, payload = found
+    pid, start_time = owner
+    # Use the answering home so a multiplexer and its named-profile clients
+    # contend on the same inode. Keep it after release, as with gateway.lock.
+    path = control.resolve() / ".gateway-startup-stop.lock"
+    fd = _open_checked(path, _LOCK_FLAGS)
+    with os.fdopen(fd, "r+", encoding="utf-8") as claim:
+        while not _try_acquire_file_lock(claim):
+            time.sleep(min(0.05, remaining(deadline)))
+        if not _still_names(path, fd) or os.fstat(fd).st_nlink != 1:
+            return "owner_unverified"
+        if _endpoint(payload, home, control_home=None if control == home else control).reason_code != "startup_stalled":
+            return "owner_changed"
+        target = json.dumps(owner)
+        claim.seek(0)
+        already_attempted = claim.read(len(target) + 1) == target
+        if get_process_start_time(pid) != start_time:
+            return "owner_changed"
+
+        # Re-read under the stop claim and after the OS identity check. Even an
+        # advanced stamp that is already stale invalidates this stop decision.
+        budget = remaining(deadline)
+        try:
+            latest = _identify(home, timeout=min(2.0, budget))
+        except (OSError, ValueError, TypeError):
+            return "owner_unreachable"
+        if latest is None:
+            return None
+        latest_control, current = latest
+        keys = ("hermes_home", "kind", "pid", "start_time", "startup_progress_at", "startup_schema_phase_at")
+        if (latest_control != control
+                or any(current.get(key) != payload.get(key) for key in keys)
+                or _endpoint(current, home, control_home=None if control == home else control).reason_code
+                != "startup_stalled"):
+            return "owner_changed"
+
+        # Record the attempted owner so a waiter cannot send another stop if
+        # the first attempt fails to terminate it.
+        if already_attempted:
+            return "owner_did_not_exit"
+        claim.seek(0)
+        claim.write(target)
+        claim.truncate()
+        claim.flush()
+        return _stop_owner(control, pid, start_time, deadline)
+
+
+def _stop_owner(control: Path, pid: int, start_time: Any, deadline: float) -> str | None:
+    from gateway.status import terminate_pid
+
     _write_planned_stop(control, pid, start_time)
     graceful = min(_GRACEFUL_STOP_SECONDS, max(deadline - time.monotonic() - _FORCED_STOP_SECONDS, 1.0))
     try:

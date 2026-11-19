@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Sequence
 
 
 from hermes_constants import get_hermes_home
-from hermes_startup_watchdog import report_startup_progress
+from hermes_startup_watchdog import STATE_DB_SCHEMA_PHASE_S, report_startup_progress
 from utils import safe_json_loads
 from hermes_state_common import (
     DEFERRED_INDEX_SQL, FTS_CJK_STALE_KEY, FTS_REBUILD_DEFERRAL_KEY, FTS_STALE_KEY, FTS_SQL,
@@ -951,7 +951,7 @@ class SessionSchemaMixin:
         # _MAX_LEASE_S=900. Honest worst case: a genuinely wedged DB init delays supervisor respawn by up to
         # the lease duration. Per-chunk renewal would shrink that, but adds complexity to the migration
         # loops for a rare failure mode.
-        report_startup_progress(600.0, phase="state_db_init_schema")
+        report_startup_progress(STATE_DB_SCHEMA_PHASE_S, phase="state_db_init_schema", schema_phase=True)
         cursor = self._conn.cursor()
         cursor.executescript(SCHEMA_SQL)
 
@@ -1051,7 +1051,7 @@ class SessionSchemaMixin:
         """Version-gated chain for DATA migrations only (row backfills); column additions never
         belong here. Advances schema_version at the end unless FTS5 is unavailable."""
         # Renew the lease: the chain can rewrite whole tables on large DBs.
-        report_startup_progress(600.0, phase="state_db_data_migrations")
+        report_startup_progress(STATE_DB_SCHEMA_PHASE_S, phase="state_db_data_migrations", schema_phase=True)
         # (v10 trigram backfill and v11 inline FTS re-index were superseded by v23 and removed.)
         # v11 (SUPERSEDED by v23): re-index FTS5 tables to cover tool_name + tool_calls in inline mode
         # (#16751). v23 drops and rebuilds both FTS tables in external-content form, so running the v11

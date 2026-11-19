@@ -288,6 +288,7 @@ def _identify_gateway_runtime(runner=None, *, progress=None):
     if payload.get('state') == 'draining' and descriptor.get('drain_reason'):
         payload['drain_reason'] = descriptor['drain_reason']
     if payload.get("state") == "starting" and progress is not None:
+        payload["startup_schema_phase_at"] = progress.schema_phase_started_at
         payload["startup_progress_at"] = progress.last_advanced
     payload["supervisor"] = {"manual": "none", "desktop": "none"}.get(
         payload.get("supervisor"), payload.get("supervisor", "none"))

@@ -837,7 +837,9 @@ class SessionDB(
             self._conn.set_progress_handler(progress.advance, 100_000)
             try:
                 self._init_schema()
+                progress.advance()
             finally:
+                progress.schema_phase_started_at = None
                 self._conn.set_progress_handler(None, 0)
 
     def _connect_and_init_with_lock_patience(self) -> None:

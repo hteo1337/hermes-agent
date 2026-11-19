@@ -46,6 +46,10 @@ async def test_ensure_waits_for_the_early_gateway_control_listener(monkeypatch):
 @pytest.mark.platforms("posix")
 @pytest.mark.asyncio
 async def test_ensure_replaces_only_the_verified_stalled_startup(monkeypatch):
+    import threading
+    import time
+    from types import SimpleNamespace
+
     from gateway import status
     from gateway.control_socket import GatewayControlServer
     from hermes_cli import gateway_runtime_replace as replace, gateway_runtime_start, process_identity
@@ -124,15 +128,133 @@ async def test_ensure_replaces_only_the_verified_stalled_startup(monkeypatch):
         assert result.state == "ready", result
         assert stopped == [pid, pid]
 
-        # The old-format owner has a process-age bound even without a progress field.
-        payload.update(state="starting", pid=pid, start_time=start_time)
-        del payload["runtime_protocol"], payload["startup_progress_at"]
-        monkeypatch.setattr(process_identity, "_process_create_time", lambda _: 1.0)
-        result = await ensure()
-        assert result.state == "ready", result
-        assert stopped == [pid, pid, pid]
+        # A wall-clock step in either direction cannot expire an unstamped owner.
+        legacy_states = []
+        for wall_time in (10610.0, 9980.0):
+            payload.update(state="starting", pid=pid, start_time=start_time)
+            payload.pop("runtime_protocol", None)
+            payload.pop("startup_progress_at", None)
+            with monkeypatch.context() as wall:
+                wall.setattr(process_identity, "_process_create_time", lambda _: 10000.0)
+                wall.setattr(replace, "time", SimpleNamespace(
+                    time=lambda: wall_time, monotonic=time.monotonic, sleep=time.sleep))
+                legacy_states.append((await ensure(0.5)).state)
+
+        # Complete a phase after replacement has read the expired reply, at
+        # the process fingerprint check. The PID and fingerprint stay put.
+        resumed_states = []
+        for advance in (1, 700):
+            pid += 10
+            payload.update(state="starting", pid=pid, start_time=start_time, runtime_protocol=1,
+                           startup_progress_at=clock - 900)
+            verifies = 0
+
+            def resume(target):
+                nonlocal verifies
+                verifies += 1
+                if verifies == 2:
+                    payload["startup_progress_at"] += advance
+                    if advance == 700:
+                        payload.update(state="ready", supervisor="none",
+                                       served_profiles=[{"home": str(home), "profile_id": str(home)}])
+                return start_time
+
+            # Exercise the observed stop synchronously rather than allowing
+            # a later ensure iteration to make a new expiry decision.
+            with monkeypatch.context() as race:
+                race.setattr(status, "get_process_start_time", resume)
+                resumed_states.append(await asyncio.to_thread(
+                    replace.replace_incompatible_owner, home, deadline=time.monotonic() + 5, stalled=True))
+
+        # Hold the first graceful stop while a second ensure reaches the
+        # same owner. Leave it alive to exercise the failed-stop outcome.
+        pid += 10
+        payload.update(state="starting", pid=pid, start_time=start_time, startup_progress_at=clock - 301)
+        first_stop = threading.Event()
+        contender = threading.Event()
+        try_lock = status._try_acquire_file_lock
+        concurrent_stops = []
+
+        def record_stop(target, *, force=False, expected_start_time):
+            assert (target, expected_start_time) == (pid, start_time)
+            concurrent_stops.append(force)
+            if len(concurrent_stops) == 1:
+                first_stop.set()
+                assert contender.wait(4)
+            elif not force:
+                contender.set()
+
+        def record_contention(handle):
+            acquired = try_lock(handle)
+            if not acquired:
+                contender.set()
+            return acquired
+
+        with monkeypatch.context() as race:
+            race.setattr(status, "terminate_pid", record_stop)
+            race.setattr(status, "_try_acquire_file_lock", record_contention)
+            first = asyncio.create_task(ensure(8))
+            assert await asyncio.to_thread(first_stop.wait, 6)
+            results = await asyncio.gather(first, ensure(8))
+        assert [result.state for result in results] == ["incompatible", "incompatible"]
+        assert (legacy_states, resumed_states, concurrent_stops) == (
+            ["starting", "starting"], ["owner_changed", "owner_changed"], [False, True])
     finally:
         await server.stop()
+
+
+@pytest.mark.platforms("posix")
+@pytest.mark.asyncio
+async def test_ensure_protects_a_schema_phase_without_vm_callbacks(monkeypatch):
+    import threading
+
+    from gateway.run_bootstrap import _start_gateway_start_control_socket
+    from hermes_cli import gateway_runtime_replace as replace
+    from hermes_cli.gateway_runtime import discover_gateway_endpoint
+    from hermes_cli.gateway_runtime_discovery import query_identify
+    from hermes_constants import get_hermes_home
+    from hermes_startup_watchdog import StartupProgress, startup_progress
+    from hermes_state import SessionDB
+
+    entered = threading.Event()
+    release = threading.Event()
+    original = SessionDB._reconcile_columns
+
+    def hold_schema(db, cursor):
+        entered.set()
+        assert release.wait(10)
+        return original(db, cursor)
+
+    def open_store():
+        SessionDB(home / "state.db").close()
+
+    home = get_hermes_home()
+    home.chmod(0o700)
+    progress = StartupProgress()
+    token = startup_progress.set(progress)
+    monkeypatch.setattr(SessionDB, "_reconcile_columns", hold_schema)
+    server = await _start_gateway_start_control_socket(progress=progress)
+    assert server is not None
+    worker = asyncio.create_task(asyncio.to_thread(open_store))
+    try:
+        assert await asyncio.to_thread(entered.wait, 6)
+        before = await asyncio.to_thread(query_identify, home, timeout=2)
+        stamp = before["startup_progress_at"]
+        monkeypatch.setattr(replace, "monotonic", lambda: stamp + 301)
+        protected = await asyncio.to_thread(discover_gateway_endpoint, home)
+        during = await asyncio.to_thread(query_identify, home, timeout=2)
+        assert during["startup_progress_at"] == stamp
+        assert protected.state == "starting"
+        monkeypatch.setattr(replace, "monotonic", lambda: before["startup_schema_phase_at"] + 600)
+        expired = await asyncio.to_thread(discover_gateway_endpoint, home)
+        assert expired.reason_code == "startup_stalled"
+    finally:
+        release.set()
+        startup_progress.reset(token)
+        try:
+            await worker
+        finally:
+            await server.stop()
 
 
 @pytest.mark.asyncio

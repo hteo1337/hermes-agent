@@ -408,7 +408,12 @@ def _observe_replacing_stale(home: Path, deadline: float, replaced: set[Path]) -
     else:
         refusal = replace.replace_incompatible_owner(home, deadline=deadline)
     if refusal == "owner_changed":
-        return discover_gateway_endpoint(home, timeout=remaining(deadline))
+        latest = discover_gateway_endpoint(home, timeout=remaining(deadline))
+        if reason == latest.reason_code == "startup_stalled":
+            # A changed progress stamp can still be old. Let the next ensure
+            # iteration make a fresh expiry decision.
+            return GatewayDiscovery("starting")
+        return latest
     replaced.add(home)
     if refusal is not None:
         return GatewayDiscovery("incompatible", reason_code=reason,
