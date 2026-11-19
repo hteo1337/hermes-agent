@@ -42,7 +42,8 @@ async def _build_profile_authority(runner, name, home, *, register):
     # Each home's store resolves through the runner's scope-following handle cache, exactly
     # the handle every later scoped read of that profile uses (one writer per state.db).
     with _profile_runtime_scope(home, hydrate_secrets=False):
-        db = getattr(runner._session_db, '_db', runner._session_db)
+        scoped_db = await asyncio.to_thread(lambda: runner._session_db)
+        db = getattr(scoped_db, '_db', scoped_db)
         if db is None:
             raise RuntimeError(_store_open_failure(runner, home))
         if (await asyncio.to_thread(Path(db.db_path).resolve)).parent != home:

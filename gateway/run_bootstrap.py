@@ -268,128 +268,132 @@ def _start_gateway_claim_pid_file(force: bool = False) -> bool:
     return True
 
 
-async def _start_gateway_start_control_socket(runner):
-    """Start the gateway control socket (identify/status/pause-for-update); None when unavailable."""
-    from gateway.run import (asyncio, logger, os, threading)
-    import atexit
+def _identify_gateway_runtime(runner=None):
+    from gateway.control_socket import build_identify_payload
+    from gateway.drain_control import RESTART_WAIT_REASON
+
+    descriptor = getattr(runner, 'session_runtime_descriptor', {'state': 'starting', 'served_profiles': []})
+    payload = build_identify_payload()
+    payload.update({key: descriptor[key] for key in (
+        "instance_id", "runtime_protocol", "authority_epoch", "state", "api_origin",
+        "served_profiles", "parked_profiles", "capabilities") if key in descriptor})
+    if getattr(runner, '_draining', False):
+        payload.update(state='draining')
+        # The restart's after-turn wait still owns its turns: clients reach it to answer a
+        # parked approval/clarify (#139041), so the endpoint stays dialable until stop().
+        if descriptor.get('drain_reason') != RESTART_WAIT_REASON:
+            payload['capabilities'] = []
+    if payload.get('state') == 'draining' and descriptor.get('drain_reason'):
+        payload['drain_reason'] = descriptor['drain_reason']
+    payload["supervisor"] = {"manual": "none", "desktop": "none"}.get(
+        payload.get("supervisor"), payload.get("supervisor", "none"))
+    return payload
+
+
+def _bind_gateway_control_runtime(server, runner):
+    """Attach runtime verbs to the already listening control socket."""
+    from gateway.run import asyncio, os, threading
     import concurrent.futures
     import inspect
-    _control_server = None
-    try:
-        # Started immediately after the PID-file claim: winning that O_EXCL race is the moment this process
-        # becomes the authoritative gateway for its HERMES_HOME, so from here on "does a socket answer?" is
-        # a truthful liveness/identity query for updater and fleet consumers. Returns None on failure and
-        # start_gateway aborts startup: the listener mints every local client's attach ticket, so a
-        # gateway without it can serve no local session. See #92091.
-        from gateway.control_socket import GatewayControlServer, build_identify_payload
-        from gateway.run_profile_reconcile import (
-            migrate_profile_identity_verb, purge_profile_identity_verb,
-            unserve_profile_verb, serve_profile_verb,
-        )
-        from gateway.run_plugin_rewire import reload_plugins_verb
-        from gateway.run_active_work_verb import active_work_verb
-        from gateway.drain_control import RESTART_WAIT_REASON
+    from gateway.run_profile_reconcile import (
+        migrate_profile_identity_verb, purge_profile_identity_verb,
+        unserve_profile_verb, serve_profile_verb,
+    )
+    from gateway.run_plugin_rewire import reload_plugins_verb
+    from gateway.run_active_work_verb import active_work_verb
 
-        def _identify_runtime():
-            descriptor = getattr(runner, 'session_runtime_descriptor', {'state': 'starting'})
-            payload = build_identify_payload()
-            payload.update({key: descriptor[key] for key in (
-                "instance_id", "runtime_protocol", "authority_epoch", "state", "api_origin",
-                "served_profiles", "parked_profiles", "capabilities") if key in descriptor})
-            if getattr(runner, '_draining', False):
-                payload.update(state='draining')
-                # The restart's after-turn wait still owns its turns: clients reach it to answer a
-                # parked approval/clarify (#139041), so the endpoint stays dialable until stop().
-                if descriptor.get('drain_reason') != RESTART_WAIT_REASON:
-                    payload['capabilities'] = []
-            if payload.get('state') == 'draining' and descriptor.get('drain_reason'):
-                payload['drain_reason'] = descriptor['drain_reason']
-            payload["supervisor"] = {"manual": "none", "desktop": "none"}.get(
-                payload.get("supervisor"), payload.get("supervisor", "none"))
-            return payload
-        # pause-for-update: the updater asks us to drain + exit (freeing venv handles) vs. a tree-kill
-        # (same path as SIGUSR1). Handler runs on the socket executor thread, so marshal onto the loop.
-        # pause-for-update (#92091 step 2): the updater asks this gateway to drain in-flight turns and exit
-        # cleanly — releasing every venv file handle — instead of being tree-killed mid-turn. Same drain
-        # path as SIGUSR1/service restarts (request_restart(via_service=True)); the updater (or the service
-        # manager) relaunches after the code swap.
-        _main_loop = asyncio.get_running_loop()
+    # pause-for-update: the updater asks us to drain + exit (freeing venv handles) vs. a tree-kill
+    # (same path as SIGUSR1). Handler runs on the socket executor thread, so marshal onto the loop.
+    # pause-for-update (#92091 step 2): the updater asks this gateway to drain in-flight turns and exit
+    # cleanly — releasing every venv file handle — instead of being tree-killed mid-turn. Same drain
+    # path as SIGUSR1/service restarts (request_restart(via_service=True)); the updater (or the service
+    # manager) relaunches after the code swap.
+    _main_loop = asyncio.get_running_loop()
 
-        def _pause_for_update_handler() -> dict:
+    def _pause_for_update_handler() -> dict:
+        try:
+            from hermes_cli.gateway import _get_restart_drain_timeout
+            _drain = float(_get_restart_drain_timeout())
+        except Exception:
+            _drain = 30.0
+        accepted_box: list[bool] = []
+        _done = threading.Event()
+
+        def _request() -> None:
             try:
-                from hermes_cli.gateway import _get_restart_drain_timeout
-                _drain = float(_get_restart_drain_timeout())
-            except Exception:
-                _drain = 30.0
-            accepted_box: list[bool] = []
-            _done = threading.Event()
+                accepted_box.append(runner.request_restart(detached=False, via_service=True))
+            finally:
+                _done.set()
 
-            def _request() -> None:
-                try:
-                    accepted_box.append(runner.request_restart(detached=False, via_service=True))
-                finally:
-                    _done.set()
+        _main_loop.call_soon_threadsafe(_request)
+        _done.wait(timeout=5.0)
+        accepted = bool(accepted_box and accepted_box[0])
+        return {
+            "pausing": accepted, "already_stopping": not accepted,
+            "pid": os.getpid(), "drain_timeout": _drain}
 
-            _main_loop.call_soon_threadsafe(_request)
-            _done.wait(timeout=5.0)
-            accepted = bool(accepted_box and accepted_box[0])
-            return {
-                "pausing": accepted, "already_stopping": not accepted,
-                "pid": os.getpid(), "drain_timeout": _drain}
+    def _rescan_profiles_handler() -> dict:
+        """``hermes profile create/delete`` asks the multiplexer to reconcile ``profiles/`` now
+        (the watcher also rescans periodically). Runs on the socket executor: marshal onto the loop
+        and wait briefly so the caller learns whether the profile is served. A gateway standalone
+        only because the host had one profile starts multiplexing in place on this rescan."""
+        future = asyncio.run_coroutine_threadsafe(
+            runner.reconcile_served_profiles(reason="control-socket"), _main_loop)
+        try:
+            # Bounded: a token-less create reconciles in milliseconds; a credential-add whose adapter
+            # connect outlasts this keeps running and the caller sees ``pending`` (not an error).
+            result = future.result(timeout=5.0)
+        except concurrent.futures.TimeoutError:
+            result = {"pending": True, "served_profiles": runner.served_profile_names()}
+        return {"multiplex": bool(getattr(runner.config, "multiplex_profiles", False)), **result}
 
-        def _rescan_profiles_handler() -> dict:
-            """``hermes profile create/delete`` asks the multiplexer to reconcile ``profiles/`` now
-            (the watcher also rescans periodically). Runs on the socket executor: marshal onto the loop
-            and wait briefly so the caller learns whether the profile is served. A gateway standalone
-            only because the host had one profile starts multiplexing in place on this rescan."""
-            future = asyncio.run_coroutine_threadsafe(
-                runner.reconcile_served_profiles(reason="control-socket"), _main_loop)
-            try:
-                # Bounded: a token-less create reconciles in milliseconds; a credential-add whose adapter
-                # connect outlasts this keeps running and the caller sees ``pending`` (not an error).
-                result = future.result(timeout=5.0)
-            except concurrent.futures.TimeoutError:
-                result = {"pending": True, "served_profiles": runner.served_profile_names()}
-            return {"multiplex": bool(getattr(runner.config, "multiplex_profiles", False)), **result}
+    def after_authorities(handler):
+        wants_params = "params" in inspect.signature(handler).parameters
 
-        def after_authorities(handler):
-            wants_params = "params" in inspect.signature(handler).parameters
+        def invoke(params):
+            if (server.ticket_store is None and
+                    getattr(runner, 'session_runtime_descriptor', {}).get('state') != 'ready'):
+                raise RuntimeError('gateway runtime starting')
+            return handler(params) if wants_params else handler()
 
-            def invoke(params):
-                if (_control_server.ticket_store is None and
-                        getattr(runner, 'session_runtime_descriptor', {}).get('state') != 'ready'):
-                    raise RuntimeError('gateway runtime starting')
-                return handler(params) if wants_params else handler()
+        return invoke
 
-            return invoke
+    runtime_handlers = {"pause-for-update": _pause_for_update_handler,
+                       "rescan-profiles": _rescan_profiles_handler,
+                       "migrate-profile-identity": migrate_profile_identity_verb(runner),
+                       "unserve-profile": unserve_profile_verb(runner),
+                       "serve-profile": serve_profile_verb(runner),
+                       "purge-profile-identity": purge_profile_identity_verb(runner),
+                       # `hermes gateway stop/restart` refuse while this names live work.
+                       "active-work": active_work_verb(runner, _main_loop),
+                       # A plugin installed/enabled by another process loads now and re-wires the
+                       # live adapters' handlers (#87770); tools/prompt still wait for the next session.
+                       "reload-plugins": reload_plugins_verb(runner, _main_loop)}
+    server.set_verb_handlers({
+        "identify": lambda: _identify_gateway_runtime(runner),
+        **{verb: after_authorities(handler) for verb, handler in runtime_handlers.items()},
+    })
+    server.ticket_store = getattr(runner, 'session_ticket_store', None)
+    # Hosted-room transports install onto this listener.
+    runner.session_control_server = server
 
-        runtime_handlers = {"pause-for-update": _pause_for_update_handler,
-                           "rescan-profiles": _rescan_profiles_handler,
-                           "migrate-profile-identity": migrate_profile_identity_verb(runner),
-                           "unserve-profile": unserve_profile_verb(runner),
-                           "serve-profile": serve_profile_verb(runner),
-                           "purge-profile-identity": purge_profile_identity_verb(runner),
-                           # `hermes gateway stop/restart` refuse while this names live work.
-                           "active-work": active_work_verb(runner, _main_loop),
-                           # A plugin installed/enabled by another process loads now and re-wires the
-                           # live adapters' handlers (#87770); tools/prompt still wait for the next session.
-                           "reload-plugins": reload_plugins_verb(runner, _main_loop)}
-        _control_server = GatewayControlServer(verb_handlers={
-            "identify": _identify_runtime,
-            **{verb: after_authorities(handler) for verb, handler in runtime_handlers.items()},
-        })
-        _control_server.ticket_store = getattr(runner, 'session_ticket_store', None)
-        if not await _control_server.start():
-            _control_server = None
-        else:
-            atexit.register(_control_server.cleanup_files)
-            # Hosted-room transports install onto this listener; bind it here so every launcher
-            # that starts the control socket (not only start_gateway) exposes it.
-            runner.session_control_server = _control_server
-    except Exception as _cs_exc:
-        logger.error("Control socket startup failed; the gateway cannot start without it: %s", _cs_exc)
-        _control_server = None
-    return _control_server
+
+async def _start_gateway_start_control_socket(runner=None):
+    """Bind after claiming the PID file, with identify/status available during store migration."""
+    import atexit
+    from gateway.control_socket import GatewayControlServer
+
+    server = GatewayControlServer(verb_handlers={"identify": _identify_gateway_runtime})
+    if not await server.start():
+        return None
+    atexit.register(server.cleanup_files)
+    if runner is not None:
+        try:
+            _bind_gateway_control_runtime(server, runner)
+        except BaseException:
+            await server.stop()
+            raise
+    return server
 
 
 def _start_gateway_start_cron_and_housekeeping(runner):
@@ -826,7 +830,20 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         from gateway.run_startup import recover_left_core_at_gateway_start
         await asyncio.to_thread(recover_left_core_at_gateway_start)  # before the runner loads platform config
 
-        runner = GatewayRunner(resolved_config)
+        _control_server = await _start_gateway_start_control_socket()
+        if _control_server is None:
+            raise RuntimeError("gateway session bootstrap control listener unavailable")
+        # The first SessionDB open may build the policy index or wait for a writer.
+        # Keep identify/status responsive while the launch store is initialized.
+        build_runner = asyncio.create_task(asyncio.to_thread(GatewayRunner, resolved_config))
+        try:
+            runner = await asyncio.shield(build_runner)
+        except asyncio.CancelledError:
+            # Keep the PID and profile locks until the writer finishes opening and
+            # the shutdown tail can close its handles.
+            runner = await build_runner
+            raise
+        _bind_gateway_control_runtime(_control_server, runner)
         # Multiplex: swap the launch-home file handlers for per-profile routers so each profile's records
         # land in its own logs/. Must run after the runner resolved (possibly None) config and setup_logging.
         # See #82936.
@@ -873,11 +890,6 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             name="planned-stop-watcher")
         _planned_stop_watcher_thread.start()
 
-        # Right after the PID claim (which makes us authoritative). Fatal: local clients attach only
-        # with tickets minted on this listener, so startup aborts without it.
-        _control_server = await _start_gateway_start_control_socket(runner)
-        if _control_server is None:
-            raise RuntimeError("gateway session bootstrap control listener unavailable")
         # Identify/status can answer while authorities recover. Tickets remain unavailable until
         # the owned profile set is complete.
         from gateway.run_runtime import initialize_gateway_runtime

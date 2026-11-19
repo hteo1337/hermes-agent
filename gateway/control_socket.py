@@ -226,6 +226,10 @@ class GatewayControlServer:
         self._handlers: dict[str, Callable[..., dict[str, Any]]] = {
             "identify": build_identify_payload, "status": build_status_payload, **(verb_handlers or {})}
 
+    def set_verb_handlers(self, handlers: dict[str, Callable[..., dict[str, Any]]]) -> None:
+        """Publish new handlers together while request workers may be reading the old mapping."""
+        self._handlers = {**self._handlers, **handlers}
+
     async def start(self) -> bool:
         """Bind and start serving. Returns True on success, False otherwise."""
         if self._request_executor is None:
