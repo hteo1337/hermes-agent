@@ -327,3 +327,49 @@ Desktop reported 56 passes and one Windows-only skip across 12 files in 7.83 sec
 The initial Python invocation completed six files with 81 passes, 10 skips and zero reported failures. The continuation completed 24 files in 450.2 seconds and reported 509 passes, seven skips and one failure. That failure was the new test's simulated ready reply, which omitted the required `supervisor` field and was correctly refused. Adding `supervisor="none"` changed only the test fixture. The targeted pass above resolved that failure. Final coverage was **591 passes and 17 skips across 30 files**, with no unresolved failures. The full Python command was interrupted and only the unfinished files were resumed. The Desktop selection ran once.
 
 The paired rollback used `rollback.py` and `rollback-env/isolated` in the same scratch directory. It ran the fallback writer on the post-boot SQLite clone, then compared two copies of that same store in the checked-out product tree and an unmodified `git archive 57499e996fb`. Both kept the mirror-only route at import and allocated a new ID at the base's subsequent stale-route check. The initial assertion that the next DM must keep the ID was disproved by the paired control. Separate logs are `rollback.log` and `rollback-pair.log`.
+
+## Round four
+
+Reviewed control `fa96f66028752b4fbb87de5d43fe897a2b9eb5f4` and product/test head `d591e1410b098b9b4e056d0ed7864f7502b7bc54`. The delivery commit changes only issue handoff Markdown. Draft PR #4 uses base `57499e996fb`.
+
+- The startup control payload now includes the existing 600-second allowance for an active schema or data migration phase. Starting and finishing the phase renew protection independently of SQLite VM callbacks. Callback activity cannot extend an open phase past its allowance. A phase that completes removes the bound and publishes completed work.
+- The automatic expiry stop takes a cross-process claim in the answering control home. Root and named-profile clients of the same owner use that home. With the claim held, ensure checks the process fingerprint, asks identify again, and abandons the stop if the response no longer identifies the same stalled owner with the same progress. The claim remains held through graceful and forced termination and records the attempted fingerprint. A waiter rechecks the owner and cannot initiate another stop against that fingerprint after an unsuccessful attempt.
+- A starting reply with a valid PID but no usable monotonic timestamp stays protected. Automatic expiry for such an owner is unavailable. An explicitly older runtime protocol still takes the verified upgrade path. The scheduled retention rollback was checked against the PR base and remains in effect.
+
+### Paired controls
+
+The reviewed archive used the final test file as its only overlay. The corrected control run reported two failures and three deselections. A preliminary control exposed a missing required test timeout argument, corrected before the final control and the only treatment suite run. The reviewed head reported `incompatible` after 301 seconds of simulated callback silence and `ready` after stopping both unstamped owners under simulated wall-clock correction. The composite replacement case also exercised a progress/ready change at the fingerprint check and allowed two graceful/force sequences against one remaining owner. The treatment's five lifecycle tests passed. They distinguish a stable expired stamp from an advanced but still expired stamp, from readiness, and from overlapping attempts against an owner that stays alive. Termination was intercepted in those tests.
+
+### Commands
+
+Scratch evidence on m5 is in `/private/tmp/th12642-r4.Iva9YC`. All runs used a cleared environment with separate temporary HOME, HERMES_HOME, HERMES_RUNTIME_DIR and lock directories. Python and Desktop used the existing 3.14.9 test interpreter with aiohttp, pinned in the launcher. Python and Desktop ran sequentially with one worker each. The Python launcher runs exactly the 30 file arguments recorded under **Round three**, with file retries disabled.
+
+```sh
+scratch=/private/tmp/th12642-r4.Iva9YC
+(cd "$scratch/reviewed" && "$scratch/baseline-env/isolated" scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py \
+  -k 'test_ensure_replaces_only_the_verified_stalled_startup or test_ensure_protects_a_schema_phase_without_vm_callbacks')
+"$scratch/final-env/isolated" bash "$scratch/final-python.sh"
+"$scratch/boot-env/isolated" env PYTHONPATH="$PWD" sh -c 'exec "$HERMES_PYTHON" "$1"' probe "$scratch/phase-probe.py"
+(cd apps/desktop && "$scratch/desktop-env/isolated" npm test -- --maxWorkers=1 electron/local-gateway)
+(cd apps/desktop && "$scratch/desktop-env/isolated" ../../node_modules/.bin/tsc -p tsconfig.electron.json --noEmit)
+(cd apps/desktop && "$scratch/desktop-env/isolated" node scripts/bundle-electron-main.mjs --dev --out "$scratch/electron-bundle")
+"$scratch/final-env/isolated" python scripts/check --only health --base 57499e996fb --commit d591e1410b0
+git diff --check 57499e996fb..HEAD
+```
+
+Semif judged the product diff and draft delivery plan to require an independent adversarial review. Same-reviewer confirmation, adversarial Sol review, the read-only security audit and exact-head CI remain downstream.
+
+### Results
+
+| Check | Result |
+| --- | --- |
+| Python | 592 passed, 17 skipped, 0 failed across 30 files in 184.0 s. |
+| Desktop local gateway | 56 passed and one Windows-only native pipe case skipped across 12 files in 3.40 s. |
+| Electron static checks | TypeScript and the development bundle both exited 0. |
+| Code health | Zero blocking and zero advisory findings against `57499e996fb`. |
+| Isolated gateway boot | Both 1,263,828,992-byte fixture stores built the expression index. At each schema gate, identify's work stamp stayed constant, ensure returned `starting/deadline` at a simulated 301 seconds and discovery returned `startup_stalled` at 600 seconds. The child reached ready in 5,514.0 ms and the probe stopped that child only. |
+
+The bounded-time probe changes only the observing client's monotonic sample. Its 301- and 600-second outcomes test the time boundaries without keeping SQLite stalled for ten wall-clock minutes. It used real schema work for the launch and secondary profiles. Windows native pipe runtime remains unverified on macOS.
+
+The full `python scripts/check --base 57499e996fb --commit d591e1410b0` run passed all 12 checks. The process scan found no competing Python test runner or Vitest process before or after the sequential runs. Git's whitespace check and the comparison of the rolled-back files against the PR base also passed.
