@@ -13,9 +13,12 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
     legacy_dir = sessions_dir / "legacy"
     legacy_dir.mkdir(parents=True)
     transcript = sessions_dir / "old.jsonl"
+    own_dump = sessions_dir / "request_dump_old_20261119_140000_000000.json"
+    neighbor_dump = sessions_dir / "request_dump_old_other_20261119_140000_000000.json"
+    case_neighbor = sessions_dir / "Next.jsonl"
     nested_artifact = legacy_dir / "fragment.json"
     routing_mirror = sessions_dir / "sessions.json"
-    for artifact in (transcript, nested_artifact, routing_mirror):
+    for artifact in (transcript, own_dump, neighbor_dump, case_neighbor, nested_artifact, routing_mirror):
         artifact.write_text("{}")
 
     with closing(SessionDB(tmp_path / "state.db")) as db:
@@ -35,10 +38,12 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
         filters = dict(source="cron", ended_before=10, exclude_active_write_guards=True, sessions_dir=sessions_dir)
         assert db.prune_sessions(batch_size=1, **filters) == 1
         assert db.get_session("next") is None
+        assert case_neighbor.read_text() == "{}"
         assert db.get_session("chain") and db.get_session("tip")
         assert db.prune_sessions(batch_size=1, **filters) == 1
         assert db.get_meta(POLICY_PREFIX + "old") is None
-        assert not transcript.exists()
+        assert not transcript.exists() and not own_dump.exists()
+        assert neighbor_dump.read_text() == "{}"
         assert db.prune_sessions(batch_size=2, **filters) == 2
         assert db.get_session("chain") is None and db.get_session("tip") is None
         assert db.prune_sessions(batch_size=256, **filters) == 0

@@ -48,3 +48,5 @@ The pushed-head authority repeat measured list/count at 27.04/7.48 ms, longest c
 `python scripts/check --only health --base 57499e996fb --commit HEAD` passed on the reviewed head. The existing retention regression was extended after the audit to verify cleanup confinement and rerun once. It passed against the final code. The two full suites were already complete and were not repeated.
 
 Release-port dry runs used `git merge-tree --write-tree --merge-base=4dcef215cfe 3b4215785882 57499e996fb` and `git merge-tree --write-tree --merge-base=f8108e2e71e^ 3b4215785882 f8108e2e71e`. They found six m5 conflicts and four m4 conflicts. Do not rebase this issue branch onto the stable release base.
+
+The final artifact-ownership follow-up reran the same targeted retention case with one worker. It passed in 3.4 s. It checked removal of correctly named cron files and preservation of differently spelled, nested, reserved, and unrelated dump files. Older dump names that lack the writer's timestamp shape are retained by the scheduled sweep. Code health reported zero findings after the follow-up.
