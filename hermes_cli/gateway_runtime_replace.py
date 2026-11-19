@@ -74,6 +74,9 @@ def _verified_owner(control: Path, payload: dict) -> tuple[int, Any] | str:
         return "owner_newer"
     if not _within_install(control, _install_root()) or not _same(payload.get("hermes_home"), control):
         return "foreign_install"
+    # A different owner can bind between discovery and this identity check.
+    if (type(protocol) is int and protocol == 1) or payload.get("state") == "starting":
+        return "owner_changed"
     pid, recorded = payload.get("pid"), payload.get("start_time")
     if (payload.get("kind") != _GATEWAY_KIND or type(pid) is not int or pid <= 1
             or pid in {os.getpid(), os.getppid()} or recorded is None or not _pid_exists(pid)):

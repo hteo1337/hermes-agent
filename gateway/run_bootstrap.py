@@ -272,7 +272,9 @@ def _identify_gateway_runtime(runner=None):
     from gateway.control_socket import build_identify_payload
     from gateway.drain_control import RESTART_WAIT_REASON
 
-    descriptor = getattr(runner, 'session_runtime_descriptor', {'state': 'starting', 'served_profiles': []})
+    descriptor = getattr(runner, 'session_runtime_descriptor', {
+        'state': 'starting', 'runtime_protocol': 1, 'served_profiles': [],
+    })
     payload = build_identify_payload()
     payload.update({key: descriptor[key] for key in (
         "instance_id", "runtime_protocol", "authority_epoch", "state", "api_origin",

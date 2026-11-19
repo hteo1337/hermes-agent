@@ -96,7 +96,17 @@ def _overlay_owner_home(home: Path) -> Path:
 
 
 def _endpoint(payload: dict, home: Path, control_home: Path | None = None) -> GatewayDiscovery:
-    if type(payload.get("runtime_protocol")) is not int or payload["runtime_protocol"] != 1:
+    protocol = payload.get("runtime_protocol")
+    valid_protocol = type(protocol) is int and protocol == 1
+    owner_home = payload.get("hermes_home")
+    # The launch socket can answer before any profile has been published. Only its
+    # own home is known at this point; named clients still use the reservation path.
+    starting_owner = (payload.get("state") == "starting" and isinstance(owner_home, str) and owner_home
+                      and _canonical_home(owner_home) == _canonical_home(control_home or home))
+    early_start = starting_owner and (valid_protocol or "runtime_protocol" not in payload)
+    if early_start and control_home is None:
+        return GatewayDiscovery("starting")
+    if not valid_protocol and not early_start:
         return GatewayDiscovery("incompatible", reason_code="runtime_protocol")
     profiles = payload.get("served_profiles")
     if not isinstance(profiles, list):
@@ -381,6 +391,8 @@ def _observe_replacing_stale(home: Path, deadline: float, replaced: set[Path]) -
     from hermes_cli import gateway_runtime_replace as replace
     replaced.add(home)
     refusal = replace.replace_incompatible_owner(home, deadline=deadline)
+    if refusal == "owner_changed":
+        return discover_gateway_endpoint(home, timeout=remaining(deadline))
     if refusal is not None:
         return GatewayDiscovery("incompatible", reason_code="runtime_protocol",
                                 detail=replace.REFUSAL_DETAIL.get(refusal, _REPLACE_FAILED_DETAIL))
