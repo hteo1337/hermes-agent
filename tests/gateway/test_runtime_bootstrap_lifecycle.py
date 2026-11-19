@@ -71,7 +71,7 @@ async def test_ensure_replaces_only_the_verified_stalled_startup(monkeypatch):
         assert (target, expected_start_time) == (pid, start_time)
         stopped.append(target)
         payload.update(state="ready", runtime_protocol=1, pid=pid + 1, start_time=200,
-                       instance_id="replacement", authority_epoch=1,
+                       instance_id="replacement", authority_epoch=1, supervisor="none",
                        api_origin="http://127.0.0.1:9001", capabilities=["session-authority-v1"],
                        served_profiles=[{"home": str(home), "profile_id": str(home)}])
 
@@ -101,7 +101,8 @@ async def test_ensure_replaces_only_the_verified_stalled_startup(monkeypatch):
             clock += 100
             assert (await ensure(0.5)).state == "starting"
         clock += 101
-        assert (await ensure()).state == "ready"
+        result = await ensure()
+        assert result.state == "ready", result
         assert stopped == [pid]
 
         # A fresh owner can publish between the original observation and the stop path's reread.
@@ -119,14 +120,16 @@ async def test_ensure_replaces_only_the_verified_stalled_startup(monkeypatch):
 
         # A fresh timestamp cannot shield an explicitly older protocol.
         payload.update(runtime_protocol=0, pid=pid, start_time=start_time)
-        assert (await ensure()).state == "ready"
+        result = await ensure()
+        assert result.state == "ready", result
         assert stopped == [pid, pid]
 
         # The old-format owner has a process-age bound even without a progress field.
         payload.update(state="starting", pid=pid, start_time=start_time)
         del payload["runtime_protocol"], payload["startup_progress_at"]
         monkeypatch.setattr(process_identity, "_process_create_time", lambda _: 1.0)
-        assert (await ensure()).state == "ready"
+        result = await ensure()
+        assert result.state == "ready", result
         assert stopped == [pid, pid, pid]
     finally:
         await server.stop()
