@@ -1649,8 +1649,9 @@ class SessionSessionsMixin:
         ``request_dump_<id>_*.json``; OSError is swallowed so a filesystem hiccup never blocks a
         DB operation. Every historical writer name is swept because a "deleted" session's snapshot
         can carry plaintext secrets (#20334, #60207)."""
-        from hermes_state_session_files import safe_session_file_id
-        if sessions_dir is None or not safe_session_file_id(session_id):
+        name = session_id.casefold()  # Imported IDs cannot name a path or another transcript artifact.
+        if (sessions_dir is None or not name or name in {".", "..", "sessions"}
+                or name.startswith(("session_", "request_dump_")) or any(c in name for c in "/\\:\x00")):
             return
         targets = [sessions_dir / f"{session_id}{suffix}" for suffix in (".json", ".jsonl")]
         targets.append(sessions_dir / f"session_{session_id}.json")

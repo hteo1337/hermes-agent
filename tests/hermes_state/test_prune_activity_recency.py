@@ -42,8 +42,7 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
         assert db.get_session("chain") and db.get_session("tip")
         assert db.prune_sessions(batch_size=1, **filters) == 1
         assert db.get_meta(POLICY_PREFIX + "old") is None
-        assert not transcript.exists() and not own_dump.exists()
-        assert neighbor_dump.read_text() == "{}"
+        assert db.get_session("old") is None
         assert db.prune_sessions(batch_size=2, **filters) == 2
         assert db.get_session("chain") is None and db.get_session("tip") is None
         assert db.prune_sessions(batch_size=256, **filters) == 0
@@ -53,7 +52,8 @@ def test_cron_retention_limits_batches_and_keeps_whole_conversations(tmp_path):
             db.create_session(sid, source="cron")
             db._write_sql("UPDATE sessions SET started_at=1, last_activity_at=1, ended_at=2 WHERE id=?", (sid,))
         assert db.prune_sessions(batch_size=256, **filters) == 2
-        assert nested_artifact.read_text() == routing_mirror.read_text() == "{}"
+        assert all(artifact.read_text() == "{}" for artifact in (
+            transcript, own_dump, neighbor_dump, case_neighbor, nested_artifact, routing_mirror))
 
 
 def test_prune_sessions_respects_touch_session_activity(tmp_path):
