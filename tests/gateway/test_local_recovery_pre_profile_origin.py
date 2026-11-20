@@ -120,8 +120,7 @@ _RECEIPT_DAMAGE = {
 ])
 async def test_a_refused_receipt_names_its_failing_check_in_the_log(tmp_path, monkeypatch, caplog, damage, clause):
     """#140099: the client only ever sees ``storage_unavailable``; gateway.log must name the check that
-    refused the receipt (the wrapped cause, or where an inner check raised), on cold recovery and on
-    every later restore, so a field report pins the layer without offline replication."""
+    refused the receipt (the wrapped cause, or where an inner check raised) on demand, so a field report pins the layer without offline replication."""
     import logging
     from gateway.session_contract import Principal
     from gateway.session_local import create_local_session
@@ -138,8 +137,7 @@ async def test_a_refused_receipt_names_its_failing_check_in_the_log(tmp_path, mo
         cold, _, _ = await _served_authority(tmp_path, monkeypatch, 'second', db=db)
         assert ref.session_id not in cold.sessions
         recovery = [r.getMessage() for r in caplog.records if ref.session_id in r.getMessage()]
-        assert any(clause in message for message in recovery), recovery
-        assert len(recovery) == 1, f'one boot warning per refused receipt: {recovery}'
+        assert recovery == [], 'idle receipts are not inspected at boot'
         caplog.clear()
         with pytest.raises(RuntimeStoreError, match='storage_unavailable'):
             restore_local_session(cold, ref.session_id)

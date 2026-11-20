@@ -378,7 +378,6 @@ class SessionMaintenanceMixin:
             # archive-only escape hatch (#139597) must never reach the delete path.
             raise ValueError("prune_sessions() never deletes open sessions: include_open is archive-only")
         where, where_params = self._prune_where(older_than_days, source, filters, whole_lineages=True)
-        removed_ids: list[str] = []
         def _do(conn):
             cursor = conn.execute(f"SELECT s.id FROM sessions s WHERE {where}", where_params)
             session_ids = {row["id"] for row in cursor.fetchall()}
@@ -388,26 +387,25 @@ class SessionMaintenanceMixin:
             session_ids = retire_prunable(conn, sorted(session_ids))
             prune_retired_tombstones(conn)  # every prune pass also reclaims expired deletion tombstones
             if not session_ids:
-                return 0
+                return []
             # Batched: a cron-heavy store prunes tens of thousands of ids in one call.
             for chunk in _id_chunks(session_ids):
                 ph = _placeholders(chunk)
                 conn.execute(f"UPDATE sessions SET parent_session_id = NULL WHERE parent_session_id IN ({ph})", chunk)
                 conn.execute(f"DELETE FROM messages WHERE session_id IN ({ph})", chunk)
                 conn.execute(f"DELETE FROM sessions WHERE id IN ({ph})", chunk)
-                removed_ids.extend(chunk)
             self._delete_unreferenced_system_prompts(conn)
-            return len(session_ids)
-        count = self._execute_write(_do)
-        if count:
+            return session_ids
+        removed_ids = self._execute_write(_do)
+        if deleted_ids is not None:
+            deleted_ids.extend(removed_ids)
+        if removed_ids:
             emit_session_deleted(self, removed_ids, reason="prune", sessions_dir=sessions_dir)
         from hermes_state_media import collect_retired_media
         collect_retired_media(self)
         for sid in removed_ids:
             self._remove_session_files(sessions_dir, sid)
-        if deleted_ids is not None:
-            deleted_ids.extend(removed_ids)
-        return count
+        return len(removed_ids)
 
     def _page_pragmas(self, names: tuple[str, ...], fail_msg: str) -> Optional[list]:
         """Integer PRAGMAs over the existing connection (never a byte probe); None + debug log on failure."""

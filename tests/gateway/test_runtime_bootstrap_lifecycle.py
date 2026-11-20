@@ -6,6 +6,85 @@ import pytest
 from websockets.asyncio.client import connect
 
 
+@pytest.mark.platforms("posix")
+@pytest.mark.asyncio
+async def test_ensure_waits_for_the_early_gateway_control_listener(monkeypatch):
+    from gateway.run_bootstrap import _start_gateway_start_control_socket
+    from hermes_cli import gateway_runtime_discovery, gateway_runtime_replace, gateway_runtime_start
+    from hermes_cli.gateway_runtime import ensure_gateway_runtime
+    from hermes_constants import get_hermes_home
+
+    def unexpected_replace(*args, **kwargs):
+        pytest.fail("ensure tried to replace the gateway while it was starting")
+
+    def unexpected_spawn(*args, **kwargs):
+        pytest.fail("ensure tried to start another gateway while one was starting")
+
+    home = get_hermes_home()
+    home.chmod(0o700)
+    observed = []
+    query_identify = gateway_runtime_discovery.query_identify
+
+    def observe(*args, **kwargs):
+        payload = query_identify(*args, **kwargs)
+        observed.append(payload["state"])
+        return payload
+
+    monkeypatch.setattr(gateway_runtime_discovery, "query_identify", observe)
+    monkeypatch.setattr(gateway_runtime_replace, "replace_incompatible_owner", unexpected_replace)
+    monkeypatch.setattr(gateway_runtime_start, "spawn_unmanaged_gateway", unexpected_spawn)
+    server = await _start_gateway_start_control_socket()
+    assert server is not None
+    try:
+        result = await asyncio.to_thread(ensure_gateway_runtime, home, timeout=1)
+        assert (result.state, result.reason_code) == ("starting", "deadline")
+        assert observed and set(observed) == {"starting"}
+    finally:
+        await server.stop()
+
+
+@pytest.mark.platforms("posix")
+@pytest.mark.asyncio
+async def test_ensure_never_stops_a_starting_owner_with_an_old_stamp(monkeypatch):
+    from gateway import status
+    from gateway.control_socket import GatewayControlServer
+    from hermes_cli import gateway_runtime_replace as replace, gateway_runtime_start
+    from hermes_cli.gateway_runtime import ensure_gateway_runtime
+    from hermes_constants import get_hermes_home
+
+    home = get_hermes_home()
+    home.chmod(0o700)
+    pid = 900_001
+    fingerprint = 100
+    payload = {
+        "hermes_home": str(home), "kind": "hermes-gateway", "pid": pid,
+        "start_time": fingerprint, "state": "starting", "runtime_protocol": 1,
+        "served_profiles": [], "startup_progress_at": 100.0,
+    }
+
+    def unexpected_stop(*args, **kwargs):
+        pytest.fail("ensure requested a stop against a starting gateway")
+
+    def unexpected_spawn(*args, **kwargs):
+        pytest.fail("ensure tried to launch a second gateway")
+
+    monkeypatch.setattr(replace, "monotonic", lambda: 1000.0, raising=False)
+    monkeypatch.setattr(replace, "_install_root", lambda: home)
+    monkeypatch.setattr(status, "_pid_exists", lambda target: target == pid)
+    monkeypatch.setattr(status, "get_process_start_time", lambda target: fingerprint)
+    monkeypatch.setattr(replace, "_write_planned_stop", unexpected_stop)
+    monkeypatch.setattr(status, "terminate_pid", unexpected_stop)
+    monkeypatch.setattr(gateway_runtime_start, "spawn_unmanaged_gateway", unexpected_spawn)
+
+    server = GatewayControlServer(verb_handlers={"identify": lambda: payload})
+    assert await server.start()
+    try:
+        result = await asyncio.to_thread(ensure_gateway_runtime, home, timeout=0.5)
+        assert (result.state, result.reason_code) == ("starting", "deadline")
+    finally:
+        await server.stop()
+
+
 @pytest.mark.asyncio
 async def test_runtime_preserves_browser_ticket_gate(tmp_path):
     from gateway.config import GatewayConfig

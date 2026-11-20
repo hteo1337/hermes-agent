@@ -132,20 +132,21 @@ def cancel_persisted_close(authority, session_id):
     forget_persisted_close(authority, session_id, record)
 
 
-def rearm_persisted_closes(authority):
+def rearm_persisted_closes(authority, stored):
     """Boot/serve recovery, after the local sessions are restored: every stored close whose session
     is mounted with no viewer goes back to ``pending_closes``. The caller schedules the drain, whose
     idle point (after any queued turn; never past an ``unknown`` one) completes it. Returns the ids."""
-    with authority.db._read_ctx() as conn:
-        stored = conn.execute('SELECT key, value FROM state_meta WHERE key LIKE ?', (CLOSE_PREFIX + '%',)).fetchall()
     armed = []
-    for key, record in stored:
-        session_id = key[len(CLOSE_PREFIX):]
+    for session_id, record in stored:
         live = authority.sessions.get(session_id)
         if live is None or live.superseded:
             continue  # not restored (paused, retired): left stored for a later recovery
         if live.subscribers:
             forget_persisted_close(authority, session_id, record)
+            continue
+        # Recovery yielded after taking the snapshot. A viewer may have cancelled
+        # this operation and already disconnected, or replaced it with a new close.
+        if authority.db.get_meta(CLOSE_PREFIX + session_id) != record:
             continue
         authority.pending_closes.setdefault(session_id, _PendingClose.from_record(record))
         armed.append(session_id)

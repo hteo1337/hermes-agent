@@ -208,15 +208,9 @@ def _local_conversations(conn):
     (policy, FIFO, generation), each receipt lineage segment and the current target), and the ids
     of every derived (Bot Chat, A2A) conversation. One prefix scan, not a lookup per swept id.
     Malformed receipts name nothing."""
-    from hermes_state_local import POLICY_PREFIX
+    from hermes_state_policy_index import policy_summaries
     members, derived = {}, set()
-    for (raw,) in conn.execute('SELECT value FROM state_meta WHERE key GLOB ?', (POLICY_PREFIX + '*',)):
-        try:
-            receipt = json.loads(raw)
-        except (TypeError, ValueError):
-            continue
-        if not isinstance(receipt, dict):
-            continue
+    for _, receipt in policy_summaries(conn):
         entry, lineage = receipt.get('entry'), receipt.get('lineage')
         ids = tuple(x for x in [receipt.get('session_id'), *(lineage if isinstance(lineage, list) else []),
                                 entry.get('session_id') if isinstance(entry, dict) else None] if isinstance(x, str))

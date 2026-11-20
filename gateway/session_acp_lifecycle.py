@@ -5,19 +5,17 @@ is only a viewer, so the owner stamps it when the last subscription goes or the 
 a writer, source='acp' rows stay open forever and the ended-session guard keeps prune/archive away.
 A later ``session/load`` + prompt reopens the row (``session_local_recovery.reopen_local_session``).
 """
+import asyncio
 import logging
 
-from hermes_state_local import POLICY_PREFIX, end_idle_local_session, local_receipt
+from hermes_state_local import end_idle_local_session, local_receipt
+from hermes_state_policy_index import POLICY_PREFIX, policy_summaries
 from hermes_state_runtime import RuntimeStoreError
 
 ACP_END_REASON = 'acp_disconnect'
 
 
-def end_idle_acp_session(authority, session_id):
-    """End *session_id* iff it is an ACP-created local session with no viewer and an idle FIFO."""
-    live = authority.sessions.get(session_id)
-    if live is not None and live.subscribers:
-        return False
+def _end_idle_acp_session(authority, session_id):
     try:
         receipt = local_receipt(authority.db, session_id)
     except RuntimeStoreError:
@@ -30,6 +28,12 @@ def end_idle_acp_session(authority, session_id):
     except (RuntimeStoreError, KeyError, TypeError):
         logging.getLogger(__name__).warning('ACP session %s not ended', session_id, exc_info=True)
         return False
+
+
+def end_idle_acp_session(authority, session_id):
+    """End an ACP session with no viewer and an idle FIFO."""
+    live = authority.sessions.get(session_id)
+    return (live is None or not live.subscribers) and _end_idle_acp_session(authority, session_id)
 
 
 def end_idle_viewer_session(authority, session_id, reason):
@@ -64,9 +68,14 @@ async def reopen_if_reattached(authority, session_id, ended):
     return ended
 
 
-def end_idle_acp_sessions(authority):
-    """Gateway shutdown: every ACP session nobody is viewing, attached this run or not."""
+def _end_idle_acp_sessions(authority, viewed):
     with authority.db._read_ctx() as conn:
-        ids = [row[0][len(POLICY_PREFIX):] for row in conn.execute(
-            'SELECT key FROM state_meta WHERE key LIKE ?', (POLICY_PREFIX + '%',))]
-    return sum(end_idle_acp_session(authority, sid) for sid in ids)
+        ids = [key[len(POLICY_PREFIX):] for key, policy in policy_summaries(conn)
+               if policy['source'] == 'acp']
+    return sum(_end_idle_acp_session(authority, sid) for sid in ids if sid not in viewed)
+
+
+async def end_idle_acp_sessions(authority):
+    """Gateway shutdown: close unviewed ACP sessions, including those never attached this run."""
+    viewed = {sid for sid, live in authority.sessions.items() if live.subscribers}
+    return await asyncio.to_thread(_end_idle_acp_sessions, authority, viewed)

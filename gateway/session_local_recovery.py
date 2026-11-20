@@ -9,7 +9,7 @@ from gateway.session import SessionEntry, SessionSource
 from gateway.session_contract import SessionRef
 from hermes_state_keys import local_identity
 from hermes_state_local import POLICY_PREFIX, local_receipt
-from hermes_state_runtime import RuntimeStoreError, list_session_admissions
+from hermes_state_runtime import RuntimeStoreError
 
 
 def local_adapter_map(authority):
@@ -134,19 +134,15 @@ def _stray_route_target(authority, receipt, session_id):
     return True
 
 
-def restore_local_session(authority, sid):
-    from gateway.session_authority import LiveSession
-    from gateway.session_local import LocalSessionAdapter
+def _prepare_restore(authority, sid):
     from gateway.session_policy import restore_policy
     try:
         # The catch-up writes, so the receipt as stored must already be this owner's (#140060).
         receipt, source, route, entry = owned_receipt(authority, sid)
-        chat_id, store = source.chat_id, authority.runner.session_store
         adopted = _with_untracked_compression(authority, sid, receipt)
         policy = restore_policy(adopted['policy'])
         if adopted is not receipt:  # re-read after a catch-up: check the copy that will be served
             receipt, entry = adopted, _checked_entry(authority, adopted, source, route)
-        target = entry.session_id
         from hermes_state_local_lineage import validate_local_lineage
         with authority.db._read_ctx() as conn:
             validate_local_lineage(conn, receipt)
@@ -158,6 +154,20 @@ def restore_local_session(authority, sid):
         if isinstance(exc, RuntimeStoreError):
             raise _ReceiptRefused(exc.reason, field=exc.field, detail=exc.detail) from exc
         raise _ReceiptRefused('storage_unavailable') from exc
+    return receipt, source, route, entry, policy
+
+
+def restore_local_session(authority, sid):
+    return _publish_restore(authority, sid, _prepare_restore(authority, sid))
+
+
+def _publish_restore(authority, sid, prepared):
+    from gateway.session_authority import LiveSession
+    from gateway.session_local import LocalSessionAdapter
+    receipt, source, route, entry, policy = prepared
+    chat_id, store, target = source.chat_id, authority.runner.session_store, entry.session_id
+    if getattr(authority, 'retiring', False) or getattr(authority, 'retired', False):
+        raise RuntimeStoreError('runtime_draining')
     adapters = local_adapter_map(authority)
     adapter = adapters.get(Platform.LOCAL)
     if adapter is None:
@@ -351,18 +361,44 @@ def reset_local_session(store, old_entry, session_id, now, display_name):
     return entry
 
 
-def local_receipt_ids(authority):
+def _local_recovery_work(authority):
+    from gateway.session_viewer_close import CLOSE_PREFIX
     with authority.db._read_ctx() as conn:
-        return [row[0][len(POLICY_PREFIX):] for row in conn.execute(
-            'SELECT key FROM state_meta WHERE key LIKE ?', (POLICY_PREFIX + '%',))]
+        pending = dict(conn.execute(
+            "SELECT target_session_id, MAX(status = 'unknown') FROM session_admissions "
+            "WHERE status IN ('queued','started','unknown') "
+            "AND EXISTS (SELECT 1 FROM state_meta WHERE key=? || target_session_id) "
+            "GROUP BY target_session_id", (POLICY_PREFIX,)))
+        closing = [(key[len(CLOSE_PREFIX):], record) for key, record in conn.execute(
+            'SELECT key, value FROM state_meta WHERE key GLOB ?', (CLOSE_PREFIX + '*',))]
+    return pending, closing
 
 
-def recover_local_sessions(authority, *, schedule=False):
-    for sid in local_receipt_ids(authority):
+def _publish_pending_restore(authority, sid, prepared):
+    from hermes_state_policy_index import policy_summary
+    _, _, route, entry, _ = prepared
+    # A deletion or target rotation may have committed while validation ran in the worker.
+    with authority.db._read_ctx() as conn:
+        saved = policy_summary(conn, sid)
+    if saved.get('route') != route or saved['entry']['session_id'] != entry.session_id:
+        raise RuntimeStoreError('admission_conflict')
+    return _publish_restore(authority, sid, prepared)
+
+
+async def recover_local_sessions(authority, *, schedule=True):
+    """Mount only work that needs a crash-recovery decision. Other receipts restore on demand."""
+    from functools import partial
+    from gateway.session_runtime_workers import tracked_write, track_mutation
+    from gateway.session_viewer_close import rearm_persisted_closes, settle_viewer_close
+
+    pending, closing = await asyncio.to_thread(_local_recovery_work, authority)
+    for sid in dict.fromkeys([*pending, *(sid for sid, _ in closing)]):
         try:
-            ref = restore_local_session(authority, sid)
-            pending = list_session_admissions(authority.db, session_id=sid)
-            if schedule and pending and not any(row['status'] == 'unknown' for row in pending):
+            # Preparation may catch up an older compression in its own fenced transaction.
+            # Publish only on the owner loop, with the same route and policy checks as lazy restore.
+            ref = await tracked_write(authority, partial(_prepare_restore, authority, sid),
+                                      then=partial(_publish_pending_restore, authority, sid))
+            if schedule and sid in pending and not pending[sid]:
                 authority._schedule(ref)
         except (_ReceiptRefused, _CatchUpPending):
             continue  # logged: the check that refused it, or the catch-up handed to a worker
@@ -370,10 +406,8 @@ def recover_local_sessions(authority, *, schedule=False):
             logging.getLogger(__name__).warning('Local session %s paused: %s', sid, exc.reason)
     if schedule:
         # A last-viewer close the previous owner stopped before completing (#134889 LC-6b).
-        from gateway.session_viewer_close import rearm_persisted_closes, settle_viewer_close
-        from gateway.session_runtime_workers import track_mutation
-        for sid in rearm_persisted_closes(authority):
+        for sid in rearm_persisted_closes(authority, closing):
             authority._schedule(SessionRef(authority.profile_id, sid))
-            if any(row['status'] == 'unknown' for row in list_session_admissions(authority.db, session_id=sid)):
+            if pending.get(sid):
                 # A hard-killed owner's turn: the drain pauses on it, so the close resolves it.
                 track_mutation(authority, settle_viewer_close(authority, sid))

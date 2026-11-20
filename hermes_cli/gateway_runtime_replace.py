@@ -67,6 +67,11 @@ def _within_install(home: Path, root: Path) -> bool:
     return home == root or (home.parent == root / "profiles")
 
 
+def starting_payload(payload: dict) -> bool:
+    protocol = payload.get("runtime_protocol")
+    return payload.get("state") == "starting" and not (type(protocol) is int and protocol != 1)
+
+
 def _verified_owner(control: Path, payload: dict) -> tuple[int, Any] | str:
     from gateway.status import _GATEWAY_KIND, _pid_exists, get_process_start_time, start_time_fingerprints_match
     protocol = payload.get("runtime_protocol")
@@ -74,6 +79,9 @@ def _verified_owner(control: Path, payload: dict) -> tuple[int, Any] | str:
         return "owner_newer"
     if not _within_install(control, _install_root()) or not _same(payload.get("hermes_home"), control):
         return "foreign_install"
+    # The reply can change between discovery and the verified upgrade check.
+    if (type(protocol) is int and protocol == 1) or starting_payload(payload):
+        return "owner_changed"
     pid, recorded = payload.get("pid"), payload.get("start_time")
     if (payload.get("kind") != _GATEWAY_KIND or type(pid) is not int or pid <= 1
             or pid in {os.getpid(), os.getppid()} or recorded is None or not _pid_exists(pid)):

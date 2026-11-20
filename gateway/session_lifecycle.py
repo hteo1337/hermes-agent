@@ -106,14 +106,15 @@ class SessionLifecycleMixin:
             return None
         import sqlite3
 
-        from hermes_state_local import local_receipt
-        from hermes_state_runtime import RuntimeStoreError
+        from hermes_state_policy_index import policy_summary
         try:
-            receipt = local_receipt(db, str(origin.chat_id))
+            with db._read_ctx() as conn:
+                receipt = policy_summary(conn, str(origin.chat_id))
             if receipt.get("route") != entry.session_key:
                 return None
-            return str(receipt["entry"]["session_id"]) or None
-        except (RuntimeStoreError, sqlite3.Error, KeyError, TypeError, AttributeError):
+            target = receipt["entry"]["session_id"]
+            return target if isinstance(target, str) and target else None
+        except (sqlite3.Error, KeyError, TypeError, AttributeError):
             return None
 
     def _route_reset_reason(self, entry: SessionEntry) -> Optional[str]:

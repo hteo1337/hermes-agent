@@ -1,0 +1,8 @@
+TH1-2642 security lane, product diff 57499e996fb..d5186ce10a03f3c69a2ebbf792bffa53a656c0c7
+Ordinary review (gpt-6.1-sol) CONFIRMED.
+Semif adversarial_required, probability 0.977.
+Adversarial review (gpt-6.1-sol) CONFIRMED.
+Read-only security audit required filesystem cleanup confinement. The follow-up limits cleanup to transcript basenames and preserves reserved artifacts. The existing retention regression case was extended and passed. Follow-up exact-head confirmation is tracked in the draft PR.
+Each review inspected the detached worktree. No reviews modified code or ran tests.
+On b22aa9ef3cc the same Sol reviewers confirmed the cleanup-confinement delta. The security auditor requested exact ownership matching for scheduled file cleanup. The scheduled batch now matches actual on-disk names and recognizes the dump writer's timestamp format. The same retention contract passed with valid transcript and dump cleanup, plus preservation of unrelated files. The draft PR records the final exact-head confirmation.
+The review on 227b83c70b1 confirmed the spelling and prefix checks but found that standalone artifact names do not always carry the original session identity. The final scheduled sweep retires SQLite session records and receipts and leaves standalone files intact. The same targeted retention case verified preservation of all fixture files.

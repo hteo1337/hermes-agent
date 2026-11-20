@@ -65,6 +65,7 @@ async function controlSocket(home: string, served: string[]) {
   const server = net.createServer(socket => socket.once('data', chunk => {
     const params = JSON.parse(chunk.toString()).params
     requests.push(params)
+
     socket.end(JSON.stringify(served.includes(params.profile_id)
       ? { protocol: 1, id: 1, ok: true, result: { profile_id: params.profile_id, instance_id: 'owner', runtime_protocol: 1, ticket: `grant-${requests.length}` } }
       : { protocol: 1, id: 1, ok: false, error: 'PermissionError: bootstrap binding rejected' }) + '\n')
@@ -95,7 +96,9 @@ test.skipIf(process.platform === 'win32')('a linked profile mints for the home t
     await expect(mintLocalGatewayTicket({ ...endpointFor(root), control_home: path.join(links, 'home') }, 'native-http')).rejects.toThrow('Noncanonical gateway profile')
     const gone = await nativeGatewayHttpHeaders(descriptor, `${ORIGIN}/api/sessions?profile=gone`).catch(error => error)
     expect([gone.message.includes(`Profile 'gone' does not exist`), isStaleLocalGatewayError(gone)]).toEqual([true, false])
-    expect(gateway.requests).toEqual([{ profile_id: target, instance_id: 'owner', purpose: 'native-http' }])
+    expect(gateway.requests).toEqual([{
+      profile_id: target, instance_id: 'owner', purpose: 'native-http'
+    }])
   } finally {
     await gateway.close()
     await Promise.all([root, target, links].map(dir => fs.rm(dir, { recursive: true, force: true })))

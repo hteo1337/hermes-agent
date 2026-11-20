@@ -29,7 +29,7 @@ async def test_local_create_receipt_survives_cold_authority_atomically(tmp_path,
     policy = first.adapters[Platform.LOCAL].policies[authority.sessions[ref.session_id].source.chat_id]
     second = runner()
     cold = await initialize_session_authority(second, profile_id='fixture', instance_id='second')
-    assert ref.session_id in cold.sessions, 'durable creation was lost with process-local registry'
+    assert ref.session_id not in cold.sessions, 'idle receipts must remain on disk until used'
     config['platform_toolsets']['cli'] = ['terminal']
     assert create_local_session(cold, actor, params) == ref
     assert second.adapters[Platform.LOCAL].policies[cold.sessions[ref.session_id].source.chat_id] == policy

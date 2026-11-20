@@ -261,7 +261,15 @@ export async function ensureLocalGateway(
 // Unsafe path permissions or types require repair, not another ensure of the same home.
 const STALE_CONTROL_ERRORS = new Set(['Invalid gateway ticket response', 'Invalid gateway control pointer', 'Noncanonical gateway profile'])
 
+// Once a mint may have reached the owner, neither the socket retry nor the
+// outer ensure/redial may submit it again. Only the owner's pre-mint stale
+// instance refusal proves that rediscovering and submitting again is safe.
+class SubmittedTicketError extends Error {}
+class StaleTicketInstanceError extends Error {}
+
 export function isStaleLocalGatewayError(error: unknown): boolean {
+  if (error instanceof SubmittedTicketError) {return false}
+  if (error instanceof StaleTicketInstanceError) {return true}
   const message = error instanceof Error ? error.message : String(error ?? '')
 
   return message.startsWith('Gateway ticket') || STALE_CONTROL_ERRORS.has(message)
@@ -527,7 +535,7 @@ async function mintGroupWritableHome(endpoint: GatewayEndpoint, purpose: Gateway
   if (!pythonTicketClient) {throw new Error(`Unsafe gateway control path: profile home is group-writable and this Desktop cannot verify the group is private: run chmod g-w ${homes.map(shellQuote).join(' ')}`)}
 
   try {
-    return await pythonTicketClient(endpoint, purpose)
+    return await mintWithPython(pythonTicketClient, endpoint, purpose)
   } catch (error) {
     if ((error as { reason?: string })?.reason !== 'unsafe_control_permissions') {throw error}
     const quoted = homes.map(shellQuote).join(' ')
@@ -540,6 +548,19 @@ function isMissingNodeError(error: unknown): boolean {
   const code = (error as NodeJS.ErrnoException)?.code
 
   return code === 'ENOENT' || code === 'ENOTDIR'
+}
+
+async function mintWithPython(client: NonNullable<typeof pythonTicketClient>, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose): Promise<string> {
+  try {
+    return await client(endpoint, purpose)
+  } catch (error) {
+    const reason = (error as { reason?: string })?.reason
+
+    if (reason === 'stale_runtime_instance') {throw new StaleTicketInstanceError('Gateway ticket runtime instance changed')}
+    if (reason === 'control_unavailable') {throw new Error('Gateway ticket control endpoint unavailable')}
+    if (reason === 'unsafe_control_permissions') {throw error}
+    throw new SubmittedTicketError('Gateway ticket bootstrap failed')
+  }
 }
 
 /** Python's `posixpath.realpath`: each ordinary component keeps the spelling it was given, and a
@@ -618,7 +639,7 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
   if (process.platform === 'win32') {
     if (!pythonTicketClient) {throw new Error('Gateway ticket client is not configured')}
 
-    return pythonTicketClient(endpoint, purpose)
+    return mintWithPython(pythonTicketClient, endpoint, purpose)
   }
 
   const home = endpoint.profile_id
@@ -638,26 +659,73 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
 
   if (groupWritable.length) {return mintGroupWritableHome(endpoint, purpose, groupWritable)}
 
-  let socketPath: string
+  const deadline = performance.now() + 5000
+  const backoff = [100, 250]
 
-  try { socketPath = await resolveControlSocket(controlHome) } catch (error) {
-    // `gateway stop` unlinks both the socket and its pointer: the owner is gone,
-    // which the redial must treat as stale rather than as a raw filesystem error.
-    if (isMissingNodeError(error)) {throw new Error('Gateway ticket control socket missing')}
-    throw error
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const socketPath = await resolveControlSocket(controlHome)
+      const remaining = deadline - performance.now()
+
+      if (remaining <= 0) {throw new Error('Gateway ticket deadline')}
+      const attemptBudget = attempt < backoff.length ? Math.min(remaining, 1000 + 500 * attempt) : remaining
+
+      return await requestLocalGatewayTicket(socketPath, endpoint, purpose, attemptBudget, deadline)
+    } catch (error) {
+      const missing = isMissingNodeError(error)
+
+      if ((!missing && !(error instanceof TransientTicketError)) ||
+          attempt >= backoff.length || performance.now() + backoff[attempt] >= deadline) {
+        if (missing) {throw new Error('Gateway ticket control socket missing')}
+        throw error
+      }
+
+      await new Promise(resolve => setTimeout(resolve, backoff[attempt]))
+    }
   }
+}
+
+class TransientTicketError extends Error {}
+
+function requestLocalGatewayTicket(socketPath: string, endpoint: GatewayEndpoint, purpose: GatewayTicketPurpose, connectBudget: number, expiresAt: number): Promise<string> {
+  const home = endpoint.profile_id
 
   return new Promise((resolve, reject) => {
     const socket = net.createConnection(socketPath)
     let buffer = ''
-    const deadline = setTimeout(() => socket.destroy(new Error('Gateway ticket deadline')), 5000)
-    socket.on('error', () => reject(new Error('Gateway ticket bootstrap failed')))
-    socket.on('close', () => { clearTimeout(deadline); reject(new Error('Gateway ticket connection closed')) })
-    socket.on('connect', () => socket.write(JSON.stringify({ protocol: 1, id: 1, verb: 'session-ticket', params: { profile_id: home, instance_id: endpoint.instance_id, purpose, ...ticketScope(purpose) } }) + '\n'))
+    let submitted = false
+    const transportError = (message: string) => submitted ? new SubmittedTicketError(message) : new TransientTicketError(message)
+
+    const expire = () => {
+      reject(transportError('Gateway ticket deadline'))
+      socket.destroy()
+    }
+    let deadline = setTimeout(expire, connectBudget)
+
+    socket.on('error', (error: NodeJS.ErrnoException) => {
+      const transient = ['ENOENT', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ETIMEDOUT'].includes(error.code ?? '')
+
+      reject(submitted || transient ? transportError('Gateway ticket bootstrap failed') : new Error('Gateway ticket bootstrap failed'))
+    })
+    socket.on('close', () => { clearTimeout(deadline); reject(transportError('Gateway ticket connection closed')) })
+    socket.on('connect', () => {
+      const remaining = expiresAt - performance.now()
+
+      if (remaining <= 0) {expire(); return}
+      clearTimeout(deadline)
+      submitted = true
+      deadline = setTimeout(expire, remaining)
+      socket.write(JSON.stringify({ protocol: 1, id: 1, verb: 'session-ticket', params: { profile_id: home, instance_id: endpoint.instance_id, purpose, ...ticketScope(purpose) } }) + '\n')
+    })
     socket.on('data', chunk => {
       buffer += chunk.toString()
 
-      if (buffer.length > 65536) {return socket.destroy(new Error('Oversized gateway ticket response'))}
+      if (buffer.length > 65536) {
+        reject(new Error('Oversized gateway ticket response'))
+        socket.destroy()
+
+        return
+      }
 
       if (!buffer.includes('\n')) {return}
 
@@ -665,9 +733,16 @@ export async function mintLocalGatewayTicket(endpoint: GatewayEndpoint, purpose:
         const reply = JSON.parse(buffer.split('\n')[0])
         const grant = reply.result
 
-        if (!reply.ok || reply.protocol !== 1 || reply.id !== 1 || grant?.instance_id !== endpoint.instance_id || grant?.profile_id !== home || typeof grant?.ticket !== 'string') {throw new Error('Invalid gateway ticket')}
-        resolve(grant.ticket)
-      } catch { reject(new Error('Invalid gateway ticket response')) }
+        if (reply.protocol === 1 && reply.id === 1 && reply.ok === false &&
+            reply.error === 'PermissionError: stale runtime instance' && !Object.hasOwn(reply, 'result')) {
+          reject(new StaleTicketInstanceError('Gateway ticket runtime instance changed'))
+        } else if (reply.ok === true && reply.protocol === 1 && reply.id === 1 &&
+            grant?.instance_id === endpoint.instance_id && grant?.profile_id === home && typeof grant?.ticket === 'string') {
+          resolve(grant.ticket)
+        } else {
+          reject(new SubmittedTicketError('Invalid gateway ticket response'))
+        }
+      } catch { reject(new SubmittedTicketError('Invalid gateway ticket response')) }
 
       socket.destroy()
     })

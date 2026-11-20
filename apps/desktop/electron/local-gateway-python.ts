@@ -43,6 +43,8 @@ while True:
         reply = {'id': request['id'], 'ticket': ticket}
     except DiscoveryError as exc:
         reply = {'id': request['id'], 'error': exc.reason}
+    except (FileNotFoundError, ConnectionRefusedError):
+        reply = {'id': request['id'], 'error': 'control_unavailable'}
     except Exception:
         reply = {'id': request['id'], 'error': 'ticket_failed'}
     print(json.dumps(reply), flush=True)

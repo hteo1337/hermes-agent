@@ -1,8 +1,7 @@
 """Rate-limited heap release for long-lived Hermes gateway processes.
 
-On Linux/glibc, ``malloc_trim(0)`` can return pages from freed Python/C allocations to the OS. Every
-platform runs the rate-limited ``gc.collect()``; only the page release is glibc-only. Behavior is configured
-under ``context.memory_trim`` in ``config.yaml``.
+On Linux/glibc, ``malloc_trim(0)`` can return pages from freed Python/C allocations to the OS.
+Behavior is configured under ``context.memory_trim`` in ``config.yaml``.
 """
 
 from __future__ import annotations
@@ -25,8 +24,7 @@ _DEFAULT_LOG_EVERY_N = 1
 _DEFAULT_INFO_LOG_MIN_DELTA_MB = 0.0
 # Even forced trims honor a short floor: AIAgent.close() forces a trim, and delegate
 # batches close N child subagents back-to-back in the SAME process — without a floor
-# that stacks N+1 uncooled full gc.collect() passes (50-500ms each in a large gateway
-# process). 5s coalesces the burst while keeping the parent's final close-trim effective.
+# that stacks N+1 uncooled trim passes. 5s coalesces the burst.
 _FORCE_FLOOR_SECONDS = 5.0
 _trim_lock = threading.Lock()
 _last_trim_monotonic = 0.0
@@ -154,6 +152,8 @@ def trim_memory(
     global _last_trim_monotonic, _trim_call_count
     with _trim_lock:
         trim = _probe_glibc_malloc_trim()
+        if trim is None:
+            return False
         now = time.monotonic()
         cooldown = configured_cooldown if cooldown_seconds is None else _cooldown_seconds(cooldown_seconds)
         since_last = now - _last_trim_monotonic
@@ -165,9 +165,10 @@ def trim_memory(
         try:
             before = collect_memory_snapshot()
             started = time.perf_counter()
-            gc.collect()
-            # Cycle collection is allocator-independent; only the page release needs glibc.
-            trim_result = trim(0) if trim is not None else 0
+            # A full collection holds the GIL even when this runs on a housekeeping thread.
+            # Leave older generations to the interpreter's normal collection schedule.
+            gc.collect(0)
+            trim_result = trim(0)
             released = bool(trim_result)
             after = collect_memory_snapshot()
             duration_ms = (time.perf_counter() - started) * 1000

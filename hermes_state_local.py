@@ -2,9 +2,9 @@
 import json
 import time
 
+from hermes_state_policy_index import POLICY_PREFIX, policy_summaries, policy_summary
 from hermes_state_runtime import RuntimeStoreError, _epoch, _json
 
-POLICY_PREFIX = 'gateway.local_policy.v1:'
 API_BINDING_PREFIX = 'gateway.api.binding.v1.'
 API_DECLARED_PREFIX = 'gateway.api.conversation.v1.'
 
@@ -136,18 +136,6 @@ def _row_cwd(policy):
     return policy['cwd'] if not isinstance(value, str) else (value or None)
 
 
-def _policy_target(raw):
-    """Current physical target a creation receipt routes to; None for a malformed receipt, which
-    then stays (its own reads already refuse it as ``storage_unavailable``) and cannot abort
-    the delete of an unrelated session."""
-    try:
-        value = json.loads(raw)
-    except (TypeError, ValueError):
-        return None
-    entry = value.get('entry') if isinstance(value, dict) else None
-    return entry.get('session_id') if isinstance(entry, dict) else None
-
-
 def retire_local_receipts(conn, session_ids):
     """Deletion fence half for owner receipts. A local creation policy carries the launch request
     (``request_json``: a cron fire's job and raw prompt), so it goes exactly when its route does:
@@ -157,10 +145,8 @@ def retire_local_receipts(conn, session_ids):
     targets = set(session_ids)
     if not targets:
         return
-    # Prefix scans (GLOB uses the key index), not one LIKE per id: a prune retires thousands.
-    gone = [key for key, value in conn.execute('SELECT key,value FROM state_meta WHERE key GLOB ?',
-                                               (POLICY_PREFIX + '*',))
-            if _policy_target(value) in targets]
+    gone = [key for key, policy in policy_summaries(conn)
+            if isinstance((target := policy['entry']['session_id']), str) and target in targets]
     gone += [key for key, value in conn.execute('SELECT key,value FROM state_meta WHERE key GLOB ?',
                                                 (API_DECLARED_PREFIX + '*',)) if value in targets]
     gone += [API_BINDING_PREFIX + sid for sid in targets]
@@ -174,11 +160,7 @@ def local_lineage_owner(conn, session_id):
     owner = row[0] if row else None
     if not owner or owner == session_id:
         return session_id
-    saved = conn.execute('SELECT value FROM state_meta WHERE key=?', (POLICY_PREFIX + owner,)).fetchone()
-    try:
-        lineage = json.loads(saved[0]).get('lineage') if saved else None
-    except (TypeError, ValueError, AttributeError):
-        return session_id
+    lineage = policy_summary(conn, owner).get('lineage')
     return owner if isinstance(lineage, list) and session_id in lineage else session_id
 
 
@@ -195,11 +177,7 @@ def local_conversation_ids(conn, session_id):
     each segment of the receipt lineage. A canonical reset never forks the logical session (one
     policy, FIFO and generation), so listing, delete and retirement treat these ids as one."""
     owner = local_lineage_owner(conn, session_id)
-    saved = conn.execute('SELECT value FROM state_meta WHERE key=?', (POLICY_PREFIX + owner,)).fetchone()
-    try:
-        lineage = json.loads(saved[0]).get('lineage') if saved else None
-    except (TypeError, ValueError, AttributeError):
-        lineage = None
+    lineage = policy_summary(conn, owner).get('lineage')
     if not isinstance(lineage, list):
         return [session_id]
     return list(dict.fromkeys([owner, *(sid for sid in lineage if isinstance(sid, str))]))
@@ -213,10 +191,7 @@ def local_lineage_index(conn):
     reset segment to ``(owner, lineage)`` for the row that represents the conversation. A delete
     of that row removes the whole lineage (``hermes_state_mutation_guards.delete_targets``)."""
     superseded, heads = set(), {}
-    rows = conn.execute("SELECT value FROM state_meta WHERE key GLOB ? AND json_valid(value) "
-                        "AND json_array_length(value, '$.lineage') > 1", (POLICY_PREFIX + '*',)).fetchall()
-    for (raw,) in rows:
-        receipt = json.loads(raw)
+    for _, receipt in policy_summaries(conn, multi_segment=True):
         owner, lineage = receipt.get('session_id'), receipt.get('lineage')
         if not isinstance(owner, str) or not all(isinstance(sid, str) for sid in lineage):
             continue

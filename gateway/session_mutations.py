@@ -411,6 +411,14 @@ def retire_live_sessions(authority, session_ids, *, require_fence=False):
     release_session_workspaces(authority, session_ids)
     from tools.async_delegation import allow_for_session
     from gateway.session_vault_prompt import release_unlocks
+    from gateway.config import Platform
+    from gateway.session_local import LocalSessionAdapter
+    from gateway.session_local_recovery import local_adapter_map
+    adapter = local_adapter_map(authority).get(Platform.LOCAL) if session_ids else None
+    if isinstance(adapter, LocalSessionAdapter) and adapter.authority is authority:
+        for sid in session_ids:
+            adapter.policies.pop(sid, None)
+            adapter.sources.pop(sid, None)
     for sid in session_ids:
         # A closed session's refusal of new delegations (session_viewer_close) goes with its live state.
         allow_for_session((authority.profile_id, sid))

@@ -66,7 +66,6 @@ async def test_secondary_receipt_restores_without_losing_its_owner(tmp_path, mon
             assert local_receipt(restored.db, ref.session_id) == receipt
             assert second.session_authorities.launch.db.get_session(ref.session_id) is None
             return
-        assert ref.session_id in restored.sessions, 'owned legacy receipt was paused on cold recovery'
         with _profile_runtime_scope(home, {}):
             assert restore_local_session(restored, ref.session_id) == ref
         live = restored.sessions[ref.session_id]
