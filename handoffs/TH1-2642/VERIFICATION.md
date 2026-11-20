@@ -373,3 +373,46 @@ Semif judged the product diff and draft delivery plan to require an independent 
 The bounded-time probe changes only the observing client's monotonic sample. Its 301- and 600-second outcomes test the time boundaries without keeping SQLite stalled for ten wall-clock minutes. It used real schema work for the launch and secondary profiles. Windows native pipe runtime remains unverified on macOS.
 
 The full `python scripts/check --base 57499e996fb --commit d591e1410b0` run passed all 12 checks. The process scan found no competing Python test runner or Vitest process before or after the sequential runs. Git's whitespace check and the comparison of the rolled-back files against the PR base also passed.
+
+## Round five scope cut
+
+Product and test head `de1eaed04f2e97bba6be6e802306b6409573a970`. The subsequent delivery commit changes only the Markdown handoff and verification. The round-five control is `be5c254dfa9af7b5922e55b8763a9f924eaa9646`. Earlier measurements describe the historical revisions in their headings.
+
+### Base behavior
+
+- At `57499e996fb`, [gateway/run_bootstrap.py:791](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/gateway/run_bootstrap.py#L791) reserves the profiles and claims the PID before constructing the runner and opening the profile stores at lines 814–816. The listener binds at line 865.
+- With a missing or refused socket, [hermes_cli/gateway_runtime.py:302](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/hermes_cli/gateway_runtime.py#L302) tries the multiplexer and falls back to the home's reservation. A held private lock yields `starting` per [hermes_cli/gateway_runtime_discovery.py:233](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/hermes_cli/gateway_runtime_discovery.py#L233). A control timeout maps to `starting/deadline` at runtime lines 434–436. Ensure records the startup at lines 450–451, avoids a duplicate launch and returns `starting/deadline` at lines 488–489. The base archive probe held a real reservation with no listener, observed both states and recorded zero replacement or unmanaged-spawn calls.
+- Only a `runtime_protocol` incompatibility enters base replacement at [hermes_cli/gateway_runtime.py:372](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/hermes_cli/gateway_runtime.py#L372). The protocol-0 upgrade still uses the same identify, install, PID and fingerprint checks followed by the same planned-stop, graceful wait and guarded force path. The scoped guard keeps the verified upgrade check from stopping a newly observed current or unversioned starting owner. `gateway/status.py` already matched base and its shared lock helpers remain in use.
+- [hermes_cli/main.py:67](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/hermes_cli/main.py#L67) arms the in-process watchdog. [hermes_startup_watchdog.py:355](https://github.com/hteo1337/hermes-agent/blob/57499e996fb/hermes_startup_watchdog.py#L355) checks leases and exits after its existing progress allowance. The watchdog, both 600-second schema leases and the SessionDB open/init path match base byte for byte. When the watchdog is disabled, a hung start requires `hermes gateway restart`, as at base.
+
+### Controls and one real boot
+
+- The reviewed archive received only the regression test overlay. The real private listener returned a starting reply with an old stamp. The test failed at its planned-stop sentinel before any stop side effect. The treatment used the same test in the 30-file run.
+- On the product and test head, one disposable gateway isolated two copies of the 1.26 GB synthetic fixture. At both schema gates it answered private identify from the same child PID. Ensure for the launch and secondary profile respectively returned `starting/deadline` with zero replacement or unmanaged-spawn calls. Both stores built the expression index and the gateway reported ready in 9,033.7 ms. Cleanup stopped only the probe's child.
+- The product diff from round five is limited to bootstrap and runtime progress plumbing, startup classification and upgrade re-identification, watchdog/schema restoration, and the lifecycle tests. Desktop reconnect, viewer-close, policy index, deadline diagnostics, allocator guard and manual prune reporting match the reviewed tree.
+
+### Commands
+
+Scratch evidence on m5 is in `/private/tmp/th12642-r5-scope.1ejanx`. The launchers clear the environment, isolate HOME, Hermes runtime and lock directories, and reuse Python 3.14.9 and existing Node packages. The 30 Python paths are specified under **Round three**, and the two suites run sequentially with one worker each. The Python wrapper kept its live-system guard and process cleanup enabled.
+
+```sh
+scratch=/private/tmp/th12642-r5-scope.1ejanx
+(cd "$scratch/base-tree" && "$scratch/base/isolated" env PYTHONPATH="$PWD" python "$scratch/base-probe.py")
+(cd "$scratch/reviewed" && "$scratch/control/isolated" scripts/run_tests.sh -j 1 --tb=short \
+  tests/gateway/test_runtime_bootstrap_lifecycle.py \
+  -k test_ensure_never_stops_a_starting_owner_with_an_old_stamp)
+"$scratch/boot/isolated" env PYTHONPATH="$PWD" python "$scratch/boot-probe.py"
+"$scratch/python/isolated" bash "$scratch/final-python.sh"
+(cd apps/desktop && "$scratch/desktop/isolated" npm test -- --maxWorkers=1 electron/local-gateway)
+"$scratch/checks/isolated" env RAYON_NUM_THREADS=1 python scripts/check --base 57499e996fb --commit de1eaed04f2
+git diff --check 57499e996fb...HEAD
+```
+
+### Results
+
+| Check | Result |
+| --- | --- |
+| Python | 591 passed, 17 skipped and 0 failed across 30 files in 388.0 s. All four gateway lifecycle cases passed. |
+| Desktop local gateway | 56 passed and one Windows-only native-pipe case skipped across 12 files in 6.42 s. |
+| Repository checks | All 12 passed. Code health reported zero blocking and advisory findings. |
+| Review routing | Semif judged independent adversarial review required for the runtime ownership diff and security delivery plan. Same-reviewer confirmation, adversarial review, read-only security audit and GitHub CI remain downstream. |
