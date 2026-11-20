@@ -34,7 +34,6 @@ import logging
 import os
 import threading
 import time
-from contextvars import ContextVar
 from datetime import datetime, timezone, UTC
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -42,24 +41,7 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger(__name__)
 
 DEFAULT_STARTUP_WATCHDOG_TIMEOUT_S = 300.0
-STATE_DB_SCHEMA_PHASE_S = 600.0
 _MIN_TIMEOUT_S = 30.0
-
-
-class StartupProgress:
-    """Last completed work, shared by the boot task and its SQLite workers."""
-
-    def __init__(self) -> None:
-        self.last_advanced: float | None = time.monotonic()
-        self.schema_phase_started_at: float | None = None
-
-    def advance(self) -> int:
-        if self.last_advanced is not None:
-            self.last_advanced = time.monotonic()
-        return 0  # A SQLite progress callback must return zero to continue.
-
-
-startup_progress: ContextVar[StartupProgress | None] = ContextVar("startup_progress", default=None)
 
 # Mirrors gateway.restart.GATEWAY_SERVICE_RESTART_EXIT_CODE (parity test in
 # tests/gateway/test_startup_watchdog.py) — this module must not import gateway.
@@ -509,18 +491,15 @@ def kick_startup_watchdog(extra_s: float = 0.0) -> None:
     _with_armed_handle("kick", "Failed to kick gateway startup watchdog", extra_s)
 
 
-def report_startup_progress(expected_s: float, phase: str = "", *, schema_phase: bool = False) -> None:
+def report_startup_progress(expected_s: float, phase: str = "") -> None:
     """Declare a phase-owned progress lease on the armed startup watchdog.
 
     Call from startup phases about to do legitimately long synchronous work — most
     importantly ``state.db`` schema migrations and corruption repair/backup inside
     ``SessionDB.__init__`` — with an honest worst case, renewing for multi-step phases.
-    Per-call duration is clamped to ``_MAX_LEASE_S``. Schema work also publishes
-    its phase start to the private control listener while the store opens.
+    Per-call duration is clamped to ``_MAX_LEASE_S``. No-op when not armed; never
+    raises — safe to call unconditionally from application code.
     """
-    if schema_phase and (progress := startup_progress.get()) is not None:
-        if progress.last_advanced is not None:
-            progress.schema_phase_started_at = time.monotonic()
     _with_armed_handle("lease", "Failed to report startup progress", expected_s, phase)
 
 

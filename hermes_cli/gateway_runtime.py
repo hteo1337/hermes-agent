@@ -96,31 +96,27 @@ def _overlay_owner_home(home: Path) -> Path:
 
 
 def _endpoint(payload: dict, home: Path, control_home: Path | None = None) -> GatewayDiscovery:
-    from hermes_cli.gateway_runtime_replace import starting_payload, startup_progress_is_fresh
+    from hermes_cli.gateway_runtime_replace import starting_payload
 
     protocol = payload.get("runtime_protocol")
-    valid_protocol = type(protocol) is int and protocol == 1
     owner_home = payload.get("hermes_home")
-    # The launch socket can answer before any profile has been published. Only its
-    # own home is known at this point; named clients still use the reservation path.
+    # The early launch socket answers before any profile is published. Named
+    # profiles without a served entry still use the reservation path.
     starting_owner = (starting_payload(payload) and isinstance(owner_home, str) and owner_home
                       and _canonical_home(owner_home) == _canonical_home(control_home or home))
-    stalled = starting_owner and not startup_progress_is_fresh(payload)
     if starting_owner and control_home is None:
-        return (GatewayDiscovery("incompatible", reason_code="startup_stalled") if stalled
-                else GatewayDiscovery("starting"))
-    if not valid_protocol and not starting_owner:
+        return GatewayDiscovery("starting")
+    if (type(protocol) is not int or protocol != 1) and not starting_owner:
         return GatewayDiscovery("incompatible", reason_code="runtime_protocol")
     profiles = payload.get("served_profiles")
+    if not isinstance(profiles, list):
+        return GatewayDiscovery("inaccessible", reason_code="profile_mismatch")
     # Canonicalize BOTH sides: on Windows normcase lower-cases the served spelling, so a
     # caller's mixed-case Path (WorkerRPC) never matched and every worker saw owner_unavailable.
     wanted = _canonical_home(home)
-    matches = [p for p in (profiles if isinstance(profiles, list) else []) if isinstance(p, dict)
+    matches = [p for p in profiles if isinstance(p, dict)
                and isinstance(p.get("home"), str) and _canonical_home(p["home"]) == wanted]
-    matched = len(matches) == 1 and isinstance(matches[0].get("profile_id"), str) and matches[0]["profile_id"]
-    if stalled and (matched or _starting_profile_reserved(home, payload)):
-        return GatewayDiscovery("incompatible", reason_code="startup_stalled")
-    if not matched:
+    if len(matches) != 1 or not isinstance(matches[0].get("profile_id"), str) or not matches[0]["profile_id"]:
         return GatewayDiscovery("inaccessible", reason_code="profile_mismatch")
     state = payload.get("state")
     # A graceful restart's after-turn wait still owns its in-flight turns (#139041): it stays
@@ -171,15 +167,6 @@ def control_home_for(home: Path, endpoint: GatewayEndpoint | None) -> Path:
     if endpoint is not None and endpoint.control_home:
         return Path(endpoint.control_home)
     return home
-
-
-def _starting_profile_reserved(home: Path, payload: dict) -> bool:
-    """Before the served list is published, require the named home's live reservation."""
-    from gateway.runtime_ownership import live_runtime_owner
-    from hermes_cli.gateway_runtime_discovery import missing_owner_state
-    pid = payload.get("pid")
-    return (type(pid) is int and pid > 1 and missing_owner_state(home) == "starting"
-            and live_runtime_owner(home) == pid)
 
 
 def _starting_multiplexer_root(home: Path) -> Path | None:
@@ -386,7 +373,7 @@ def _fenced_verdict(home: Path, timeout: float) -> GatewayDiscovery:
     return GatewayDiscovery("draining", reason_code="update_paused")
 
 
-_REPLACE_FAILED_DETAIL = "a Hermes gateway still owns this profile after a stop; run: hermes gateway stop"
+_REPLACE_FAILED_DETAIL = "an older Hermes gateway still owns this profile after a stop; run: hermes gateway stop"
 # ``draining`` reasons after which the owner is going away by itself: its own idle exit, or the
 # older-Hermes owner this call just stopped. Ensure waits it out and starts the current owner.
 _RETIRING = frozenset({"idle_exit", "replaced"})
@@ -397,26 +384,17 @@ def _observe_replacing_stale(home: Path, deadline: float, replaced: set[Path]) -
     ``hermes gateway stop``) and reported as retiring; a refusal keeps ``incompatible`` + its remedy."""
     from hermes_cli.gateway_runtime_service import remaining
     observed = discover_gateway_endpoint(home, timeout=remaining(deadline))
-    reason = observed.reason_code
-    if observed.state != "incompatible" or reason not in {"runtime_protocol", "startup_stalled"}:
+    if observed.state != "incompatible" or observed.reason_code != "runtime_protocol":
         return observed
     if home in replaced:
-        return GatewayDiscovery("incompatible", reason_code=reason, detail=_REPLACE_FAILED_DETAIL)
+        return GatewayDiscovery("incompatible", reason_code="runtime_protocol", detail=_REPLACE_FAILED_DETAIL)
     from hermes_cli import gateway_runtime_replace as replace
-    if reason == "startup_stalled":
-        refusal = replace.replace_incompatible_owner(home, deadline=deadline, stalled=True)
-    else:
-        refusal = replace.replace_incompatible_owner(home, deadline=deadline)
+    refusal = replace.replace_incompatible_owner(home, deadline=deadline)
     if refusal == "owner_changed":
-        latest = discover_gateway_endpoint(home, timeout=remaining(deadline))
-        if reason == latest.reason_code == "startup_stalled":
-            # A changed progress stamp can still be old. Let the next ensure
-            # iteration make a fresh expiry decision.
-            return GatewayDiscovery("starting")
-        return latest
+        return discover_gateway_endpoint(home, timeout=remaining(deadline))
     replaced.add(home)
     if refusal is not None:
-        return GatewayDiscovery("incompatible", reason_code=reason,
+        return GatewayDiscovery("incompatible", reason_code="runtime_protocol",
                                 detail=replace.REFUSAL_DETAIL.get(refusal, _REPLACE_FAILED_DETAIL))
     return GatewayDiscovery("draining", reason_code="replaced")
 
@@ -425,7 +403,8 @@ def ensure_gateway_runtime(profile_home: str | Path, *, timeout: float = DEFAULT
                            idle_exit: bool = False) -> GatewayDiscovery:
     """Ensure once; pending remains pending at deadline.
 
-    An older-protocol or startup-stalled gateway on this install's own home is stopped
+    Never installs anything. The one owner it replaces is a gateway an older Hermes left running on
+    this install's own home (``incompatible``/``runtime_protocol``, the upgrade case): it is stopped
     the way ``hermes gateway stop`` stops it, once, and the current one started like any absent
     owner. Another install's or a newer Hermes's gateway stays refused, with the reason in ``detail``
     (``hermes_cli.gateway_runtime_replace``).

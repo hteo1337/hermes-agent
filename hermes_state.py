@@ -828,19 +828,7 @@ class SessionDB(
         # permissive process umask can never expose a fresh profile store.
         _secure_state_db_files(self.db_path, create_main=True)
         self._conn = self._open_writer_conn()
-        from hermes_startup_watchdog import startup_progress
-        progress = startup_progress.get()
-        if progress is None or progress.last_advanced is None:
-            self._init_schema()
-        else:
-            # Count SQLite VM work during index creation and migration, never lock waits.
-            self._conn.set_progress_handler(progress.advance, 100_000)
-            try:
-                self._init_schema()
-                progress.advance()
-            finally:
-                progress.schema_phase_started_at = None
-                self._conn.set_progress_handler(None, 0)
+        self._init_schema()
 
     def _connect_and_init_with_lock_patience(self) -> None:
         """Open + init, waiting out a sibling's write lock with jittered patience:

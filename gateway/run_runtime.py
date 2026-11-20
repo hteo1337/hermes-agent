@@ -151,8 +151,6 @@ async def initialize_gateway_runtime(runner):
     runner.session_runtime_descriptor = descriptor
     registry = SessionAuthorities(homes[0][1], multiplexed=getattr(runner.config, 'multiplex_profiles', False))
     runner.session_authorities = registry
-    from hermes_startup_watchdog import startup_progress
-    progress = startup_progress.get()
     for index, (name, home) in enumerate(homes):
         try:
             await _build_profile_authority(runner, name, home, register=index == 0)
@@ -160,8 +158,6 @@ async def initialize_gateway_runtime(runner):
             if index == 0:
                 raise  # the launch profile's store is the process's own; nothing to park it behind
             _park_reserved_profile(runner, name, home, exc)
-        if progress is not None:
-            progress.advance()
     descriptor['authority_epoch'] = registry.launch.epoch
     descriptor['served_profiles'] = registry.served_profiles()
     # Publish this boot's verdict (an empty map clears a previous run's parked set).

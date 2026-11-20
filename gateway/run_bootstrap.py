@@ -268,7 +268,7 @@ def _start_gateway_claim_pid_file(force: bool = False) -> bool:
     return True
 
 
-def _identify_gateway_runtime(runner=None, *, progress=None):
+def _identify_gateway_runtime(runner=None):
     from gateway.control_socket import build_identify_payload
     from gateway.drain_control import RESTART_WAIT_REASON
 
@@ -287,15 +287,12 @@ def _identify_gateway_runtime(runner=None, *, progress=None):
             payload['capabilities'] = []
     if payload.get('state') == 'draining' and descriptor.get('drain_reason'):
         payload['drain_reason'] = descriptor['drain_reason']
-    if payload.get("state") == "starting" and progress is not None:
-        payload["startup_schema_phase_at"] = progress.schema_phase_started_at
-        payload["startup_progress_at"] = progress.last_advanced
     payload["supervisor"] = {"manual": "none", "desktop": "none"}.get(
         payload.get("supervisor"), payload.get("supervisor", "none"))
     return payload
 
 
-def _bind_gateway_control_runtime(server, runner, *, progress=None):
+def _bind_gateway_control_runtime(server, runner):
     """Attach runtime verbs to the already listening control socket."""
     from gateway.run import asyncio, os, threading
     import concurrent.futures
@@ -375,7 +372,7 @@ def _bind_gateway_control_runtime(server, runner, *, progress=None):
                        # live adapters' handlers (#87770); tools/prompt still wait for the next session.
                        "reload-plugins": reload_plugins_verb(runner, _main_loop)}
     server.set_verb_handlers({
-        "identify": lambda: _identify_gateway_runtime(runner, progress=progress),
+        "identify": lambda: _identify_gateway_runtime(runner),
         **{verb: after_authorities(handler) for verb, handler in runtime_handlers.items()},
     })
     server.ticket_store = getattr(runner, 'session_ticket_store', None)
@@ -383,19 +380,19 @@ def _bind_gateway_control_runtime(server, runner, *, progress=None):
     runner.session_control_server = server
 
 
-async def _start_gateway_start_control_socket(runner=None, *, progress=None):
+async def _start_gateway_start_control_socket(runner=None):
     """Bind after claiming the PID file, with identify/status available during store migration."""
     import atexit
     from gateway.control_socket import GatewayControlServer
 
     server = GatewayControlServer(
-        verb_handlers={"identify": lambda: _identify_gateway_runtime(progress=progress)})
+        verb_handlers={"identify": lambda: _identify_gateway_runtime()})
     if not await server.start():
         return None
     atexit.register(server.cleanup_files)
     if runner is not None:
         try:
-            _bind_gateway_control_runtime(server, runner, progress=progress)
+            _bind_gateway_control_runtime(server, runner)
         except BaseException:
             await server.stop()
             raise
@@ -830,17 +827,13 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     _control_server = None
     runner = None
     _planned_stop_watcher_stop = None
-    from hermes_startup_watchdog import StartupProgress, startup_progress
-    progress = StartupProgress()
-    progress_context = startup_progress.set(progress)
     try:
         _start_gateway_configure_logging(verbosity)
 
         from gateway.run_startup import recover_left_core_at_gateway_start
         await asyncio.to_thread(recover_left_core_at_gateway_start)  # before the runner loads platform config
 
-        progress.advance()
-        _control_server = await _start_gateway_start_control_socket(progress=progress)
+        _control_server = await _start_gateway_start_control_socket()
         if _control_server is None:
             raise RuntimeError("gateway session bootstrap control listener unavailable")
         # The first SessionDB open may build the policy index or wait for a writer.
@@ -853,8 +846,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             # the shutdown tail can close its handles.
             runner = await build_runner
             raise
-        progress.advance()
-        _bind_gateway_control_runtime(_control_server, runner, progress=progress)
+        _bind_gateway_control_runtime(_control_server, runner)
         # Multiplex: swap the launch-home file handlers for per-profile routers so each profile's records
         # land in its own logs/. Must run after the runner resolved (possibly None) config and setup_logging.
         # See #82936.
@@ -905,17 +897,14 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         # the owned profile set is complete.
         from gateway.run_runtime import initialize_gateway_runtime
         await initialize_gateway_runtime(runner)
-        progress.advance()
         # Loading the durable routing index may read thousands of ended session rows.
         await asyncio.to_thread(runner.session_store._ensure_loaded)
-        progress.advance()
         _control_server.ticket_store = runner.session_ticket_store
         # Republish the host record with the settled served set.
         _refresh_host_gateway_record(runner)
         _log_standalone_profiles_at_boot(runner)
         from gateway.run_runtime import start_gateway_runtime_api
         await start_gateway_runtime_api(runner)
-        progress.advance()
 
         def _lifecycle_record_startup() -> Optional[dict]:
             # Report if the previous life died uncleanly (SIGKILL / OOM / VM death), then claim the
@@ -946,7 +935,6 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         try:
             # READY only once adapters, cron and housekeeping run; missing systemd state just disables watchdog.
             publish_gateway_runtime_ready(runner)
-            progress.last_advanced = None
             runner._start_systemd_watchdog()
             if idle_exit:
                 from gateway.run_idle_exit import arm_unmanaged_idle_exit
@@ -968,8 +956,6 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         return verdict
 
     finally:
-        progress.last_advanced = None
-        startup_progress.reset(progress_context)
         try:
             if runner is not None:
                 from gateway.run_runtime import drain_gateway_runtime
