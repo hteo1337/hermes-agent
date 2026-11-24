@@ -140,6 +140,9 @@ async def run_preagent_setup(runner, event, source, quick_key: str, run_generati
                 "chat_type": getattr(source, "chat_type", "") or "",
                 "session_id": session_entry.session_id,
                 "message": prepared.message_text[:500],
+                "reply_to_message_id": str(event.reply_to_message_id or ""),
+                "reply_to_text": (event.reply_to_text or "")[:2000],
+                "reply_to_is_own_message": bool(event.reply_to_is_own_message),
             }
             await runner.hooks.emit("agent:start", hook_ctx)
             from gateway.run_heartbeat_acceptance import heartbeat_owner_is_current
