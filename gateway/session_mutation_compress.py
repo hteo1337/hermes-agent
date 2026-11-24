@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from types import SimpleNamespace
 
+from gateway.executor_pools import submit_workload
 from persistence.core.errors import AuthorityRefusal
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ async def prepare_compress(authority, live, payload, prepared):
             if not any(m.get('_compressed_summary') for m in compressed):
                 return None, compressor
             return rejoin_compressed_head_and_tail(compressed, tail), compressor
-    compressed, compressor = await asyncio.to_thread(summarize)
+    compressed, compressor = await submit_workload(authority.runner, "summary", summarize)
     owner.context_compressor = compressor
     owner.owned = resident is None and not isinstance(compressor, ContextCompressor)
     # The same report every native /compress prints ("Compressed: N → M messages").

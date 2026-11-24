@@ -26,6 +26,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from gateway.executor_pools import MCP_DISCOVERY_EXECUTOR
 from gateway.run_shutdown import _log_suppressed
 from hermes_cli.config_backend import ConfigBackendUnavailable
 from utils import file_cache_version
@@ -469,7 +470,7 @@ class GatewayProfileReconcileMixin:
             try:
                 from tools.mcp_tool_discovery import discover_mcp_tools
                 with _profile_runtime_scope(Path(profile_home)), suppress_interactive_oauth():
-                    await loop.run_in_executor(None, copy_context().run, discover_mcp_tools)
+                    await loop.run_in_executor(MCP_DISCOVERY_EXECUTOR, copy_context().run, discover_mcp_tools)
             except Exception:
                 logger.warning("MCP tool discovery failed for profile '%s'", profile_name, exc_info=True)
 

@@ -3,6 +3,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import json
 import threading
+from types import SimpleNamespace
 
 import pytest
 
@@ -40,7 +41,6 @@ async def test_concurrent_producers_can_call_back_with_the_default_pool_busy(tmp
     server = GatewayControlServer(home, verb_handlers={'identify': lambda: {'alive': True}})
     # Every producer synchronously asks this same listener for another control reply.
     server.private_handlers['hosted-producer'] = lambda params, peer: query_gateway_control(home, 'identify', timeout=5)
-    assert await server.start()
     loop = asyncio.get_running_loop()
     await asyncio.to_thread(lambda: None)
     previous = getattr(loop, '_default_executor', None)
@@ -56,6 +56,13 @@ async def test_concurrent_producers_can_call_back_with_the_default_pool_busy(tmp
     blocker = loop.run_in_executor(None, busy)
     try:
         await async_wait_until(entered.is_set)
+        assert await asyncio.wait_for(server.start(), 5)
+        from tui_gateway.ws import _dispatch_request
+        ping = {"jsonrpc": "2.0", "id": 2, "method": "ping", "params": {}}
+        reply = await asyncio.wait_for(
+            _dispatch_request(None, ping, "ping", SimpleNamespace(desktop_local=True)), 5)
+        assert reply == {"jsonrpc": "2.0", "id": 2, "result": {"pong": True}}
+        assert not blocker.done()
         replies = await asyncio.wait_for(asyncio.gather(
             *(_request(home, 'hosted-producer') for _ in range(8)), _request(home, 'identify')), 5)
         assert all(reply['ok'] and reply['result'] == {'alive': True} for reply in replies)

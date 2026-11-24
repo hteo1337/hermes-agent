@@ -230,13 +230,15 @@ class GatewayControlServer:
 
     async def start(self) -> bool:
         """Bind and start serving. Returns True on success, False otherwise."""
+        if self._request_dispatch is None:
+            self._request_dispatch = ControlRequestDispatcher()
         try:
             # Build one default ``identify`` answer before accepting. A fresh process's first answer
             # pays every lazy cost (the code-identity git walk, the first psutil process probe),
             # which a loaded host stretches past a client's identify deadline; warm, it takes
             # milliseconds. It also pins the code identity the gateway booted with, not a checkout
             # an update swapped in before the first client asked.
-            await asyncio.to_thread(build_identify_payload)
+            await self._request_dispatch.run_control(build_identify_payload)
             return await (self._start_windows() if _IS_WINDOWS else self._start_posix())
         except Exception as exc:
             await self.stop()
@@ -244,8 +246,6 @@ class GatewayControlServer:
             return False
 
     async def _start_posix(self) -> bool:
-        if self._request_dispatch is None:
-            self._request_dispatch = ControlRequestDispatcher()
         bind_path, pointer_file = resolve_server_socket_path(self._home)
         try:
             bind_path = await self._bind_posix(bind_path, pointer_file)
@@ -303,7 +303,7 @@ class GatewayControlServer:
     async def _start_windows(self) -> bool:
         from gateway.runtime_bootstrap_windows import NativeControlServer
         self._pipe_server = NativeControlServer(self._home, self.handle_request_line)
-        await asyncio.to_thread(self._pipe_server.start)
+        await self._request_dispatch.run_control(self._pipe_server.start)
         return True
     async def stop(self) -> None:
         """Stop serving and remove the socket/pointer files."""
@@ -315,7 +315,7 @@ class GatewayControlServer:
                 await self._server.wait_closed()
         if self._pipe_server is not None:
             with contextlib.suppress(Exception):
-                await asyncio.to_thread(self._pipe_server.close)
+                await self._request_dispatch.run_control(self._pipe_server.close)
         self._server = self._pipe_server = None
         if self._request_dispatch is not None:
             self._request_dispatch.close()
