@@ -1,0 +1,5 @@
+- [x] Establish base startup, no-answer and protocol-0 behavior with file and line references.
+- [x] Remove starting-owner replacement and its plumbing while preserving reviewed fixes.
+- [x] Verify the starting-owner contract with a control and one isolated actual-path run.
+- [x] Run the prescribed Python and Desktop suites once and record results.
+- [x] Update the description and handoff, push the feature branch, and verify the remote draft head.

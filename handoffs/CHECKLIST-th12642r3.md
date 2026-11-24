@@ -1,0 +1,4 @@
+- [x] Prove scheduled retention and the mirror guard are removed, with base diff and retained explicit prune.
+- [x] Implement persistent startup progress and verify stuck, progressing, old-protocol and replacement-race behavior against the reviewed head.
+- [x] Run the focused Python and Desktop selections once and record exact results.
+- [x] Push the issue branch and handoff and verify the draft PR title, body, label and head.
