@@ -1,7 +1,7 @@
 """Rate-limited heap release for long-lived Hermes gateway processes.
 
-On Linux/glibc, ``malloc_trim(0)`` can return pages from freed Python/C allocations to the OS. Every
-platform runs the rate-limited ``gc.collect()``; only the page release is glibc-only. Behavior is configured
+On Linux/glibc, ``malloc_trim(0)`` can return pages from freed Python/C allocations to the OS.
+Allocator trimming and its optional collection require ``malloc_trim``. Behavior is configured
 under ``context.memory_trim`` in ``config.yaml``.
 """
 
@@ -167,6 +167,8 @@ def trim_memory(
     global _last_trim_monotonic, _last_alloc_trim_monotonic, _trim_call_count
     with _trim_lock:
         trim = _probe_glibc_malloc_trim()
+        if trim is None:
+            return False
         now = time.monotonic()
         cooldown = configured_cooldown if cooldown_seconds is None else _cooldown_seconds(cooldown_seconds)
         last = _last_trim_monotonic if collect else max(_last_trim_monotonic, _last_alloc_trim_monotonic)
@@ -182,8 +184,7 @@ def trim_memory(
             started = time.perf_counter()
             if collect:
                 gc.collect()
-            # Cycle collection is allocator-independent; only the page release needs glibc.
-            trim_result = trim(0) if trim is not None else 0
+            trim_result = trim(0)
             released = bool(trim_result)
             after = collect_memory_snapshot()
             duration_ms = (time.perf_counter() - started) * 1000
