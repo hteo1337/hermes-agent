@@ -1,0 +1,1 @@
+The capped suite run exited 1 after inheriting the account HOME (245 passed, 10 failed, 12 skipped). An isolated-HOME rerun needs separate authorization, and the original Sol reviewer was archived before confirming the fix.
