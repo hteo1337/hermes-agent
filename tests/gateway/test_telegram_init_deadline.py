@@ -1,3 +1,5 @@
+from threading import get_ident
+
 import pytest
 
 from gateway.config import PlatformConfig
@@ -81,11 +83,12 @@ async def test_blocked_loop_after_expiry_dumps_diagnostics(monkeypatch):
 
     from agent import deadline as _deadline
 
+    loop_thread_id = get_ident()
     dumps = []
     monkeypatch.setattr(
         _deadline,
         "_dump_blocked_loop_diagnostics",
-        lambda label, timeout_s: dumps.append((label, timeout_s)),
+        lambda label, timeout_s, thread_id: dumps.append((label, timeout_s, thread_id)),
     )
     monkeypatch.setattr(_deadline, "_LOOP_BLOCKED_DUMP_GRACE_S", 0.15)
 
@@ -105,7 +108,7 @@ async def test_blocked_loop_after_expiry_dumps_diagnostics(monkeypatch):
     with pytest.raises(_asyncio.TimeoutError):
         await task
 
-    assert dumps == [("telegram", 0.05)]
+    assert dumps == [("telegram", 0.05, loop_thread_id)]
     hung.cancel()
 
 
