@@ -1,0 +1,140 @@
+Verdict: BLOCKING
+TH1-2858 | hteo1337/hermes-agent#5 | security lane
+PR head f3bb3191ba7f41e468b42e6bbeb738eeb93040d2
+Base base/v0.23.4 / upstream tag v0.23.4 at 8fc0374447313e276f6b9a2764bfc750190c966a
+Reviewers: gpt-6.2-sol for the PR-ready pass, gpt-6.2-sol for the independent
+adversarial pass, and gpt-6.2-sol for the independent read-only security audit.
+Each model was explicitly selected for its invocation. The coordinator
+reconciled the findings and ran the tests.
+
+Findings
+
+BLOCKING | tests/gateway/test_telegram_init_deadline.py:88
+The Telegram blocked-loop test installs a two-argument diagnostic mock.
+agent/deadline.py:299 now passes the loop thread ID as a third argument. The
+watchdog thread raises TypeError, leaving the diagnostic assertion at line 108
+empty. The same existing test function passed with the exact upstream deadline
+module substituted and failed with the PR module. Update the mock to capture
+the third argument and assert that it identifies the blocked loop. This is a
+test regression. The production deadline caller supplies the required ID.
+
+non-blocking | tui_gateway/ws.py:669
+WebSocket readiness and disconnect cleanup now queue on the process-wide
+eight-worker RPC executor. The public Desktop dial allows 15 seconds for
+gateway.ready (apps/desktop/src/api/dial-readiness.ts:13). Existing disconnect
+cleanup can synchronously join a turn and finalize multiple sessions
+(tui_gateway/ws.py:767, tui_gateway/session_lifecycle.py:706,1187). A backlog
+can delay those lifecycle steps. The baseline shares its default executor, which
+has 22 workers on the review host. No real Desktop timeout was established.
+The adversarial pass initially rated this blocking using vault.preview.fill;
+the coordinator traced the handler registration and found it is dispatched to
+the separate long-handler pool (tui_gateway/methods_vault.py:234,
+tui_gateway/rpc_dispatch.py:69,90). That example did not support the verdict.
+The existing saturation test checks control startup and a direct legacy ping
+against a busy default pool, without a Desktop dial or busy new RPC pool
+(tests/gateway/test_control_socket_executor_lifetime.py:59).
+
+non-blocking | handoffs/TH1-2858/STATUS.md:1
+The PR includes a continuity-only commit. Keep the handoff out of the eventual
+product diff as required by the merge policy. This review is pinned to the
+requested head, including that commit.
+
+Carry and security review
+
+- 56d227a26da ports 57499e996fb's reply metadata and send destination fields
+  into the relocated hook and outbound paths. Telegram own-reply provenance is
+  derived from the native message sender and excludes topic anchors
+  (plugins/platforms/telegram/adapter.py:5375,6438). Existing ingress checks and
+  profile-local hook routing still apply (gateway/run_inbound.py:228,
+  gateway/run_turn_setup_guard.py:143, gateway/hooks.py:129).
+- 81d55e38f6c carries control warmup, Windows start / stop, WS dispatch, MCP
+  discovery, and compression / summary isolation from d9e89386c2b. Upstream
+  336c9f81bc0's separate POSIX producer and control lanes survive. The omitted
+  default-executor observer only measured queue delay. Runner-owned compression
+  and summary pools enter the existing shared drain budget (gateway/run.py:4004).
+- 295e0d4b1fb carries 4cc70e21402's event-loop-first deadline dump and keeps the
+  all-thread fallback if the first dump raises. The separate gateway liveness
+  watchdog and its restart path are unchanged and already pass their loop
+  thread ID to the dump writer (gateway/shutdown_watchdog.py:140).
+- 8e81c91b232 carries the unsupported-allocator return from 4cc70e21402.
+  TH1-2858 specifies skipping trim-triggered collection when the allocator
+  lacks a release primitive. Upstream's glibc collection mode and its separate
+  idle collection already implement the remaining caller policy. Upstream
+  0f21d45899a moved startup recovery preparation off-loop, and
+  persistence/sqlite/conversation/_store/local.py:120 caches the lineage index.
+- Read-only security audit found no newly introduced authorization bypass,
+  credential scope loss, or private-disclosure item. POSIX and Windows check
+  peer identity before invoking control handlers (gateway/control_socket.py:339,
+  :418, :442; gateway/runtime_bootstrap_windows.py:379). WebSocket upgrade
+  authorization precedes profile binding (hermes_cli/web_routers/chat_ws.py:652,
+  :694); WS, MCP, and workload executor hops copy the existing profile context.
+  No credential values were used.
+
+Commands and results
+
+- gh pr view 5 -R hteo1337/hermes-agent --json headRefOid,baseRefOid,baseRefName,headRefName,isDraft,state,labels,url,statusCheckRollup,body
+  Exact head/base above, open draft, lane:security present. Latest status
+  refresh returned UNSTABLE, two cancelled checks, eight skipped checks and
+  one queued check. Jobs 138443752498 and 138443749049 were cancelled with
+  runner_id=0 and zero steps. Job 139204369276 was queued with runner_id=0,
+  zero steps and no annotations. No billing failure was established.
+- git rev-parse HEAD 'v0.23.4^{commit}'; git log --oneline 8fc03744..HEAD
+  Exact head/base above. Four product commits plus one continuity commit.
+- git diff --check 8fc03744 HEAD
+  Exit 0, no output.
+- git diff --stat 8e81c91b232 HEAD
+  Only handoffs/TH1-2858/STATUS.md changed, eight lines added.
+- git diff --exit-code 8fc03744 HEAD -- gateway/shutdown_watchdog.py gateway/run_startup_liveness.py apps/desktop
+  Exit 0, no output. Static inspection then traced Desktop readiness into the
+  changed Python server.
+- git show 57499e996fb; git show d9e89386c2b; git show 4cc70e21402; git show -s 336c9f81bc0 0f21d45899a
+  Original metadata/send, executor and diagnostics/trim hunks compared
+  against the carry. Upstream control lanes and off-loop recovery confirmed.
+- semif_decide on the plan and actual gateway/WS/deadline hunks
+  First request returned 422 (4556 input tokens, limit 4096). Focused actual
+  diff returned required (0.9701806547089957, fast tier).
+- Existing PR verification suite, run once at the pinned head with one worker,
+  no file retries, and isolated HOME and HERMES_HOME. Python 3.14.9,
+  pytest 9.1.1, python-telegram-bot 22.8. No competing test processes observed
+  before or after the run.
+    env -i PATH="$PATH" HOME="$review_test_dir/home" HERMES_HOME="$review_test_dir/hermes" HERMES_PYTHON=/tmp/th1-2858.q1KiFD/venv/bin/python HERMES_TEST_FILE_RETRIES=0 \
+      scripts/run_tests.sh -j 1 tests/agent/test_deadline*.py \
+      tests/gateway/test_codex_hygiene_compaction.py tests/gateway/test_control_socket*.py \
+      tests/gateway/test_executor_pool_isolation.py tests/gateway/test_hooks*.py \
+      tests/gateway/test_local_control_compression_child.py tests/gateway/test_shutdown_executor_quiesce.py \
+      tests/gateway/test_telegram_reply*.py \
+      tests/gateway/outbound/test_send_message_{cross_loop,surrogate_sanitization}.py \
+      tests/hermes_cli/test_mem_trim.py tests/tui_gateway/test_ws_{concurrent_reads,orphan_races,send_timeout}.py \
+      --tb=long
+  Exit 0. 23 files, 255 passed, 0 failed, 12 skipped in 101.1s.
+- Gateway deadline behavior and upstream control, separate from the selected
+  suite. git show 8fc03744:agent/deadline.py supplied the base module;
+  git diff --exit-code 8fc03744 HEAD -- tests/gateway/test_telegram_init_deadline.py
+  exited 0 and the comparison for agent/deadline.py exited 1 (files differ).
+  A disposable check_deadline.py ran the unchanged
+  test_blocked_loop_after_expiry_dumps_diagnostics function with
+  pytest.MonkeyPatch and a thread exception collector, once per module.
+  The first shell wrapper exited before launching either arm because zsh
+  reserves status. The corrected wrapper used probe_exit and ran:
+    env -i PATH="$PATH" HOME="$review_test_dir/probe-home" HERMES_HOME="$review_test_dir/probe-hermes" \
+      /tmp/th1-2858.q1KiFD/venv/bin/python "$review_test_dir/check_deadline.py" \
+      "$review_revision" "$review_test_dir/base_deadline.py"
+  Base: diagnostic assertion passed; thread errors=[]; exit 0.
+  Head: diagnostic assertion failed; watchdog TypeError, lambda takes 2
+  positional arguments but 3 were given; exit 1.
+- Default pool comparison on review host: Python ThreadPoolExecutor default
+  max_workers=22, os.process_cpu_count()=18. The PR's RPC pool sets 8 explicitly.
+
+Verification boundary
+
+The selected run was the existing PR verification suite. The repository-wide
+suite, live Electron connection, native Windows pipe, deployment, and uptime
+under live gateway load were outside this review. No product edit or merge.
+
+Delivery receipts
+
+- GitHub comment connector returned HTTP 403 (integration access). The
+  authorized CLI fallback, gh pr comment 5 -R hteo1337/hermes-agent --body-file
+  "$review_test_dir/pr-verdict.md", exited 0 and returned
+  https://github.com/hteo1337/hermes-agent/pull/5#issuecomment-7190619053.
+- linear_save_comment for TH1-2858 returned d59d4f8d-8626-468c-85c9-ee0fab067dff.
