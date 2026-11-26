@@ -26,6 +26,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Protocol, TypeVar
 
@@ -241,7 +242,7 @@ async def _run_abandon_cleanup(on_abandon: Callable[[], Awaitable[Any]]) -> None
         logger.debug("deadline abandon-cleanup failed", exc_info=True)
 
 
-def _dump_blocked_loop_diagnostics(label: str, timeout_s: float) -> None:
+def _dump_blocked_loop_diagnostics(label: str, timeout_s: float, loop_thread_id: int) -> None:
     logger.warning(
         "[deadline] %r deadline (%.0fs) expired but the event loop has not processed the expiry "
         "after a further %.0fs — the loop thread appears BLOCKED in a synchronous call, which is "
@@ -249,6 +250,14 @@ def _dump_blocked_loop_diagnostics(label: str, timeout_s: float) -> None:
         "blocking frame.",
         label, timeout_s, _LOOP_BLOCKED_DUMP_GRACE_S,
     )
+    try:
+        # faulthandler limits its output to 100 threads and can omit the blocked loop.
+        frame = sys._current_frames().get(loop_thread_id)
+        if frame is not None:
+            print("Event-loop thread (before all-thread dump):", file=sys.stderr, flush=True)
+            traceback.print_stack(frame, file=sys.stderr)
+    except Exception:
+        logger.debug("event-loop traceback dump failed", exc_info=True)
     try:
         faulthandler.dump_traceback(all_threads=True)
     except Exception:
@@ -276,6 +285,7 @@ async def run_bounded_async(
 
     task = asyncio.ensure_future(awaitable)
     loop = asyncio.get_running_loop()
+    loop_thread_id = threading.get_ident()
     deadline: asyncio.Future[None] = loop.create_future()
     loop_processed_expiry = threading.Event()
 
@@ -286,7 +296,7 @@ async def run_bounded_async(
 
     def _watchdog_check() -> None:
         if not loop_processed_expiry.is_set():
-            _dump_blocked_loop_diagnostics(label, timeout_s)
+            _dump_blocked_loop_diagnostics(label, timeout_s, loop_thread_id)
 
     timers = [threading.Timer(timeout_s, lambda: loop.call_soon_threadsafe(_mark_expired))]
     if dump_on_blocked_loop:

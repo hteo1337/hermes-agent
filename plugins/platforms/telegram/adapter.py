@@ -6435,6 +6435,7 @@ class TelegramAdapter(TelegramContactMixin, TelegramHeldInboundMixin, TelegramRe
             message_id=str(message.message_id), platform_update_id=update_id,
             user_id=source.user_id, user_name=source.user_name,
             reply_to_message_id=reply_to_id, reply_to_text=reply_to_text, auto_skill=topic_skill,
+            reply_to_is_own_message=self._is_reply_to_bot(message),
             channel_prompt=group_identity_prompt(self, message, channel_prompt), reply_expected=group_reply_expected(self, message, chat_type),
             edit_revision=self._edit_revision(message, update_id), timestamp=message.date)
 

@@ -9,6 +9,8 @@ import asyncio
 import collections
 import contextlib
 import concurrent.futures
+from contextvars import copy_context
+from functools import partial
 import json
 import logging
 import socket
@@ -37,6 +39,13 @@ _dashboard_client_touch_lock = threading.Lock()
 _dashboard_client_touch_pool = concurrent.futures.ThreadPoolExecutor(
     max_workers=1, thread_name_prefix="dashboard-client-touch")
 _dashboard_client_touch_pending: set = set()
+_rpc_executor = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="gateway-rpc")
+
+
+async def _rpc_thread(func, *args, **kwargs):
+    """Run synchronous WebSocket work independently of the default executor."""
+    return await asyncio.get_running_loop().run_in_executor(
+        _rpc_executor, copy_context().run, partial(func, *args, **kwargs))
 
 
 def _touch_dashboard_client_marker(path) -> None:
@@ -394,8 +403,8 @@ def _authority_connection(ws: Any, transport: WSTransport, auth_identity: dict |
 
 async def _dispatch_request(authority_connection: Any, req: Any, req_method: Any, transport: WSTransport) -> Any:
     """One request through the authority when attached, else the legacy dispatcher. A request from the
-    local Desktop runs as work for it (the welcome trial and onboarding key on that), and so do the
-    threads it hands off to: ``to_thread`` and the legacy pool copy this context."""
+    local Desktop runs as work for it (the welcome trial and onboarding key on that), and so do
+    the worker threads it hands off to via a copied context."""
     from hermes_cli.process_identity import serving_local_desktop
     from tui_gateway.server_requests import resolve_pinned_response
     if authority_connection is not None and resolve_pinned_response(req, transport):
@@ -404,7 +413,7 @@ async def _dispatch_request(authority_connection: Any, req: Any, req_method: Any
         return None
     with serving_local_desktop(getattr(transport, "desktop_local", False)):
         if authority_connection is None:
-            return await asyncio.to_thread(server.dispatch, req, transport)
+            return await _rpc_thread(server.dispatch, req, transport)
         resp = await authority_connection.dispatch(req)
         actor = authority_connection.actor
         if (_is_unknown_method(resp) and req_method in server._methods
@@ -413,7 +422,7 @@ async def _dispatch_request(authority_connection: Any, req: Any, req_method: Any
             # registers (pet, wake word, connectors) keeps its legacy handler. A legacy
             # session writer keeps the authority's -32601 (ws_legacy_fallback), as does a
             # method neither side knows, which the client's capability fallbacks key on.
-            resp = await asyncio.to_thread(dispatch_legacy, server, req, transport, actor)
+            resp = await _rpc_thread(dispatch_legacy, server, req, transport, actor)
         return resp
 
 
@@ -657,7 +666,7 @@ async def handle_ws(ws: Any, *, auth_identity: dict | None = None, subprotocol: 
         transport = WSTransport(ws, asyncio.get_running_loop(), peer=peer, auth_identity=auth_identity)
         authority_connection = _authority_connection(ws, transport, auth_identity, operator)
         # resolve_skin() is sync I/O + CPU; pooled so the read loop can drain the frontend's initial RPC burst.
-        skin_payload = await asyncio.to_thread(server.resolve_skin)
+        skin_payload = await _rpc_thread(server.resolve_skin)
         # change_events: this backend broadcasts pet/cron/sessions.changed, so clients can demote legacy
         # polls to backstops. replay_epoch lets reconnecting clients detect a backend restart and reset
         # their per-session seq watermarks (event_replay).
@@ -747,7 +756,7 @@ async def handle_ws(ws: Any, *, auth_identity: dict | None = None, subprotocol: 
             server.unregister_live_transport(transport)
             transport.close()
             try:
-                await asyncio.to_thread(server._release_wake_for_transport, transport)
+                await _rpc_thread(server._release_wake_for_transport, transport)
             except Exception:
                 _log.exception("ws wake-word teardown failed peer=%s", peer)
             # The single WS-disconnect teardown path: reap sessions this transport owned (close_on_disconnect
@@ -755,7 +764,7 @@ async def handle_ws(ws: Any, *, auth_identity: dict | None = None, subprotocol: 
             # ones go to the grace-windowed orphan reaper (a quick resume cancels it). Offloaded: worker.close()
             # blocks (terminate + waits) plus a sync DB write, which inline would freeze the loop for every peer.
             try:
-                reaped_sessions, detached_sessions = await asyncio.to_thread(
+                reaped_sessions, detached_sessions = await _rpc_thread(
                     server._close_sessions_for_transport, transport, end_reason="ws_disconnect"
                 )
             except Exception:

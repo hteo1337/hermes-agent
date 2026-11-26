@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 import json
 from typing import Callable
 
@@ -13,6 +14,10 @@ class ControlRequestDispatcher:
         # then await session work which can itself need the loop's default executor.
         self._controls = ThreadPoolExecutor(thread_name_prefix='gateway-control')
         self._producers = ThreadPoolExecutor(thread_name_prefix='gateway-hosted-producer')
+
+    async def run_control(self, handler):
+        return await asyncio.get_running_loop().run_in_executor(
+            self._controls, copy_context().run, handler)
 
     async def dispatch(
         self, handler: Callable[[bytes, str | None], bytes], raw: bytes, peer: str | None,
@@ -25,7 +30,7 @@ class ControlRequestDispatcher:
         # and authenticated peer before invoking either private operation.
         producer = isinstance(request, dict) and request.get('verb') == 'hosted-producer'
         executor = self._producers if producer else self._controls
-        return await asyncio.get_running_loop().run_in_executor(executor, handler, raw, peer)
+        return await asyncio.get_running_loop().run_in_executor(executor, copy_context().run, handler, raw, peer)
 
     def close(self) -> None:
         # Never run queued mutations after listener shutdown. In-flight handlers retain

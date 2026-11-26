@@ -38,14 +38,13 @@ def test_config_kill_switch_overrides_force_from_config_file(monkeypatch, tmp_pa
 
 
 
-def test_gc_collect_runs_even_without_platform_primitive(monkeypatch):
-    # No page-release primitive (macOS, musl): the rate-limited gc.collect() still runs;
-    # only the success flag stays False.
+def test_trim_skips_gc_without_platform_primitive(monkeypatch):
+    # macOS and musl cannot release pages with malloc_trim.
     collect = Mock()
     monkeypatch.setattr(mem_trim.gc, "collect", collect)
 
     assert mem_trim.trim_memory(force=True, reason="test") is False
-    collect.assert_called_once()
+    collect.assert_not_called()
 
 
 def test_collect_memory_snapshot_parses_linux_proc_status(monkeypatch):
