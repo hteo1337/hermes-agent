@@ -1,12 +1,11 @@
 <!-- continuity-seed: 0711687d0edc18ff0fdd1bbb5b681558e03834aa94405ac0e108e1708892f12d -->
 # TH1-2858
-- Issue https://linear.app/th1337/issue/TH1-2858/hermes-m5m4-move-to-upstream-v0234-and-re-carry-local-commits
-- Repository `hteo1337/hermes-agent`, branch `dispatch/TH1-2858`, base `base/v0.23.4` at `8fc0374447313e276f6b9a2764bfc750190c966a`.
-- Done. Fixed the Sol blocker from `f3bb3191ba7` in test commit `b5bd5d442187effdb31af0f61e7654af81082a74`. The test captures the loop thread ID and checks the diagnostic callback received it. [Draft PR #5](https://github.com/hteo1337/hermes-agent/pull/5) retains `lane:security`.
-- Verification. On the test commit, the focused watchdog test passed (1 passed, 0 failed in 4.0s, exit 0). Ruff passed and code health reported 0 blocking and 0 advisory findings.
-- Suite. One run of the existing 23-file selection returned 245 passed, 10 failed, 12 skipped in 116.6s (exit 1). The invocation inherited the account HOME. All ten failures trace to the home I/O guard blocking the update-marker probe in the worktree's Git directory. The PR body records the commands and results.
-- Next. A passing suite on the corrected head still needs an isolated HOME and a separately authorized run. The original Sol reviewer was archived during takeover, so confirmation is outstanding. Keep the PR draft. Clear the handoffs from the diff before final-head review and merge. Teo owns merge.
-- Open questions. Desktop readiness under load remains the separate non-blocking finding. GitHub CI and live gateway behavior are unverified.
+- Issue [TH1-2858](https://linear.app/th1337/issue/TH1-2858) in paseo-ops. Repository `hteo1337/hermes-agent`, branch `dispatch/TH1-2858`, [draft PR #5](https://github.com/hteo1337/hermes-agent/pull/5).
+- Done. `gpt-6.2-sol` confirmed APPROVE for `af4cef507860853a1eb4c13ca44d55d447dd73f0`. Fix `b5bd5d44218` accepts the third diagnostic argument and checks the event-loop thread ID.
+- Verification. With a disposable HOME, Python 3.14.9 and one worker, the Telegram deadline file passed 3 tests in 5.6s and the 23-file PR suite passed 255, failed 0 and skipped 12 in 132.7s. Both exited 0.
+- Posted commands and verdict on [GitHub](https://github.com/hteo1337/hermes-agent/pull/5#issuecomment-7190917994) and [Linear](https://linear.app/th1337/issue/TH1-2858#comment-d387381e-44d6-4072-8ce7-62c219f5d778). Handoff updated locally to preserve the reviewed PR head.
+- Next. Clear the existing handoff files from the PR diff and confirm the resulting head and green CI before Teo merges.
+- Open questions. CI remained queued or pending. Desktop readiness under load at `tui_gateway/ws.py:669` remains non-blocking.
 
 ## Dispatch history
 
@@ -46,3 +45,21 @@ Do not change product code unless the test proves product code is wrong. Leave t
 Run the failing test, then the existing PR verification suite once. Push to dispatch/TH1-2858. Update the PR body with the commands and their exact results, and update handoffs/TH1-2858/STATUS.md. Keep the PR draft. Teo owns the merge.
 Launch: branch=dispatch/TH1-2858, repo_path=/Users/hteo/.hermes/hermes-agent, run_id=d19c55e8dfc04e22969a3170eab3ad14, task_id=397f42362ddf4e85a781db37497182c5, workspace_id=wks_3006914af5933bf6
 Continuity launch ID: 397f42362ddf4e85a781db37497182c5:d19c55e8dfc04e22969a3170eab3ad14
+
+## New launch
+
+Task: TH1-2858 confirm BLOCKING fix on PR #5
+Issue: https://linear.app/th1337/issue/TH1-2858/hermes-m5m4-move-to-upstream-v0234-and-re-carry-local-commits
+Branch: dispatch/TH1-2858
+Adopted branch: yes
+Acceptance: Brief confirming review only. Do not push code.
+
+The earlier Sol review of https://github.com/hteo1337/hermes-agent/pull/5 (head f3bb3191) had one BLOCKING finding: the mock at tests/gateway/test_telegram_init_deadline.py:88 took two arguments, but agent/deadline.py:299 passes three. Commit b5bd5d44218 (head af4cef50786) fixes it.
+
+Confirm the BLOCKING finding is resolved and that the fix introduces no regression. Run tests/gateway/test_telegram_init_deadline.py and the PR verification suite once on head af4cef50786.
+
+Post a short PR comment and a TH1-2858 comment with the verdict (APPROVE or BLOCKING), the commands with exact results, and the actual model used. The non-blocking ws.py:669 item stays non-blocking. Teo owns the merge.
+Launch: branch=dispatch/TH1-2858, repo_path=/Users/hteo/.hermes/hermes-agent, run_id=90fc7316025b4cdbbda7262eabf65584, task_id=714dd0e26c754ed4805cc2962d57fda6, workspace_id=wks_3006914af5933bf6
+Continuity launch ID: 714dd0e26c754ed4805cc2962d57fda6:90fc7316025b4cdbbda7262eabf65584
+
+Continuity stop ID: a5d82b17aa4f4fdf947ec4fe551534b2:2ac9c251af5a4013859e9718b9aa640a:e7b90791-555a-4d37-be01-9468d3db6650
